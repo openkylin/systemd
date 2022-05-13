@@ -187,8 +187,16 @@ static void unit_init(Unit *u) {
         if (ec) {
                 exec_context_init(ec);
 
-                ec->keyring_mode = MANAGER_IS_SYSTEM(u->manager) ?
-                        EXEC_KEYRING_SHARED : EXEC_KEYRING_INHERIT;
+                if (MANAGER_IS_SYSTEM(u->manager))
+                        ec->keyring_mode = EXEC_KEYRING_SHARED;
+                else {
+                        ec->keyring_mode = EXEC_KEYRING_INHERIT;
+
+                        /* User manager might have its umask redefined by PAM or UMask=. In this
+                         * case let the units it manages inherit this value by default. They can
+                         * still tune this value through their own unit file */
+                        (void) get_process_umask(getpid_cached(), &ec->umask);
+                }
         }
 
         kc = unit_get_kill_context(u);
@@ -1037,6 +1045,16 @@ int unit_add_exec_dependencies(Unit *u, ExecContext *c) {
 
         if (!MANAGER_IS_SYSTEM(u->manager))
                 return 0;
+
+        /* For the following three directory types we need write access, and /var/ is possibly on the root
+         * fs. Hence order after systemd-remount-fs.service, to ensure things are writable. */
+        if (!strv_isempty(c->directories[EXEC_DIRECTORY_STATE].paths) ||
+            !strv_isempty(c->directories[EXEC_DIRECTORY_CACHE].paths) ||
+            !strv_isempty(c->directories[EXEC_DIRECTORY_LOGS].paths)) {
+                r = unit_add_dependency_by_name(u, UNIT_AFTER, SPECIAL_REMOUNT_FS_SERVICE, true, UNIT_DEPENDENCY_FILE);
+                if (r < 0)
+                        return r;
+        }
 
         if (c->private_tmp) {
                 const char *p;
@@ -4278,7 +4296,7 @@ static int user_from_unit_name(Unit *u, char **ret) {
         if (r < 0)
                 return r;
 
-        if (valid_user_group_name(n)) {
+        if (valid_user_group_name(n, 0)) {
                 *ret = TAKE_PTR(n);
                 return 0;
         }
@@ -4846,16 +4864,7 @@ int unit_kill_context(
 
                 } else if (r > 0) {
 
-                        /* FIXME: For now, on the legacy hierarchy, we will not wait for the cgroup members to die if
-                         * we are running in a container or if this is a delegation unit, simply because cgroup
-                         * notification is unreliable in these cases. It doesn't work at all in containers, and outside
-                         * of containers it can be confused easily by left-over directories in the cgroup — which
-                         * however should not exist in non-delegated units. On the unified hierarchy that's different,
-                         * there we get proper events. Hence rely on them. */
-
-                        if (cg_unified_controller(SYSTEMD_CGROUP_CONTROLLER) > 0 ||
-                            (detect_container() == 0 && !unit_cgroup_delegate(u)))
-                                wait_for_exit = true;
+                        wait_for_exit = true;
 
                         if (send_sighup) {
                                 set_free(pid_set);
