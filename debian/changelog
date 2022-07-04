@@ -1,4 +1,4 @@
-systemd (245.4-ok1) yangtze; urgency=medium
+systemd (245.4-ok2~0704) yangtze; urgency=medium
 
   * Build for openKylin.
   * bug:
