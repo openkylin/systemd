@@ -1,5 +1,8 @@
 systemd (245.4-ok1) yangtze; urgency=medium
 
   * Build for openKylin.
+  * bug:
+    - 125520 手势触摸失效
+    - 126196 进入win_x11桌面下后注销登入wayland模式，此时外接鼠标和键盘均无法使用，重现插拔后恢复正常
 
  -- openKylinBot <openKylinBot@openkylin.com>  Mon, 25 Apr 2022 22:03:04 +0800
