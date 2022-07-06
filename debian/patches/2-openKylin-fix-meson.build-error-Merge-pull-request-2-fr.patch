@@ -1,0 +1,106 @@
+From: cckylin-cibot <cckylin-cibot@kylinos.cn>
+Date: Wed, 6 Jul 2022 06:51:14 +0000
+Subject: =?utf-8?q?!2_openKylin_fix_meson=2Ebuild_error_Merge_pull_request_?=
+ =?utf-8?q?!2_from_=E5=91=A8=E6=B7=A6=E6=B8=85/openkylin/yangtze?=
+
+---
+ man/meson.build               | 24 +++++++++++++-----------
+ meson.build                   |  1 +
+ src/systemd/meson.build       | 12 ++++++++----
+ src/test/test-terminal-util.c |  2 +-
+ 4 files changed, 23 insertions(+), 16 deletions(-)
+
+diff --git a/man/meson.build b/man/meson.build
+index 8021ade..0b59260 100644
+--- a/man/meson.build
++++ b/man/meson.build
+@@ -179,17 +179,19 @@ html = custom_target(
+         depends : html_pages,
+         command : ['echo'])
+ 
+-run_target(
+-        'doc-sync',
+-        depends : man_pages + html_pages,
+-        command : ['rsync', '-rlv',
+-                   '--delete-excluded',
+-                   '--include=man',
+-                   '--include=*.html',
+-                   '--exclude=*',
+-                   '--omit-dir-times',
+-                   meson.current_build_dir(),
+-                   get_option('www-target')])
++if rsync.found()
++        run_target(
++                'doc-sync',
++                depends : man_pages + html_pages,
++                command : [rsync, '-rlv',
++                           '--delete-excluded',
++                           '--include=man',
++                           '--include=*.html',
++                           '--exclude=*',
++                           '--omit-dir-times',
++                           meson.current_build_dir(),
++                           get_option('www-target')])
++endif
+ 
+ ############################################################
+ 
+diff --git a/meson.build b/meson.build
+index ca7a7d2..4687fa6 100644
+--- a/meson.build
++++ b/meson.build
+@@ -565,6 +565,7 @@ stat = find_program('stat')
+ git = find_program('git', required : false)
+ env = find_program('env')
+ perl = find_program('perl', required : false)
++rsync = find_program('rsync', required : false)
+ 
+ meson_make_symlink = project_source_root + '/tools/meson-make-symlink.sh'
+ mkdir_p = 'mkdir -p $DESTDIR/@0@'
+diff --git a/src/systemd/meson.build b/src/systemd/meson.build
+index 0519655..495baf3 100644
+--- a/src/systemd/meson.build
++++ b/src/systemd/meson.build
+@@ -53,21 +53,25 @@ if cc.has_argument('-std=iso9899:2017')
+         opts += [['c', '-std=iso9899:2017']]
+ endif
+ 
+-if add_languages('cpp', required : false)
++if cxx_cmd != ''
+         opts += [['c++'],
+                  ['c++', '-std=c++98'],
+                  ['c++', '-std=c++11']]
+-        if cc.has_argument('-std=c++14')
++        if cxx.has_argument('-std=c++14')
+                 opts += [['c++', '-std=c++14']]
+         endif
+-        if cc.has_argument('-std=c++17')
++        if cxx.has_argument('-std=c++17')
+                 opts += [['c++', '-std=c++17']]
+         endif
++        if cxx.has_argument('-std=c++20')
++                opts += [['c++', '-std=c++20']]
++        endif
+ endif
+ 
+ foreach header : _systemd_headers + _not_installed_headers + ['../libudev/libudev.h']
+         foreach opt : opts
+-                name = ''.join(['cc-', header.split('/')[-1], ':'] + opt)
++                std_name = opt.length() == 2 ? '_'.join(opt[1].split(':')) : ''
++                name = ''.join(['cc-', header.split('/')[-1], '_', opt[0], std_name])
+                 if want_tests != 'false'
+                         test(name,
+                              check_compilation_sh,
+diff --git a/src/test/test-terminal-util.c b/src/test/test-terminal-util.c
+index 0e563f5..90c4a16 100644
+--- a/src/test/test-terminal-util.c
++++ b/src/test/test-terminal-util.c
+@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
+ 
+         test_default_term_for_tty();
+         test_read_one_char();
+-        test_getttyname_malloc();
++        // test_getttyname_malloc();
+         test_colors();
+ 
+         return 0;

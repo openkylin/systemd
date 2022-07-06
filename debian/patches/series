@@ -60,3 +60,4 @@ network-Set-link-state-to-LINK_STATE_PENDING-instead-of-t.patch
 riscv64-seccomp.patch
 dhcp-Allow-setting-request-options-again.patch
 1-125520-126196-win_x11-wayland.patch
+2-openKylin-fix-meson.build-error-Merge-pull-request-2-fr.patch
