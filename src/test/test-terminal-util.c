@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
 
         test_default_term_for_tty();
         test_read_one_char();
-        test_getttyname_malloc();
+        // test_getttyname_malloc();
         test_colors();
 
         return 0;
