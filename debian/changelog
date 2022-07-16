@@ -1,8 +1,9 @@
-systemd (245.4-ok3) yangtze; urgency=medium
+systemd (245.4-ok4~0716) yangtze; urgency=medium
 
   * Fix meson.build error.
+  * close-cd #126315 set DefaultTimeoutStopSec=10s.
 
- -- zhouganqing <zhouganqing@kylinos.cn>  Wed, 06 Jul 2022 14:24:00 +0800
+ -- handsome_feng <jianfengli@ubuntukylin.com>  Sat, 16 Jul 2022 14:24:24 +0800
 
 systemd (245.4-ok2~0704) yangtze; urgency=medium
 
