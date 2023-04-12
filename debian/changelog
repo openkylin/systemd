@@ -1,3 +1,15 @@
+systemd (251.4-ok1) yangtze; urgency=medium
+
+  * rebuild source for openKylin
+
+ -- liaoxianfu <liaoxianfu@kylinos.cn>  Wed, 12 Apr 2023 10:22:55 +0800
+
+systemd (245.4-ok5) yangtze; urgency=medium
+
+  * update version info
+
+ -- luzhiping <luzhiping@kylinos.cn>  Mon, 22 Aug 2022 14:21:50 +0800
+
 systemd (245.4-ok4~0716) yangtze; urgency=medium
 
   * Fix meson.build error.
@@ -13,3 +25,4 @@ systemd (245.4-ok2~0704) yangtze; urgency=medium
     - 126196 进入win_x11桌面下后注销登入wayland模式，此时外接鼠标和键盘均无法使用，重现插拔后恢复正常
 
  -- openKylinBot <openKylinBot@openkylin.com>  Mon, 25 Apr 2022 22:03:04 +0800
+
