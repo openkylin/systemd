@@ -1,5 +1,5 @@
 # bootctl(1) completion                               -*- shell-script -*-
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 # This file is part of systemd.
 #
@@ -31,8 +31,8 @@ _bootctl() {
     local i verb comps
     local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
     local -A OPTS=(
-        [STANDALONE]='-h --help --no-variables -p --print-esp-path -x --print-boot-path --version --no-pager'
-        [ARG]='--esp-path --boot-path'
+        [STANDALONE]='-h --help -p --print-esp-path -x --print-boot-path --version --no-variables --no-pager --graceful'
+        [ARG]='--esp-path --boot-path --make-machine-id-directory'
     )
 
     if __contains_word "$prev" ${OPTS[ARG]}; then
@@ -45,6 +45,9 @@ _bootctl() {
                 fi
                 compopt -o filenames
                 ;;
+            --make-machine-id-directory)
+                comps="yes no auto"
+                ;;
         esac
         COMPREPLY=( $(compgen -W '$comps' -- "$cur") )
         return 0
@@ -56,8 +59,10 @@ _bootctl() {
     fi
 
     local -A VERBS=(
-        [STANDALONE]='help install list remove status update'
+        # systemd-efi-options takes an argument, but it is free-form, so we cannot complete it
+        [STANDALONE]='help status install update remove is-installed random-seed systemd-efi-options list set-timeout set-timeout-oneshot'
         [BOOTENTRY]='set-default set-oneshot'
+        [BOOLEAN]='reboot-to-firmware'
     )
 
     for ((i=0; i < COMP_CWORD; i++)); do
@@ -67,7 +72,7 @@ _bootctl() {
         fi
     done
 
-    if [[ -z $verb ]]; then
+    if [[ -z ${verb-} ]]; then
         comps=${VERBS[*]}
     elif __contains_word "$verb" ${VERBS[STANDALONE]}; then
         comps=''
@@ -86,6 +91,8 @@ _bootctl() {
         else
             comps=''
         fi
+    elif __contains_word "$verb" ${VERBS[BOOLEAN]}; then
+        comps="yes no"
     fi
 
     COMPREPLY=( $(compgen -W '$comps' -- "$cur") )

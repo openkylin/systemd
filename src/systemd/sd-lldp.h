@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 #ifndef foosdlldphfoo
 #define foosdlldphfoo
 
@@ -18,10 +18,6 @@
 ***/
 
 #include <inttypes.h>
-#include <net/ethernet.h>
-#include <sys/types.h>
-
-#include "sd-event.h"
 
 #include "_sd-common.h"
 
@@ -80,21 +76,28 @@ enum {
         SD_LLDP_SYSTEM_CAPABILITIES_TPMR     = 1 << 10,
 };
 
-#define SD_LLDP_SYSTEM_CAPABILITIES_ALL ((uint16_t) -1)
+#define SD_LLDP_SYSTEM_CAPABILITIES_ALL UINT16_MAX
 
 #define SD_LLDP_SYSTEM_CAPABILITIES_ALL_ROUTERS                         \
         ((uint16_t)                                                     \
-         (SD_LLDP_SYSTEM_CAPABILITIES_REPEATER|                         \
-          SD_LLDP_SYSTEM_CAPABILITIES_BRIDGE|                           \
-          SD_LLDP_SYSTEM_CAPABILITIES_WLAN_AP|                          \
-          SD_LLDP_SYSTEM_CAPABILITIES_ROUTER|                           \
-          SD_LLDP_SYSTEM_CAPABILITIES_DOCSIS|                           \
-          SD_LLDP_SYSTEM_CAPABILITIES_CVLAN|                            \
-          SD_LLDP_SYSTEM_CAPABILITIES_SVLAN|                            \
+         (SD_LLDP_SYSTEM_CAPABILITIES_REPEATER |                        \
+          SD_LLDP_SYSTEM_CAPABILITIES_BRIDGE |                          \
+          SD_LLDP_SYSTEM_CAPABILITIES_WLAN_AP |                         \
+          SD_LLDP_SYSTEM_CAPABILITIES_ROUTER |                          \
+          SD_LLDP_SYSTEM_CAPABILITIES_DOCSIS |                          \
+          SD_LLDP_SYSTEM_CAPABILITIES_CVLAN |                           \
+          SD_LLDP_SYSTEM_CAPABILITIES_SVLAN |                           \
           SD_LLDP_SYSTEM_CAPABILITIES_TPMR))
 
-#define SD_LLDP_OUI_802_1 (uint8_t[]) { 0x00, 0x80, 0xc2 }
-#define SD_LLDP_OUI_802_3 (uint8_t[]) { 0x00, 0x12, 0x0f }
+#define SD_LLDP_OUI_802_1 (const uint8_t[]) { 0x00, 0x80, 0xc2 }
+#define SD_LLDP_OUI_802_3 (const uint8_t[]) { 0x00, 0x12, 0x0f }
+
+#define _SD_LLDP_OUI_IANA 0x00, 0x00, 0x5E
+#define SD_LLDP_OUI_IANA  (const uint8_t[]) { _SD_LLDP_OUI_IANA }
+
+#define SD_LLDP_OUI_IANA_SUBTYPE_MUD  0x01
+#define SD_LLDP_OUI_IANA_MUD                                            \
+        (const uint8_t[]) { _SD_LLDP_OUI_IANA, SD_LLDP_OUI_IANA_SUBTYPE_MUD }
 
 /* IEEE 802.1AB-2009 Annex E */
 enum {
@@ -114,76 +117,6 @@ enum {
         SD_LLDP_OUI_802_3_SUBTYPE_LINK_AGGREGATION      = 3,
         SD_LLDP_OUI_802_3_SUBTYPE_MAXIMUM_FRAME_SIZE    = 4,
 };
-
-typedef struct sd_lldp sd_lldp;
-typedef struct sd_lldp_neighbor sd_lldp_neighbor;
-
-typedef enum sd_lldp_event {
-        SD_LLDP_EVENT_ADDED,
-        SD_LLDP_EVENT_REMOVED,
-        SD_LLDP_EVENT_UPDATED,
-        SD_LLDP_EVENT_REFRESHED,
-        _SD_LLDP_EVENT_MAX,
-        _SD_LLDP_EVENT_INVALID = -1,
-} sd_lldp_event;
-
-typedef void (*sd_lldp_callback_t)(sd_lldp *lldp, sd_lldp_event event, sd_lldp_neighbor *n, void *userdata);
-
-int sd_lldp_new(sd_lldp **ret);
-sd_lldp* sd_lldp_ref(sd_lldp *lldp);
-sd_lldp* sd_lldp_unref(sd_lldp *lldp);
-
-int sd_lldp_start(sd_lldp *lldp);
-int sd_lldp_stop(sd_lldp *lldp);
-
-int sd_lldp_attach_event(sd_lldp *lldp, sd_event *event, int64_t priority);
-int sd_lldp_detach_event(sd_lldp *lldp);
-sd_event *sd_lldp_get_event(sd_lldp *lldp);
-
-int sd_lldp_set_callback(sd_lldp *lldp, sd_lldp_callback_t cb, void *userdata);
-int sd_lldp_set_ifindex(sd_lldp *lldp, int ifindex);
-
-/* Controls how much and what to store in the neighbors database */
-int sd_lldp_set_neighbors_max(sd_lldp *lldp, uint64_t n);
-int sd_lldp_match_capabilities(sd_lldp *lldp, uint16_t mask);
-int sd_lldp_set_filter_address(sd_lldp *lldp, const struct ether_addr *address);
-
-int sd_lldp_get_neighbors(sd_lldp *lldp, sd_lldp_neighbor ***neighbors);
-
-int sd_lldp_neighbor_from_raw(sd_lldp_neighbor **ret, const void *raw, size_t raw_size);
-sd_lldp_neighbor *sd_lldp_neighbor_ref(sd_lldp_neighbor *n);
-sd_lldp_neighbor *sd_lldp_neighbor_unref(sd_lldp_neighbor *n);
-
-/* Access to LLDP frame metadata */
-int sd_lldp_neighbor_get_source_address(sd_lldp_neighbor *n, struct ether_addr* address);
-int sd_lldp_neighbor_get_destination_address(sd_lldp_neighbor *n, struct ether_addr* address);
-int sd_lldp_neighbor_get_timestamp(sd_lldp_neighbor *n, clockid_t clock, uint64_t *ret);
-int sd_lldp_neighbor_get_raw(sd_lldp_neighbor *n, const void **ret, size_t *size);
-
-/* High-level, direct, parsed out field access. These fields exist at most once, hence may be queried directly. */
-int sd_lldp_neighbor_get_chassis_id(sd_lldp_neighbor *n, uint8_t *type, const void **ret, size_t *size);
-int sd_lldp_neighbor_get_chassis_id_as_string(sd_lldp_neighbor *n, const char **ret);
-int sd_lldp_neighbor_get_port_id(sd_lldp_neighbor *n, uint8_t *type, const void **ret, size_t *size);
-int sd_lldp_neighbor_get_port_id_as_string(sd_lldp_neighbor *n, const char **ret);
-int sd_lldp_neighbor_get_ttl(sd_lldp_neighbor *n, uint16_t *ret_sec);
-int sd_lldp_neighbor_get_system_name(sd_lldp_neighbor *n, const char **ret);
-int sd_lldp_neighbor_get_system_description(sd_lldp_neighbor *n, const char **ret);
-int sd_lldp_neighbor_get_port_description(sd_lldp_neighbor *n, const char **ret);
-int sd_lldp_neighbor_get_system_capabilities(sd_lldp_neighbor *n, uint16_t *ret);
-int sd_lldp_neighbor_get_enabled_capabilities(sd_lldp_neighbor *n, uint16_t *ret);
-
-/* Low-level, iterative TLV access. This is for evertyhing else, it iteratively goes through all available TLVs
- * (including the ones covered with the calls above), and allows multiple TLVs for the same fields. */
-int sd_lldp_neighbor_tlv_rewind(sd_lldp_neighbor *n);
-int sd_lldp_neighbor_tlv_next(sd_lldp_neighbor *n);
-int sd_lldp_neighbor_tlv_get_type(sd_lldp_neighbor *n, uint8_t *type);
-int sd_lldp_neighbor_tlv_is_type(sd_lldp_neighbor *n, uint8_t type);
-int sd_lldp_neighbor_tlv_get_oui(sd_lldp_neighbor *n, uint8_t oui[_SD_ARRAY_STATIC 3], uint8_t *subtype);
-int sd_lldp_neighbor_tlv_is_oui(sd_lldp_neighbor *n, const uint8_t oui[_SD_ARRAY_STATIC 3], uint8_t subtype);
-int sd_lldp_neighbor_tlv_get_raw(sd_lldp_neighbor *n, const void **ret, size_t *size);
-
-_SD_DEFINE_POINTER_CLEANUP_FUNC(sd_lldp, sd_lldp_unref);
-_SD_DEFINE_POINTER_CLEANUP_FUNC(sd_lldp_neighbor, sd_lldp_neighbor_unref);
 
 _SD_END_DECLARATIONS;
 

@@ -1,6 +1,7 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
-#include "bus-util.h"
+#include "bus-error.h"
+#include "bus-map-properties.h"
 #include "bus-wait-for-units.h"
 #include "hashmap.h"
 #include "string-util.h"
@@ -80,6 +81,15 @@ static WaitForItem *wait_for_item_free(WaitForItem *item) {
 
 DEFINE_TRIVIAL_CLEANUP_FUNC(WaitForItem*, wait_for_item_free);
 
+static void call_unit_callback_and_wait(BusWaitForUnits *d, WaitForItem *item, bool good) {
+        d->current = item;
+
+        if (item->unit_callback)
+                item->unit_callback(d, item->bus_path, good, item->userdata);
+
+        wait_for_item_free(item);
+}
+
 static void bus_wait_for_units_clear(BusWaitForUnits *d) {
         WaitForItem *item;
 
@@ -88,12 +98,8 @@ static void bus_wait_for_units_clear(BusWaitForUnits *d) {
         d->slot_disconnected = sd_bus_slot_unref(d->slot_disconnected);
         d->bus = sd_bus_unref(d->bus);
 
-        while ((item = hashmap_first(d->items))) {
-                d->current = item;
-
-                item->unit_callback(d, item->bus_path, false, item->userdata);
-                wait_for_item_free(item);
-        }
+        while ((item = hashmap_first(d->items)))
+                call_unit_callback_and_wait(d, item, false);
 
         d->items = hashmap_free(d->items);
 }
@@ -212,13 +218,7 @@ static void wait_for_item_check_ready(WaitForItem *item) {
                         return;
         }
 
-        if (item->unit_callback) {
-                d->current = item;
-                item->unit_callback(d, item->bus_path, true, item->userdata);
-        }
-
-        wait_for_item_free(item);
-
+        call_unit_callback_and_wait(d, item, true);
         bus_wait_for_units_check_ready(d);
 }
 
@@ -289,24 +289,24 @@ static int on_properties_changed(sd_bus_message *m, void *userdata, sd_bus_error
         return 0;
 }
 
-static int on_get_all_properties(sd_bus_message *m, void *userdata, sd_bus_error *error) {
+static int on_get_all_properties(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
         WaitForItem *item = userdata;
+        const sd_bus_error *e;
         int r;
 
         assert(item);
 
-        if (sd_bus_error_is_set(error)) {
+        e = sd_bus_message_get_error(m);
+        if (e) {
                 BusWaitForUnits *d = item->parent;
 
                 d->has_failed = true;
 
-                log_debug_errno(sd_bus_error_get_errno(error), "GetAll() failed for %s: %s",
-                                item->bus_path, error->message);
+                r = sd_bus_error_get_errno(e);
+                log_debug_errno(r, "GetAll() failed for %s: %s",
+                                item->bus_path, bus_error_message(e, r));
 
-                d->current = item;
-                item->unit_callback(d, item->bus_path, false, item->userdata);
-                wait_for_item_free(item);
-
+                call_unit_callback_and_wait(d, item, false);
                 bus_wait_for_units_check_ready(d);
                 return 0;
         }
@@ -418,7 +418,7 @@ int bus_wait_for_units_run(BusWaitForUnits *d) {
                 if (r > 0)
                         continue;
 
-                r = sd_bus_wait(d->bus, (uint64_t) -1);
+                r = sd_bus_wait(d->bus, UINT64_MAX);
                 if (r < 0)
                         return r;
         }

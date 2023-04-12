@@ -4,7 +4,7 @@
 <!ENTITY % entities SYSTEM "custom-entities.ent" >
 %entities;
 ]>
-<!-- SPDX-License-Identifier: LGPL-2.1+ -->
+<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 
 <refentry id="systemd-journal-upload" conditional='HAVE_MICROHTTPD'
           xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -45,7 +45,10 @@
     Unless limited by one of the options specified below, all journal entries accessible to the user
     the program is running as will be uploaded, and then the program will wait and send new entries
     as they become available.</para>
-
+    
+    <para><command>systemd-journal-upload</command> transfers the raw content of journal file and
+    uses HTTP as a transport protocol.</para> 
+    
     <para><filename>systemd-journal-upload.service</filename> is a system service that uses
     <command>systemd-journal-upload</command> to upload journal entries to a server. It uses the
     configuration in
@@ -165,7 +168,9 @@
         <term><option>--key=</option></term>
 
         <listitem><para>
-          Takes a path to a SSL key file in PEM format.
+          Takes a path to a SSL key file in PEM format, or <option>-</option>.
+          If <option>-</option> is set, then client certificate authentication checking
+          will be disabled.
           Defaults to <filename>&CERTIFICATE_ROOT;/private/journal-upload.pem</filename>.
         </para></listitem>
       </varlistentry>
@@ -174,7 +179,9 @@
         <term><option>--cert=</option></term>
 
         <listitem><para>
-          Takes a path to a SSL certificate file in PEM format.
+          Takes a path to a SSL certificate file in PEM format, or <option>-</option>.
+          If <option>-</option> is set, then client certificate authentication checking
+          will be disabled.
           Defaults to <filename>&CERTIFICATE_ROOT;/certs/journal-upload.pem</filename>.
         </para></listitem>
       </varlistentry>
@@ -183,9 +190,8 @@
         <term><option>--trust=</option></term>
 
         <listitem><para>
-          Takes a path to a SSL CA certificate file in PEM format,
-          or <option>all</option>. If <option>all</option> is set,
-          then certificate checking will be disabled.
+          Takes a path to a SSL CA certificate file in PEM format, or <option>-</option>/<option>all</option>.
+          If <option>-</option>/<option>all</option> is set, then certificate checking will be disabled.
           Defaults to <filename>&CERTIFICATE_ROOT;/ca/trusted.pem</filename>.
         </para></listitem>
       </varlistentry>
@@ -264,7 +270,7 @@ openssl ca -batch -config ca.conf -notext -in $CLIENT.csr -out $CLIENT.pem
       those files can be specified using
       <varname>TrustedCertificateFile=</varname>,
       <varname>ServerCertificateFile=</varname>,
-      <varname>ServerKeyFile=</varname>, in
+      and <varname>ServerKeyFile=</varname> in
       <filename>/etc/systemd/journal-remote.conf</filename> and
       <filename>/etc/systemd/journal-upload.conf</filename>,
       respectively. The default locations can be queried by using

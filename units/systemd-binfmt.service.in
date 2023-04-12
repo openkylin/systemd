@@ -1,4 +1,4 @@
-#  SPDX-License-Identifier: LGPL-2.1+
+#  SPDX-License-Identifier: LGPL-2.1-or-later
 #
 #  This file is part of systemd.
 #
@@ -16,6 +16,7 @@ DefaultDependencies=no
 Conflicts=shutdown.target
 After=proc-sys-fs-binfmt_misc.automount
 After=proc-sys-fs-binfmt_misc.mount
+After=local-fs.target
 Before=sysinit.target shutdown.target
 ConditionPathIsReadWrite=/proc/sys/
 ConditionDirectoryNotEmpty=|/lib/binfmt.d
@@ -27,5 +28,6 @@ ConditionDirectoryNotEmpty=|/run/binfmt.d
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=@rootlibexecdir@/systemd-binfmt
+ExecStart={{ROOTLIBEXECDIR}}/systemd-binfmt
+ExecStop={{ROOTLIBEXECDIR}}/systemd-binfmt --unregister
 TimeoutSec=90s

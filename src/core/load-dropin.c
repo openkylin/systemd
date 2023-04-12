@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include "conf-parser.h"
 #include "fs-util.h"
@@ -13,15 +13,13 @@
 
 static int process_deps(Unit *u, UnitDependency dependency, const char *dir_suffix) {
         _cleanup_strv_free_ char **paths = NULL;
-        char **p;
         int r;
 
         r = unit_file_find_dropin_paths(NULL,
                                         u->manager->lookup_paths.search_path,
                                         u->manager->unit_path_cache,
-                                        dir_suffix,
-                                        NULL,
-                                        u->names,
+                                        dir_suffix, NULL,
+                                        u->id, u->aliases,
                                         &paths);
         if (r < 0)
                 return r;
@@ -86,7 +84,6 @@ static int process_deps(Unit *u, UnitDependency dependency, const char *dir_suff
 
 int unit_load_dropin(Unit *u) {
         _cleanup_strv_free_ char **l = NULL;
-        char **f;
         int r;
 
         assert(u);
@@ -113,13 +110,17 @@ int unit_load_dropin(Unit *u) {
                         return log_oom();
         }
 
-        STRV_FOREACH(f, u->dropin_paths)
-                (void) config_parse(u->id, *f, NULL,
-                                    UNIT_VTABLE(u)->sections,
-                                    config_item_perf_lookup, load_fragment_gperf_lookup,
-                                    0, u);
+        u->dropin_mtime = 0;
+        STRV_FOREACH(f, u->dropin_paths) {
+                struct stat st;
 
-        u->dropin_mtime = now(CLOCK_REALTIME);
+                r = config_parse(u->id, *f, NULL,
+                                 UNIT_VTABLE(u)->sections,
+                                 config_item_perf_lookup, load_fragment_gperf_lookup,
+                                 0, u, &st);
+                if (r > 0)
+                        u->dropin_mtime = MAX(u->dropin_mtime, timespec_load(&st.st_mtim));
+        }
 
         return 0;
 }

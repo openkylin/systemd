@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #if !ENABLE_DNS_OVER_TLS || !DNS_OVER_TLS_USE_GNUTLS
 #error This source file requires DNS-over-TLS to be enabled and GnuTLS to be available.
@@ -6,13 +6,15 @@
 
 #include <gnutls/socket.h>
 
+#include "io-util.h"
 #include "resolved-dns-stream.h"
 #include "resolved-dnstls.h"
+#include "resolved-manager.h"
 
 #define TLS_PROTOCOL_PRIORITY "NORMAL:-VERS-ALL:+VERS-TLS1.3:+VERS-TLS1.2"
-DEFINE_TRIVIAL_CLEANUP_FUNC(gnutls_session_t, gnutls_deinit);
+DEFINE_TRIVIAL_CLEANUP_FUNC_FULL(gnutls_session_t, gnutls_deinit, NULL);
 
-static ssize_t dnstls_stream_writev(gnutls_transport_ptr_t p, const giovec_t *iov, int iovcnt) {
+static ssize_t dnstls_stream_vec_push(gnutls_transport_ptr_t p, const giovec_t *iov, int iovcnt) {
         int r;
 
         assert(p);
@@ -27,7 +29,7 @@ static ssize_t dnstls_stream_writev(gnutls_transport_ptr_t p, const giovec_t *io
 }
 
 int dnstls_stream_connect_tls(DnsStream *stream, DnsServer *server) {
-        _cleanup_(gnutls_deinitp) gnutls_session_t gs;
+        _cleanup_(gnutls_deinitp) gnutls_session_t gs = NULL;
         int r;
 
         assert(stream);
@@ -56,15 +58,19 @@ int dnstls_stream_connect_tls(DnsStream *stream, DnsServer *server) {
         }
 
         if (server->manager->dns_over_tls_mode == DNS_OVER_TLS_YES) {
-                stream->dnstls_data.validation.type = GNUTLS_DT_IP_ADDRESS;
-                if (server->family == AF_INET) {
-                        stream->dnstls_data.validation.data = (unsigned char*) &server->address.in.s_addr;
-                        stream->dnstls_data.validation.size = 4;
-                } else {
-                        stream->dnstls_data.validation.data = server->address.in6.s6_addr;
-                        stream->dnstls_data.validation.size = 16;
+                if (server->server_name)
+                        gnutls_session_set_verify_cert(gs, server->server_name, 0);
+                else {
+                        stream->dnstls_data.validation.type = GNUTLS_DT_IP_ADDRESS;
+                        if (server->family == AF_INET) {
+                                stream->dnstls_data.validation.data = (unsigned char*) &server->address.in.s_addr;
+                                stream->dnstls_data.validation.size = 4;
+                        } else {
+                                stream->dnstls_data.validation.data = server->address.in6.s6_addr;
+                                stream->dnstls_data.validation.size = 16;
+                        }
+                        gnutls_session_set_verify_cert2(gs, &stream->dnstls_data.validation, 1, 0);
                 }
-                gnutls_session_set_verify_cert2(gs, &stream->dnstls_data.validation, 1, 0);
         }
 
         if (server->server_name) {
@@ -76,7 +82,7 @@ int dnstls_stream_connect_tls(DnsStream *stream, DnsServer *server) {
         gnutls_handshake_set_timeout(gs, GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
 
         gnutls_transport_set_ptr2(gs, (gnutls_transport_ptr_t) (long) stream->fd, stream);
-        gnutls_transport_set_vec_push_function(gs, &dnstls_stream_writev);
+        gnutls_transport_set_vec_push_function(gs, &dnstls_stream_vec_push);
 
         stream->encrypted = true;
         stream->dnstls_data.handshake = gnutls_handshake(gs);
@@ -158,17 +164,28 @@ int dnstls_stream_shutdown(DnsStream *stream, int error) {
         return 0;
 }
 
-ssize_t dnstls_stream_write(DnsStream *stream, const char *buf, size_t count) {
+ssize_t dnstls_stream_writev(DnsStream *stream, const struct iovec *iov, size_t iovcnt) {
         ssize_t ss;
 
         assert(stream);
         assert(stream->encrypted);
         assert(stream->dnstls_data.session);
-        assert(buf);
+        assert(iov);
+        assert(IOVEC_TOTAL_SIZE(iov, iovcnt) > 0);
 
-        ss = gnutls_record_send(stream->dnstls_data.session, buf, count);
+        gnutls_record_cork(stream->dnstls_data.session);
+
+        for (size_t i = 0; i < iovcnt; i++) {
+                ss = gnutls_record_send(
+                        stream->dnstls_data.session,
+                        iov[i].iov_base, iov[i].iov_len);
+                if (ss < 0)
+                        break;
+        }
+
+        ss = gnutls_record_uncork(stream->dnstls_data.session, 0);
         if (ss < 0)
-                switch(ss) {
+                switch (ss) {
                 case GNUTLS_E_INTERRUPTED:
                         return -EINTR;
                 case GNUTLS_E_AGAIN:
@@ -192,7 +209,7 @@ ssize_t dnstls_stream_read(DnsStream *stream, void *buf, size_t count) {
 
         ss = gnutls_record_recv(stream->dnstls_data.session, buf, count);
         if (ss < 0)
-                switch(ss) {
+                switch (ss) {
                 case GNUTLS_E_INTERRUPTED:
                         return -EINTR;
                 case GNUTLS_E_AGAIN:
