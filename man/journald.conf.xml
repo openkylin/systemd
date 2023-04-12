@@ -353,7 +353,7 @@
         traditional syslog daemon, to the kernel log buffer (kmsg), to the system console, or sent as wall
         messages to all logged-in users.  These options take boolean arguments. If forwarding to syslog is
         enabled but nothing reads messages from the socket, forwarding to syslog has no effect. By default,
-        only forwarding to wall is enabled. These settings may be overridden at boot time with the kernel
+        only forwarding to syslog and wall is enabled. These settings may be overridden at boot time with the kernel
         command line options <literal>systemd.journald.forward_to_syslog</literal>,
         <literal>systemd.journald.forward_to_kmsg</literal>,
         <literal>systemd.journald.forward_to_console</literal>, and
@@ -426,7 +426,7 @@
         <command>systemd-journald</command> collects generated audit records, it just controls whether it
         tells the kernel to generate them. This means if another tool turns on auditing even if
         <command>systemd-journald</command> left it off, it will still collect the generated
-        messages. Defaults to on.</para></listitem>
+        messages. Defaults to off.</para></listitem>
       </varlistentry>
 
       <varlistentry>
