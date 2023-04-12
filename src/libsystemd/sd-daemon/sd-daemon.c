@@ -1,9 +1,10 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <errno.h>
 #include <limits.h>
 #include <mqueue.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -22,24 +23,25 @@
 #include "path-util.h"
 #include "process-util.h"
 #include "socket-util.h"
+#include "stat-util.h"
 #include "strv.h"
+#include "time-util.h"
 #include "util.h"
 
 #define SNDBUF_SIZE (8*1024*1024)
 
 static void unsetenv_all(bool unset_environment) {
-
         if (!unset_environment)
                 return;
 
-        unsetenv("LISTEN_PID");
-        unsetenv("LISTEN_FDS");
-        unsetenv("LISTEN_FDNAMES");
+        assert_se(unsetenv("LISTEN_PID") == 0);
+        assert_se(unsetenv("LISTEN_FDS") == 0);
+        assert_se(unsetenv("LISTEN_FDNAMES") == 0);
 }
 
 _public_ int sd_listen_fds(int unset_environment) {
         const char *e;
-        int n, r, fd;
+        int n, r;
         pid_t pid;
 
         e = getenv("LISTEN_PID");
@@ -74,7 +76,7 @@ _public_ int sd_listen_fds(int unset_environment) {
                 goto finish;
         }
 
-        for (fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START + n; fd ++) {
+        for (int fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START + n; fd ++) {
                 r = fd_cloexec(fd, true);
                 if (r < 0)
                         goto finish;
@@ -99,7 +101,7 @@ _public_ int sd_listen_fds_with_names(int unset_environment, char ***names) {
 
         e = getenv("LISTEN_FDNAMES");
         if (e) {
-                n_names = strv_split_extract(&l, e, ":", EXTRACT_DONT_COALESCE_SEPARATORS);
+                n_names = strv_split_full(&l, e, ":", EXTRACT_DONT_COALESCE_SEPARATORS);
                 if (n_names < 0) {
                         unsetenv_all(unset_environment);
                         return n_names;
@@ -149,9 +151,7 @@ _public_ int sd_is_fifo(int fd, const char *path) {
                         return -errno;
                 }
 
-                return
-                        st_path.st_dev == st_fd.st_dev &&
-                        st_path.st_ino == st_fd.st_ino;
+                return stat_inode_same(&st_path, &st_fd);
         }
 
         return 1;
@@ -180,9 +180,7 @@ _public_ int sd_is_special(int fd, const char *path) {
                 }
 
                 if (S_ISREG(st_fd.st_mode) && S_ISREG(st_path.st_mode))
-                        return
-                                st_path.st_dev == st_fd.st_dev &&
-                                st_path.st_ino == st_fd.st_ino;
+                        return stat_inode_same(&st_path, &st_fd);
                 else if (S_ISCHR(st_fd.st_mode) && S_ISCHR(st_path.st_mode))
                         return st_path.st_rdev == st_fd.st_rdev;
                 else
@@ -414,7 +412,7 @@ _public_ int sd_is_mq(int fd, const char *path) {
         }
 
         if (path) {
-                char fpath[PATH_MAX];
+                _cleanup_free_ char *fpath = NULL;
                 struct stat a, b;
 
                 assert_return(path_is_absolute(path), -EINVAL);
@@ -422,14 +420,14 @@ _public_ int sd_is_mq(int fd, const char *path) {
                 if (fstat(fd, &a) < 0)
                         return -errno;
 
-                strncpy(stpcpy(fpath, "/dev/mqueue"), path, sizeof(fpath) - 12);
-                fpath[sizeof(fpath)-1] = 0;
+                fpath = path_join("/dev/mqueue", path);
+                if (!fpath)
+                        return -ENOMEM;
 
                 if (stat(fpath, &b) < 0)
                         return -errno;
 
-                if (a.st_dev != b.st_dev ||
-                    a.st_ino != b.st_ino)
+                if (!stat_inode_same(&a, &b))
                         return 0;
         }
 
@@ -546,9 +544,31 @@ _public_ int sd_pid_notify_with_fds(
 
 finish:
         if (unset_environment)
-                unsetenv("NOTIFY_SOCKET");
+                assert_se(unsetenv("NOTIFY_SOCKET") == 0);
 
         return r;
+}
+
+_public_ int sd_notify_barrier(int unset_environment, uint64_t timeout) {
+        _cleanup_close_pair_ int pipe_fd[2] = { -1, -1 };
+        int r;
+
+        if (pipe2(pipe_fd, O_CLOEXEC) < 0)
+                return -errno;
+
+        r = sd_pid_notify_with_fds(0, unset_environment, "BARRIER=1", &pipe_fd[1], 1);
+        if (r <= 0)
+                return r;
+
+        pipe_fd[1] = safe_close(pipe_fd[1]);
+
+        r = fd_wait_for_event(pipe_fd[0], 0 /* POLLHUP is implicit */, timeout);
+        if (r < 0)
+                return r;
+        if (r == 0)
+                return -ETIMEDOUT;
+
+        return 1;
 }
 
 _public_ int sd_pid_notify(pid_t pid, int unset_environment, const char *state) {
@@ -621,7 +641,7 @@ _public_ int sd_watchdog_enabled(int unset_environment, uint64_t *usec) {
         r = safe_atou64(s, &u);
         if (r < 0)
                 goto finish;
-        if (u <= 0 || u >= USEC_INFINITY) {
+        if (!timestamp_is_set(u)) {
                 r = -EINVAL;
                 goto finish;
         }
@@ -648,9 +668,9 @@ _public_ int sd_watchdog_enabled(int unset_environment, uint64_t *usec) {
 
 finish:
         if (unset_environment && s)
-                unsetenv("WATCHDOG_USEC");
+                assert_se(unsetenv("WATCHDOG_USEC") == 0);
         if (unset_environment && p)
-                unsetenv("WATCHDOG_PID");
+                assert_se(unsetenv("WATCHDOG_PID") == 0);
 
         return r;
 }

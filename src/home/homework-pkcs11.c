@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include "hexdecoct.h"
 #include "homework-pkcs11.h"
@@ -20,7 +20,6 @@ int pkcs11_callback(
         CK_TOKEN_INFO updated_token_info;
         size_t decrypted_key_size;
         CK_OBJECT_HANDLE object;
-        char **i;
         CK_RV rv;
         int r;
 
@@ -62,10 +61,10 @@ int pkcs11_callback(
                 goto decrypt;
         }
 
-        if (strv_isempty(data->secret->pkcs11_pin))
-                return log_error_errno(SYNTHETIC_ERRNO(ENOANO), "Security Token requires PIN.");
+        if (strv_isempty(data->secret->token_pin))
+                return log_error_errno(SYNTHETIC_ERRNO(ENOANO), "Security token requires PIN.");
 
-        STRV_FOREACH(i, data->secret->pkcs11_pin) {
+        STRV_FOREACH(i, data->secret->token_pin) {
                 rv = m->C_Login(session, CKU_USER, (CK_UTF8CHAR*) *i, strlen(*i));
                 if (rv == CKR_OK) {
                         log_info("Successfully logged into security token '%s' with PIN.", token_label);

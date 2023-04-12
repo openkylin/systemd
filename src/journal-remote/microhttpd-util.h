@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 #pragma once
 
 #include <microhttpd.h>
@@ -38,13 +38,23 @@
 #  define MHD_HTTP_NOT_ACCEPTABLE MHD_HTTP_METHOD_NOT_ACCEPTABLE
 #endif
 
-/* Renamed in µhttpd 0.9.53 */
-#ifndef MHD_HTTP_PAYLOAD_TOO_LARGE
-#  define MHD_HTTP_PAYLOAD_TOO_LARGE MHD_HTTP_REQUEST_ENTITY_TOO_LARGE
+/* Renamed in µhttpd 0.9.74 (8c644fc1f4d498ea489add8d40a68f5d3e5899fa) */
+#ifndef MHD_HTTP_CONTENT_TOO_LARGE
+#  ifdef MHD_HTTP_PAYLOAD_TOO_LARGE
+#    define MHD_HTTP_CONTENT_TOO_LARGE MHD_HTTP_PAYLOAD_TOO_LARGE /* 0.9.53 or newer */
+#  else
+#    define MHD_HTTP_CONTENT_TOO_LARGE MHD_HTTP_REQUEST_ENTITY_TOO_LARGE
+#  endif
 #endif
 
 #if MHD_VERSION < 0x00094203
 #  define MHD_create_response_from_fd_at_offset64 MHD_create_response_from_fd_at_offset
+#endif
+
+#if MHD_VERSION >= 0x00097002
+#  define mhd_result enum MHD_Result
+#else
+#  define mhd_result int
 #endif
 
 void microhttpd_logger(void *arg, const char *fmt, va_list ap) _printf_(2, 0);
@@ -74,5 +84,5 @@ int check_permissions(struct MHD_Connection *connection, int *code, char **hostn
  */
 int setup_gnutls_logger(char **categories);
 
-DEFINE_TRIVIAL_CLEANUP_FUNC(struct MHD_Daemon*, MHD_stop_daemon);
-DEFINE_TRIVIAL_CLEANUP_FUNC(struct MHD_Response*, MHD_destroy_response);
+DEFINE_TRIVIAL_CLEANUP_FUNC_FULL(struct MHD_Daemon*, MHD_stop_daemon, NULL);
+DEFINE_TRIVIAL_CLEANUP_FUNC_FULL(struct MHD_Response*, MHD_destroy_response, NULL);

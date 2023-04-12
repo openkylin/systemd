@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <stdlib.h>
 
@@ -16,13 +16,20 @@ int main(int argc, char *argv[]) {
         _cleanup_close_ int fd = -1;
         ssize_t n;
         size_t l;
+        int r;
+
+        r = rearrange_stdio(-1, -1, -1);
+        if (r < 0) {
+                log_error_errno(r, "Failed to connect stdin/stdout/stderr with /dev/null: %m");
+                return EXIT_FAILURE;
+        }
 
         if (argc != 2) {
                 log_error("Incorrect number of arguments.");
                 return EXIT_FAILURE;
         }
 
-        log_setup_service();
+        log_setup();
 
         fd = socket(AF_UNIX, SOCK_DGRAM|SOCK_CLOEXEC, 0);
         if (fd < 0) {

@@ -2,6 +2,7 @@
 title: Random Seeds
 category: Concepts
 layout: default
+SPDX-License-Identifier: LGPL-2.1-or-later
 ---
 
 # Random Seeds
@@ -118,7 +119,7 @@ requires random numbers as well, including for the following uses:
 
 * systemd maintains various hash tables internally. In order to harden them
   against [collision
-  attacks](https://rt.perl.org/Public/Bug/Display.html?CSRF_Token=165691af9ddaa95f653402f1b68de728)
+  attacks](https://www.cs.auckland.ac.nz/~mcw/Teaching/refs/misc/denial-of-service.pdf)
   they are seeded with random numbers.
 
 * At various places systemd needs random bytes for temporary file name
@@ -143,33 +144,11 @@ acquired.
 ## Keeping `systemd'`s Demand on the Kernel Entropy Pool Minimal
 
 Since most of systemd's own use of random numbers do not require
-cryptographic-grade RNGs, it tries to avoid reading entropy from the kernel
-entropy pool if possible. If it succeeds this has the benefit that there's no
-need to delay the early boot process until entropy is available, and noisy
-kernel log messages about early reading from `/dev/urandom` are avoided
-too. Specifically:
-
-1. When generating [Type 4
-   UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_\(random\)),
-   systemd tries to use Intel's and AMD's RDRAND CPU opcode directly, if
-   available. While some doubt the quality and trustworthiness of the entropy
-   provided by these opcodes, they should be good enough for generating UUIDs,
-   if not key material (though, as mentioned, today's big distributions opted
-   to trust it for that too, now, see above — but we are not going to make that
-   decision for you, and for anything key material related will only use the
-   kernel's entropy pool). If RDRAND is not available or doesn't work, it will
-   use synchronous `getrandom()` as fallback, and `/dev/urandom` on old kernels
-   where that system call doesn't exist yet. This means on non-Intel/AMD
-   systems UUID generation will block on kernel entropy initialization.
-
-2. For seeding hash tables, and all the other similar purposes systemd first
-   tries RDRAND, and if that's not available will try to use asynchronous
-   `getrandom()` (if the kernel doesn't support this system call,
-   `/dev/urandom` is used). This may fail too in case the pool is not
-   initialized yet, in which case it will fall back to glibc's internal rand()
-   calls, i.e. weak pseudo-random numbers. This should make sure we use good
-   random bytes if we can, but neither delay boot nor trigger noisy kernel log
-   messages during early boot for these use-cases.
+cryptographic-grade RNGs, it tries to avoid blocking reads to the kernel's RNG,
+opting instead for using `getrandom(GRND_INSECURE)`. After the pool is
+initialized, this is identical to `getrandom(0)`, returning cryptographically
+secure random numbers, but before it's initialized it has the nice effect of
+not blocking system boot.
 
 ## `systemd`'s Support for Filling the Kernel Entropy Pool
 
@@ -212,10 +191,10 @@ boot, in order to ensure the entropy pool is filled up quickly.
    random-seed`](https://www.freedesktop.org/software/systemd/man/bootctl.html#random-seed))
    a seed file with an initial seed is placed in a file `/loader/random-seed`
    in the ESP. In addition, an identically sized randomized EFI variable called
-   the the 'system token' is set, which is written to the machine's firmware
-   NVRAM. During boot, when `systemd-boot` finds both the random seed file and
-   the system token they are combined and hashed with SHA256 (in counter mode,
-   to generate sufficient data), to generate a new random seed file to store in
+   the 'system token' is set, which is written to the machine's firmware NVRAM.
+   During boot, when `systemd-boot` finds both the random seed file and the
+   system token they are combined and hashed with SHA256 (in counter mode, to
+   generate sufficient data), to generate a new random seed file to store in
    the ESP as well as a random seed to pass to the OS kernel. The new random
    seed file for the ESP is then written to the ESP, ensuring this is completed
    before the OS is invoked. Very early during initialization PID 1 will read
@@ -257,7 +236,16 @@ boot, in order to ensure the entropy pool is filled up quickly.
    file. If done, `systemd-boot` will use the random seed file even if no
    system token is found in EFI variables.
 
-With the three mechanisms described above it should be possible to provide
+4. A kernel command line option `systemd.random_seed=` may be used to pass in a
+   base64 encoded seed to initialize the kernel's entropy pool from during
+   early service manager initialization. This option is only safe in testing
+   environments, as the random seed passed this way is accessible to
+   unprivileged programs via `/proc/cmdline`. Using this option outside of
+   testing environments is a security problem since cryptographic key material
+   derived from the entropy pool initialized with a seed accessible to
+   unprivileged programs should not be considered secret.
+
+With the four mechanisms described above it should be possible to provide
 early-boot entropy in most cases. Specifically:
 
 1. On EFI systems, `systemd-boot`'s random seed logic should make sure good
@@ -267,12 +255,11 @@ early-boot entropy in most cases. Specifically:
 2. On virtualized systems, the early `virtio-rng` hookup should ensure entropy
    is available early on — as long as the VM environment provides virtualized
    RNG devices, which they really should all do in 2019. Complain to your
-   hosting provider if they don't.
+   hosting provider if they don't. For VMs used in testing environments,
+   `systemd.random_seed=` may be used as an alternative to a virtualized RNG.
 
-3. On Intel/AMD systems systemd's own reliance on the kernel entropy pool is
-   minimal (as RDRAND is used on those for UUID generation). This only works if
-   the CPU has RDRAND of course, which most physical CPUs do (but I hear many
-   virtualized CPUs do not. Pity.)
+3. In general, systemd's own reliance on the kernel entropy pool is minimal
+   (due to the use of `GRND_INSECURE`).
 
 4. In all other cases, `systemd-random-seed.service` will help a bit, but — as
    mentioned — is too late to help with early boot.
@@ -286,8 +273,9 @@ This primarily leaves two kind of systems in the cold:
    boot. Alternatively, consider implementing a solution similar to
    systemd-boot's random seed concept in your platform's boot loader.
 
-2. Virtualized environments that lack both virtio-rng and RDRAND. Tough
-   luck. Talk to your hosting provider, and ask them to fix this.
+2. Virtualized environments that lack both virtio-rng and RDRAND, outside of
+   test environments. Tough luck. Talk to your hosting provider, and ask them
+   to fix this.
 
 3. Also note: if you deploy an image without any random seed and/or without
    installing any 'system token' in an EFI variable, as described above, this
@@ -399,8 +387,8 @@ This primarily leaves two kind of systems in the cold:
     [systemd-boot(7)](https://www.freedesktop.org/software/systemd/man/systemd-boot.html)
     for an introduction why. That said, any boot loader can re-implement the
     logic described above, and can pass a random seed that systemd as PID 1
-    will then upload into the kernel's entropy pool. For details see the [Boot
-    Loader Interface](https://systemd.io/BOOT_LOADER_INTERFACE) documentation.
+    will then upload into the kernel's entropy pool. For details see the
+    [Boot Loader Interface](BOOT_LOADER_INTERFACE.md) documentation.
 
 11. *Why not pass the boot loader random seed via kernel command line instead
     of as EFI variable?*
@@ -409,6 +397,10 @@ This primarily leaves two kind of systems in the cold:
     `/proc/cmdline`. It's not desirable if unprivileged processes can use this
     information to possibly gain too much information about the current state
     of the kernel's entropy pool.
+
+    That said, we actually do implement this with the `systemd.random_seed=`
+    kernel command line option. Don't use this outside of testing environments,
+    however, for the aforementioned reasons.
 
 12. *Why doesn't `systemd-boot` rewrite the 'system token' too each time
     when updating the random seed file stored in the ESP?*

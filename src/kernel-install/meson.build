@@ -1,14 +1,19 @@
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
-install_data('kernel-install',
-             install_mode : 'rwxr-xr-x',
-             install_dir : bindir)
+kernel_install_in = files('kernel-install.in')
 
-install_data('00-entry-directory.install',
-             '50-depmod.install',
-             '90-loaderentry.install',
-             install_mode : 'rwxr-xr-x',
-             install_dir : kernelinstalldir)
+if want_kernel_install
+        install_data('50-depmod.install',
+                     '90-loaderentry.install',
+                     install_mode : 'rwxr-xr-x',
+                     install_dir : kernelinstalldir)
 
-meson.add_install_script('sh', '-c',
-                         mkdir_p.format(join_paths(sysconfdir, 'kernel/install.d')))
+        install_data('install.conf',
+                     install_dir : kerneldir)
+
+        if install_sysconfdir
+                meson.add_install_script('sh', '-c',
+                                         mkdir_p.format(sysconfdir / 'kernel/install.d'))
+        endif
+
+endif

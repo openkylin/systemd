@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <errno.h>
 #include <net/if.h>
@@ -38,7 +38,7 @@ static void ll_handler(sd_ipv4ll *ll, int event, void *userdata) {
                 log_error("the client was stopped with address %s", strna(address));
                 break;
         default:
-                assert_not_reached("invalid LL event");
+                assert_not_reached();
         }
 }
 

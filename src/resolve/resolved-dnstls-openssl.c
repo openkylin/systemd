@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #if !ENABLE_DNS_OVER_TLS || !DNS_OVER_TLS_USE_OPENSSL
 #error This source file requires DNS-over-TLS to be enabled and OpenSSL to be available.
@@ -6,13 +6,13 @@
 
 #include <openssl/bio.h>
 #include <openssl/err.h>
+#include <openssl/x509v3.h>
 
 #include "io-util.h"
+#include "openssl-util.h"
 #include "resolved-dns-stream.h"
 #include "resolved-dnstls.h"
-
-DEFINE_TRIVIAL_CLEANUP_FUNC(SSL*, SSL_free);
-DEFINE_TRIVIAL_CLEANUP_FUNC(BIO*, BIO_free);
+#include "resolved-manager.h"
 
 static int dnstls_flush_write_buffer(DnsStream *stream) {
         ssize_t ss;
@@ -80,13 +80,19 @@ int dnstls_stream_connect_tls(DnsStream *stream, DnsServer *server) {
 
         if (server->manager->dns_over_tls_mode == DNS_OVER_TLS_YES) {
                 X509_VERIFY_PARAM *v;
-                const unsigned char *ip;
 
                 SSL_set_verify(s, SSL_VERIFY_PEER, NULL);
                 v = SSL_get0_param(s);
-                ip = server->family == AF_INET ? (const unsigned char*) &server->address.in.s_addr : server->address.in6.s6_addr;
-                if (X509_VERIFY_PARAM_set1_ip(v, ip, FAMILY_ADDRESS_SIZE(server->family)) == 0)
-                        return -ECONNREFUSED;
+                if (server->server_name) {
+                        X509_VERIFY_PARAM_set_hostflags(v, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+                        if (X509_VERIFY_PARAM_set1_host(v, server->server_name, 0) == 0)
+                                return -ECONNREFUSED;
+                } else {
+                        const unsigned char *ip;
+                        ip = server->family == AF_INET ? (const unsigned char*) &server->address.in.s_addr : server->address.in6.s6_addr;
+                        if (X509_VERIFY_PARAM_set1_ip(v, ip, FAMILY_ADDRESS_SIZE(server->family)) == 0)
+                                return -ECONNREFUSED;
+                }
         }
 
         if (server->server_name) {
@@ -286,14 +292,9 @@ int dnstls_stream_shutdown(DnsStream *stream, int error) {
         return 0;
 }
 
-ssize_t dnstls_stream_write(DnsStream *stream, const char *buf, size_t count) {
+static ssize_t dnstls_stream_write(DnsStream *stream, const char *buf, size_t count) {
         int error, r;
         ssize_t ss;
-
-        assert(stream);
-        assert(stream->encrypted);
-        assert(stream->dnstls_data.ssl);
-        assert(buf);
 
         ERR_clear_error();
         ss = r = SSL_write(stream->dnstls_data.ssl, buf, count);
@@ -323,6 +324,29 @@ ssize_t dnstls_stream_write(DnsStream *stream, const char *buf, size_t count) {
         return ss;
 }
 
+ssize_t dnstls_stream_writev(DnsStream *stream, const struct iovec *iov, size_t iovcnt) {
+        _cleanup_free_ char *buf = NULL;
+        size_t count;
+
+        assert(stream);
+        assert(stream->encrypted);
+        assert(stream->dnstls_data.ssl);
+        assert(iov);
+        assert(IOVEC_TOTAL_SIZE(iov, iovcnt) > 0);
+
+        if (iovcnt == 1)
+                return dnstls_stream_write(stream, iov[0].iov_base, iov[0].iov_len);
+
+        /* As of now, OpenSSL can not accumulate multiple writes, so join into a
+           single buffer. Suboptimal, but better than multiple SSL_write calls. */
+        count = IOVEC_TOTAL_SIZE(iov, iovcnt);
+        buf = new(char, count);
+        for (size_t i = 0, pos = 0; i < iovcnt; pos += iov[i].iov_len, i++)
+                memcpy(buf + pos, iov[i].iov_base, iov[i].iov_len);
+
+        return dnstls_stream_write(stream, buf, count);
+}
+
 ssize_t dnstls_stream_read(DnsStream *stream, void *buf, size_t count) {
         int error, r;
         ssize_t ss;
@@ -337,7 +361,15 @@ ssize_t dnstls_stream_read(DnsStream *stream, void *buf, size_t count) {
         if (r <= 0) {
                 error = SSL_get_error(stream->dnstls_data.ssl, r);
                 if (IN_SET(error, SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE)) {
-                        stream->dnstls_events = error == SSL_ERROR_WANT_READ ? EPOLLIN : EPOLLOUT;
+                        /* If we receive SSL_ERROR_WANT_READ here, there are two possible scenarios:
+                           * OpenSSL needs to renegotiate (so we want to get an EPOLLIN event), or
+                           * There is no more application data is available, so we can just return
+                           And apparently there's no nice way to distinguish between the two.
+                           To handle this, never set EPOLLIN and just continue as usual.
+                           If OpenSSL really wants to read due to renegotiation, it will tell us
+                           again on SSL_write (at which point we will request EPOLLIN force a read);
+                           or we will just eventually read data anyway while we wait for a packet */
+                        stream->dnstls_events = error == SSL_ERROR_WANT_READ ? 0 : EPOLLOUT;
                         ss = -EAGAIN;
                 } else if (error == SSL_ERROR_ZERO_RETURN) {
                         stream->dnstls_events = 0;

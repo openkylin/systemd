@@ -1,7 +1,8 @@
 ---
 title: JSON User Records
-category: Interfaces
+category: Users, Groups and Home Directories
 layout: default
+SPDX-License-Identifier: LGPL-2.1-or-later
 ---
 
 # JSON User Records
@@ -13,8 +14,8 @@ pairs, encoded as JSON. Specifically:
 
 1. [`systemd-homed.service`](https://www.freedesktop.org/software/systemd/man/systemd-homed.service.html)
    manages `human` user home directories and embeds these JSON records
-   directly in the home directory images (see [Home
-   Directories](https://systemd.io/HOME_DIRECTORY)) for details.
+   directly in the home directory images
+   (see [Home Directories](HOME_DIRECTORY.md) for details).
 
 2. [`pam_systemd`](https://www.freedesktop.org/software/systemd/man/pam_systemd.html)
    processes these JSON records for users that log in, and applies various
@@ -70,12 +71,15 @@ the following extensions are envisioned:
 
 4. Default parameters for backup applications and similar
 
-Similar to JSON User Records there are also [JSON Group
-Records](https://systemd.io/GROUP_RECORD) that encapsulate UNIX groups.
+Similar to JSON User Records there are also
+[JSON Group Records](GROUP_RECORD.md) that encapsulate UNIX groups.
 
 JSON User Records may be transferred or written to disk in various protocols
 and formats. To inquire about such records defined on the local system use the
-[User/Group Lookup API via Varlink](https://systemd.io/USER_GROUP_API).
+[User/Group Lookup API via Varlink](USER_GROUP_API.md). User/group records may
+also be dropped in number of drop-in directories as files. See
+[`nss-systemd(8)`](https://www.freedesktop.org/software/systemd/man/nss-systemd.html)
+for details.
 
 ## Why JSON?
 
@@ -83,6 +87,11 @@ JSON is nicely extensible and widely used. In particular it's easy to
 synthesize and process with numerous programming languages. It's particularly
 popular in the web communities, which hopefully should make it easy to link
 user credential data from the web and from local systems more closely together.
+
+Please note that this specification assumes that JSON numbers may cover the full
+integer range of -2^63 … 2^64-1 without loss of precision (i.e. INT64_MIN …
+UINT64_MAX). Please read, write and process user records as defined by this
+specification only with JSON implementations that provide this number range.
 
 ## General Structure
 
@@ -180,7 +189,7 @@ strictly local context and without signatures doesn't have to deal with the
 `perMachine` or `binding` sections and can include its data exclusively in the
 regular section. A service that uses a separate, private channel for
 authenticating users (or that doesn't have a concept of authentication at all)
-does not need to to be concerned with the `secret` section of user records, as
+does not need to be concerned with the `secret` section of user records, as
 the fields included therein are only useful when executing authentication
 operations natively against JSON user records.
 
@@ -205,7 +214,8 @@ object. The following fields are currently defined:
 UNIX user name. This field is the only mandatory field, all others are
 optional. Corresponds with the `pw_name` field of of `struct passwd` and the
 `sp_namp` field of `struct spwd` (i.e. the shadow user record stored in
-`/etc/shadow`).
+`/etc/shadow`). See [User/Group Name Syntax](USER_NAMES.md) for
+the (relaxed) rules the various systemd components enforce on user/group names.
 
 `realm` → The "realm" a user is defined in. This concept allows distinguishing
 users with the same name that originate in different organizations or
@@ -220,12 +230,14 @@ optional, when unset the user should not be considered part of any realm. A
 user record with a realm set is never compatible (for the purpose of updates,
 see above) with a user record without one set, even if the `userName` field matches.
 
-`realName` → The real name of the user, a string. This should contain the user's
-real ("human") name, and corresponds loosely to the GECOS field of classic UNIX
-user records. When converting a `struct passwd` to a JSON user record this
-field is initialized from GECOS (i.e. the `pw_gecos` field), and vice versa
-when converting back. That said, unlike GECOS this field is supposed to contain
-only the real name and no other information.
+`realName` → The real name of the user, a string. This should contain the
+user's real ("human") name, and corresponds loosely to the GECOS field of
+classic UNIX user records. When converting a `struct passwd` to a JSON user
+record this field is initialized from GECOS (i.e. the `pw_gecos` field), and
+vice versa when converting back. That said, unlike GECOS this field is supposed
+to contain only the real name and no other information. This field must not
+contain control characters (such as `\n`) or colons (`:`), since those are used
+as record separators in classic `/etc/passwd` files and similar formats.
 
 `emailAddress` → The email address of the user, formatted as
 string. [`pam_systemd`](https://www.freedesktop.org/software/systemd/man/pam_systemd.html)
@@ -320,7 +332,7 @@ values, which is then inherited by all the user's processes, see
 [`setrlimit()`](http://man7.org/linux/man-pages/man2/setrlimit.2.html) for more
 information.
 
-`locked` → A boolean value. If true the user account is locked, the user may
+`locked` → A boolean value. If true, the user account is locked, the user may
 not log in. If this field is missing it should be assumed to be false,
 i.e. logins are permitted. This field corresponds to the `sp_expire` field of
 `struct spwd` (i.e. the `/etc/shadow` data for a user) being set to zero or
@@ -346,11 +358,11 @@ directory, also containing the `~/.identity` user record; `luks` is a per-user
 LUKS volume that is mounted as home directory, and `cifs` a home directory
 mounted from a Windows File Share. The five latter types are primarily used by
 `systemd-homed` when managing home directories, but may be used if other
-managers are used too. If this is not set `classic` is the implied default.
+managers are used too. If this is not set, `classic` is the implied default.
 
 `diskSize` → An unsigned 64bit integer, indicating the intended home directory
 disk space in bytes to assign to the user. Depending on the selected storage
-type this might be implement differently: for `luks` this is the intended size
+type this might be implemented differently: for `luks` this is the intended size
 of the file system and LUKS volume, while for the others this likely translates
 to classic file system quota settings.
 
@@ -367,11 +379,11 @@ directory is first created, and defaults to `/etc/skel` if not defined.
 access mask for the home directory when it is first created.
 
 `tasksMax` → Takes an unsigned 64bit integer indicating the maximum number of
-tasks the user may start in parallel during system runtime. This value is
-enforced on all tasks (i.e. processes and threads) the user starts or that are
-forked off these processes regardless if the change user identity (for example
-by setuid binaries/`su`/`sudo` and
-similar). [`systemd-logind.service`](https://www.freedesktop.org/software/systemd/man/systemd-logind.service.html)
+tasks the user may start in parallel during system runtime. This counts
+all tasks (i.e. threads, where each process is at least one thread) the user starts or that are
+forked from these processes even if the user identity is changed (for example
+by setuid binaries/`su`/`sudo` and similar).
+[`systemd-logind.service`](https://www.freedesktop.org/software/systemd/man/systemd-logind.service.html)
 enforces this by setting the `TasksMax` slice property for the user's slice
 `user-$UID.slice`.
 
@@ -403,11 +415,16 @@ useful when `cifs` is used as storage mechanism for the user's home directory,
 see above.
 
 `cifsService` → A string indicating the Windows File Share service (CIFS) to
-mount as home directory of the user on login.
+mount as home directory of the user on login. Should be in format
+`//<host>/<service>/<directory/…>`. The directory part is optional. If missing
+the top-level directory of the CIFS share is used.
+
+`cifsExtraMountOptions` → A string with additional mount options to pass to
+`mount.cifs` when mounting the home directory CIFS share.
 
 `imagePath` → A string with an absolute file system path to the file, directory
 or block device to use for storage backing the home directory. If the `luks`
-storage is used this refers to the loopback file or block device node to store
+storage is used, this refers to the loopback file or block device node to store
 the LUKS volume on. For `fscrypt`, `directory`, `subvolume` this refers to the
 directory to bind mount as home directory on login. Not defined for `classic`
 or `cifs`.
@@ -447,12 +464,19 @@ relevant when the storage mechanism used is `luks`.
 referencing the file system UUID the home directory is located in. This is
 primarily relevant when the storage mechanism used is `luks`.
 
-`luksDiscard` → A boolean. If true and `luks` storage is used controls whether
+`luksDiscard` → A boolean. If true and `luks` storage is used, controls whether
 the loopback block devices, LUKS and the file system on top shall be used in
 `discard` mode, i.e. erased sectors should always be returned to the underlying
 storage. If false and `luks` storage is used turns this behavior off. In
 addition, depending on this setting an `FITRIM` or `fallocate()` operation is
 executed to make sure the image matches the selected option.
+
+`luksOfflineDiscard` → A boolean. Similar to `luksDiscard`, it controls whether
+to trim/allocate the file system/backing file when deactivating the home
+directory.
+
+`luksExtraMountOptions` → A string with additional mount options to append to
+the default mount options for the file system in the LUKS volume.
 
 `luksCipher` → A string, indicating the cipher to use for the LUKS storage mechanism.
 
@@ -475,6 +499,18 @@ memory cost for the PBKDF operation, when LUKS storage is used, in bytes.
 
 `luksPbkdfParallelThreads` → An unsigned 64bit integer, indicating the intended
 required parallel threads for the PBKDF operation, when LUKS storage is used.
+
+`autoResizeMode` → A string, one of `off`, `grow`, `shrink-and-grow`. Unless
+set to `off`, controls whether the home area shall be grown automatically to
+the size configured in `diskSize` automatically at login time. If set to
+`shrink-and-grown` the home area is also shrunk to the minimal size possible
+(as dictated by used disk space and file system constraints) on logout.
+
+`rebalanceWeight` → An unsigned integer, `null` or a boolean. Configures the
+free disk space rebalancing weight for the home area. The integer must be in
+the range 1…10000 to configure an explicit weight. If unset, or set to `null`
+or `true` the default weight of 100 is implied. If set to 0 or `false`
+rebalancing is turned off for this home area.
 
 `service` → A string declaring the service that defines or manages this user
 record. It is recommended to use reverse domain name notation for this. For
@@ -541,7 +577,17 @@ below). It's undefined how precise the URI is: during log-in it is tested
 against all plugged in security tokens and if there's exactly one matching
 private key found with it it is used.
 
-`privileged` → An object, which contains the fields of he `privileged` section
+`fido2HmacCredential` → An array of strings, each with a Base64-encoded FIDO2
+credential ID that shall be used for authentication with FIDO2 devices that
+implement the `hmac-secret` extension. The salt to pass to the FIDO2 device is
+found in `fido2HmacSalt`.
+
+`recoveryKeyType` → An array of strings, each indicating the type of one
+recovery key. The only supported recovery key type at the moment is `modhex64`,
+for details see the description of `recoveryKey` below. An account may have any
+number of recovery keys defined, and the array should have one entry for each.
+
+`privileged` → An object, which contains the fields of the `privileged` section
 of the user record, see below.
 
 `perMachine` → An array of objects, which contain the `perMachine` section of
@@ -577,7 +623,7 @@ restrictive access semantics. The following fields are currently defined:
 be a string like "What's the name of your first pet?", but is entirely for the
 user to choose.
 
-`hashPassword` → An array of strings, each containing a hashed UNIX password
+`hashedPassword` → An array of strings, each containing a hashed UNIX password
 string, in the format
 [`crypt(3)`](http://man7.org/linux/man-pages/man3/crypt.3.html) generates. This
 corresponds with `sp_pwdp` field of `struct spwd` (and in a way the `pw_passwd`
@@ -589,7 +635,7 @@ as the lines in the traditional `~/.ssh/authorized_key` file.
 
 `pkcs11EncryptedKey` → An array of objects. Each element of the array should be
 an object consisting of three string fields: `uri` shall contain a PKCS#11
-security token URI, `data` shall contain a Base64 encoded encrypted key and
+security token URI, `data` shall contain a Base64-encoded encrypted key and
 `hashedPassword` shall contain a UNIX password hash to test the key
 against. Authenticating with a security token against this account shall work
 as follows: the encrypted secret key is converted from its Base64
@@ -597,12 +643,50 @@ representation into binary, then decrypted with the PKCS#11 `C_Decrypt()`
 function of the PKCS#11 module referenced by the specified URI, using the
 private key found on the same token. The resulting decrypted key is then
 Base64-encoded and tested against the specified UNIX hashed password. The
-Base64-enceded decrypted key may also be used to unlock further resources
+Base64-encoded decrypted key may also be used to unlock further resources
 during log-in, for example the LUKS or `fscrypt` storage backend. It is
 generally recommended that for each entry in `pkcs11EncryptedKey` there's also
 a matching one in `pkcs11TokenUri` and vice versa, with the same URI, appearing
 in the same order, but this should not be required by applications processing
 user records.
+
+`fido2HmacSalt` → An array of objects, implementing authentication support with
+FIDO2 devices that implement the `hmac-secret` extension. Each element of the
+array should be an object consisting of three string fields: `credential`,
+`salt`, `hashedPassword`, and three boolean fields: `up`, `uv` and
+`clientPin`. The first two string fields shall contain Base64-encoded binary
+data: the FIDO2 credential ID and the salt value to pass to the FIDO2
+device. During authentication this salt along with the credential ID is sent to
+the FIDO2 token, which will HMAC hash the salt with its internal secret key and
+return the result. This resulting binary key should then be Base64-encoded and
+used as string password for the further layers of the stack. The
+`hashedPassword` field of the `fido2HmacSalt` field shall be a UNIX password
+hash to test this derived secret key against for authentication. The `up`, `uv`
+and `clientPin` booleans map to the FIDO2 concepts of the same name and encode
+whether the `uv`/`up` options are enabled during the authentication, and
+whether a PIN shall be required. It is generally recommended that for each
+entry in `fido2HmacSalt` there's also a matching one in `fido2HmacCredential`,
+and vice versa, with the same credential ID, appearing in the same order, but
+this should not be required by applications processing user records.
+
+`recoveryKey`→ An array of objects, each defining a recovery key. The object
+has two mandatory fields: `type` indicates the type of recovery key. The only
+currently permitted value is the string `modhex64`. The `hashedPassword` field
+contains a UNIX password hash of the normalized recovery key. Recovery keys are
+in most ways similar to regular passwords, except that they are generated by
+the computer, not chosen by the user, and are longer. Currently, the only
+supported recovery key format is `modhex64`, which consists of 64
+[modhex](https://developers.yubico.com/yubico-c/Manuals/modhex.1.html)
+characters (i.e. 256bit of information), in groups of 8 chars separated by
+dashes,
+e.g. `lhkbicdj-trbuftjv-tviijfck-dfvbknrh-uiulbhui-higltier-kecfhkbk-egrirkui`. Recovery
+keys should be accepted wherever regular passwords are. The `recoveryKey` field
+should always be accompanied by a `recoveryKeyType` field (see above), and each
+entry in either should map 1:1 to an entry in the other, in the same order and
+matching the type. When accepting a recovery key it should be brought
+automatically into normalized form, i.e. the dashes inserted when missing, and
+converted into lowercase before tested against the UNIX password hash, so that
+recovery keys are effectively case-insensitive.
 
 ## Fields in the `perMachine` section
 
@@ -626,11 +710,11 @@ in full).
 
 The following fields are defined in this section:
 
-`matchMachineId` → An array of strings with each a formatted 128bit ID in
+`matchMachineId` → An array of strings that are formatted 128bit IDs in
 hex. If any of the specified IDs match the system's local machine ID
 (i.e. matches `/etc/machine-id`) the fields in this object are honored.
 
-`matchHostname` → An array of string with a each a valid hostname. If any of
+`matchHostname` → An array of strings that are valid hostnames. If any of
 the specified hostnames match the system's local hostname, the fields in this
 object are honored. If both `matchHostname` and `matchMachineId` are used
 within the same array entry, the object is honored when either match succeeds,
@@ -645,14 +729,17 @@ that may be used in this section are identical to the equally named ones in the
 `notAfterUSec`, `storage`, `diskSize`, `diskSizeRelative`, `skeletonDirectory`,
 `accessMode`, `tasksMax`, `memoryHigh`, `memoryMax`, `cpuWeight`, `ioWeight`,
 `mountNoDevices`, `mountNoSuid`, `mountNoExecute`, `cifsDomain`,
-`cifsUserName`, `cifsService`, `imagePath`, `uid`, `gid`, `memberOf`,
-`fileSystemType`, `partitionUuid`, `luksUuid`, `fileSystemUuid`, `luksDiscard`,
-`luksCipher`, `luksCipherMode`, `luksVolumeKeySize`, `luksPbkdfHashAlgorithm`,
+`cifsUserName`, `cifsService`, `cifsExtraMountOptions`, `imagePath`, `uid`,
+`gid`, `memberOf`, `fileSystemType`, `partitionUuid`, `luksUuid`,
+`fileSystemUuid`, `luksDiscard`, `luksOfflineDiscard`, `luksCipher`,
+`luksCipherMode`, `luksVolumeKeySize`, `luksPbkdfHashAlgorithm`,
 `luksPbkdfType`, `luksPbkdfTimeCostUSec`, `luksPbkdfMemoryCost`,
-`luksPbkdfParallelThreads`, `rateLimitIntervalUSec`, `rateLimitBurst`,
-`enforcePasswordPolicy`, `autoLogin`, `stopDelayUSec`, `killProcesses`,
-`passwordChangeMinUSec`, `passwordChangeMaxUSec`, `passwordChangeWarnUSec`,
-`passwordChangeInactiveUSec`, `passwordChangeNow`, `pkcs11TokenUri`.
+`luksPbkdfParallelThreads`, `autoResizeMode`, `rebalanceWeight`,
+`rateLimitIntervalUSec`, `rateLimitBurst`, `enforcePasswordPolicy`,
+`autoLogin`, `stopDelayUSec`, `killProcesses`, `passwordChangeMinUSec`,
+`passwordChangeMaxUSec`, `passwordChangeWarnUSec`,
+`passwordChangeInactiveUSec`, `passwordChangeNow`, `pkcs11TokenUri`,
+`fido2HmacCredential`.
 
 ## Fields in the `binding` section
 
@@ -791,6 +878,12 @@ on removable media the delay is selected very low to minimize the chance the
 home directory remains in unclean state if the storage device is removed from
 the system by the user).
 
+`accessMode` → The access mode currently in effect for the home directory
+itself.
+
+`fileSystemType` → The file system type backing the home directory: a short
+string, such as "btrfs", "ext4", "xfs".
+
 ## Fields in the `signature` section
 
 As mentioned, the `signature` section of the user record may contain one or
@@ -804,7 +897,7 @@ public key.
 The `signature` field in the top-level user record object is an array of
 objects. Each object encapsulates one signature and has two fields: `data` and
 `key` (both are strings). The `data` field contains the actual signature,
-encoded in base64, the `key` field contains a copy of the public key whose
+encoded in Base64, the `key` field contains a copy of the public key whose
 private key was used to make the signature, in PEM format. Currently only
 signatures with Ed25519 keys are defined.
 
@@ -858,13 +951,27 @@ The `secret` field of the top-level user record contains the following fields:
 
 `password` → an array of strings, each containing a plain text password.
 
-`pkcs11Pin` → an array of strings, each containing a plain text PIN, suitable
-for unlocking PKCS#11 security tokens that require that.
+`tokenPin` → an array of strings, each containing a plain text PIN, suitable
+for unlocking security tokens that require that. (The field `pkcs11Pin` should
+be considered a compatibility alias for this field, and merged with `tokenPin`
+in case both are set.)
 
 `pkcs11ProtectedAuthenticationPathPermitted` → a boolean. If set to true allows
 the receiver to use the PKCS#11 "protected authentication path" (i.e. a
 physical button/touch element on the security token) for authenticating the
-user. If false or unset authentication this way shall not be attempted.
+user. If false or unset, authentication this way shall not be attempted.
+
+`fido2UserPresencePermitted` → a boolean. If set to true allows the receiver to
+use the FIDO2 "user presence" flag. This is similar to the concept of
+`pkcs11ProtectedAuthenticationPathPermitted`, but exposes the FIDO2 "up"
+concept behind it. If false or unset authentication this way shall not be
+attempted.
+
+`fido2UserVerificationPermitted` → a boolean. If set to true allows the
+receiver to use the FIDO2 "user verification" flag. This is similar to the
+concept of `pkcs11ProtectedAuthenticationPathPermitted`, but exposes the FIDO2
+"uv" concept behind it. If false or unset authentication this way shall not be
+attempted.
 
 ## Mapping to `struct passwd` and `struct spwd`
 
