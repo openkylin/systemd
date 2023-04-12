@@ -1,5 +1,5 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
-#include <sys/poll.h>
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
+#include <poll.h>
 
 #include "fd-util.h"
 #include "io-util.h"
@@ -35,7 +35,7 @@ static int nscd_flush_cache_one(const char *database, usec_t end) {
         l = strlen(database);
         req_size = offsetof(struct nscdInvalidateRequest, dbname) + l + 1;
 
-        req = alloca(req_size);
+        req = alloca_safe(req_size);
         *req = (struct nscdInvalidateRequest) {
                 .version = 2,
                 .type = 10,
@@ -132,9 +132,8 @@ static int nscd_flush_cache_one(const char *database, usec_t end) {
 int nscd_flush_cache(char **databases) {
         usec_t end;
         int r = 0;
-        char **i;
 
-        /* Tries to invalidate the specified database in nscd. We do this carefully, with a 5s time-out, so that we
+        /* Tries to invalidate the specified database in nscd. We do this carefully, with a 5s timeout, so that we
          * don't block indefinitely on another service. */
 
         end = usec_add(now(CLOCK_MONOTONIC), NSCD_FLUSH_CACHE_TIMEOUT_USEC);

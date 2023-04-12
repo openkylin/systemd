@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <errno.h>
 #include <fcntl.h>
@@ -49,7 +49,15 @@ int parse_uid(const char *s, uid_t *ret) {
         assert(s);
 
         assert_cc(sizeof(uid_t) == sizeof(uint32_t));
-        r = safe_atou32(s, &uid);
+
+        /* We are very strict when parsing UIDs, and prohibit +/- as prefix, leading zero as prefix, and
+         * whitespace. We do this, since this call is often used in a context where we parse things as UID
+         * first, and if that doesn't work we fall back to NSS. Thus we really want to make sure that UIDs
+         * are parsed as UIDs only if they really really look like UIDs. */
+        r = safe_atou32_full(s, 10
+                             | SAFE_ATO_REFUSE_PLUS_MINUS
+                             | SAFE_ATO_REFUSE_LEADING_ZERO
+                             | SAFE_ATO_REFUSE_LEADING_WHITESPACE, &uid);
         if (r < 0)
                 return r;
 
@@ -66,22 +74,39 @@ int parse_uid(const char *s, uid_t *ret) {
 }
 
 int parse_uid_range(const char *s, uid_t *ret_lower, uid_t *ret_upper) {
-        uint32_t u, l;
+        _cleanup_free_ char *word = NULL;
+        uid_t l, u;
         int r;
 
         assert(s);
         assert(ret_lower);
         assert(ret_upper);
 
-        r = parse_range(s, &l, &u);
+        r = extract_first_word(&s, &word, "-", EXTRACT_DONT_COALESCE_SEPARATORS);
+        if (r < 0)
+                return r;
+        if (r == 0)
+                return -EINVAL;
+
+        r = parse_uid(word, &l);
         if (r < 0)
                 return r;
 
-        if (l > u)
+        /* Check for the upper bound and extract it if needed */
+        if (!s)
+                /* Single number with no dash. */
+                u = l;
+        else if (!*s)
+                /* Trailing dash is an error. */
                 return -EINVAL;
+        else {
+                r = parse_uid(s, &u);
+                if (r < 0)
+                        return r;
 
-        if (!uid_is_valid(l) || !uid_is_valid(u))
-                return -ENXIO;
+                if (l > u)
+                        return -EINVAL;
+        }
 
         *ret_lower = l;
         *ret_upper = u;
@@ -222,7 +247,7 @@ int get_user_creds(
                 else if (FLAGS_SET(flags, USER_CREDS_ALLOW_MISSING) && !gid && !home && !shell) {
 
                         /* If the specified user is a numeric UID and it isn't in the user database, and the caller
-                         * passed USER_CREDS_ALLOW_MISSING and was only interested in the UID, then juts return that
+                         * passed USER_CREDS_ALLOW_MISSING and was only interested in the UID, then just return that
                          * and don't complain. */
 
                         if (uid)
@@ -265,7 +290,7 @@ int get_user_creds(
                     (empty_or_root(p->pw_dir) ||
                      !path_is_valid(p->pw_dir) ||
                      !path_is_absolute(p->pw_dir)))
-                    *home = NULL; /* Note: we don't insist on normalized paths, since there are setups that have /./ in the path */
+                        *home = NULL; /* Note: we don't insist on normalized paths, since there are setups that have /./ in the path */
                 else
                         *home = p->pw_dir;
         }
@@ -546,7 +571,7 @@ int get_home_dir(char **_h) {
                 if (!h)
                         return -ENOMEM;
 
-                *_h = path_simplify(h, true);
+                *_h = path_simplify(h);
                 return 0;
         }
 
@@ -584,7 +609,7 @@ int get_home_dir(char **_h) {
         if (!h)
                 return -ENOMEM;
 
-        *_h = path_simplify(h, true);
+        *_h = path_simplify(h);
         return 0;
 }
 
@@ -603,7 +628,7 @@ int get_shell(char **_s) {
                 if (!s)
                         return -ENOMEM;
 
-                *_s = path_simplify(s, true);
+                *_s = path_simplify(s);
                 return 0;
         }
 
@@ -641,7 +666,7 @@ int get_shell(char **_s) {
         if (!s)
                 return -ENOMEM;
 
-        *_s = path_simplify(s, true);
+        *_s = path_simplify(s);
         return 0;
 }
 
@@ -655,10 +680,7 @@ int reset_uid_gid(void) {
         if (setresgid(0, 0, 0) < 0)
                 return -errno;
 
-        if (setresuid(0, 0, 0) < 0)
-                return -errno;
-
-        return 0;
+        return RET_NERRNO(setresuid(0, 0, 0));
 }
 
 int take_etc_passwd_lock(const char *root) {
@@ -752,7 +774,7 @@ bool valid_user_group_name(const char *u, ValidUserFlags flags) {
                         return false;
 
                 if (in_charset(u, "0123456789")) /* Don't allow fully numeric strings, they might be confused
-                                                  * with with UIDs (note that this test is more broad than
+                                                  * with UIDs (note that this test is more broad than
                                                   * the parse_uid() test above, as it will cover more than
                                                   * the 32bit range, and it will detect 65535 (which is in
                                                   * invalid UID, even though in the unsigned 32 bit range) */
@@ -772,7 +794,7 @@ bool valid_user_group_name(const char *u, ValidUserFlags flags) {
                 /* Compare with strict result and warn if result doesn't match */
                 if (FLAGS_SET(flags, VALID_USER_WARN) && !valid_user_group_name(u, 0))
                         log_struct(LOG_NOTICE,
-                                   "MESSAGE=Accepting user/group name '%s', which does not match strict user/group name rules.", u,
+                                   LOG_MESSAGE("Accepting user/group name '%s', which does not match strict user/group name rules.", u),
                                    "USER_GROUP_NAME=%s", u,
                                    "MESSAGE_ID=" SD_MESSAGE_UNSAFE_USER_NAME_STR);
 
@@ -811,7 +833,7 @@ bool valid_user_group_name(const char *u, ValidUserFlags flags) {
 
                 if (l > (size_t) sz)
                         return false;
-                if (l > FILENAME_MAX)
+                if (l > NAME_MAX) /* must fit in a filename */
                         return false;
                 if (l > UT_NAMESIZE - 1)
                         return false;
@@ -836,6 +858,37 @@ bool valid_gecos(const char *d) {
                 return false;
 
         return true;
+}
+
+char *mangle_gecos(const char *d) {
+        char *mangled;
+
+        /* Makes sure the provided string becomes valid as a GEGOS field, by dropping bad chars. glibc's
+         * putwent() only changes \n and : to spaces. We do more: replace all CC too, and remove invalid
+         * UTF-8 */
+
+        mangled = strdup(d);
+        if (!mangled)
+                return NULL;
+
+        for (char *i = mangled; *i; i++) {
+                int len;
+
+                if ((uint8_t) *i < (uint8_t) ' ' || *i == ':') {
+                        *i = ' ';
+                        continue;
+                }
+
+                len = utf8_encoded_valid_unichar(i, SIZE_MAX);
+                if (len < 0) {
+                        *i = ' ';
+                        continue;
+                }
+
+                i += len - 1;
+        }
+
+        return mangled;
 }
 
 bool valid_home(const char *p) {
@@ -887,10 +940,7 @@ int maybe_setgroups(size_t size, const gid_t *list) {
                 }
         }
 
-        if (setgroups(size, list) < 0)
-                return -errno;
-
-        return 0;
+        return RET_NERRNO(setgroups(size, list));
 }
 
 bool synthesize_nobody(void) {
@@ -1016,3 +1066,27 @@ int fgetsgent_sane(FILE *stream, struct sgrp **sg) {
         return !!s;
 }
 #endif
+
+int is_this_me(const char *username) {
+        uid_t uid;
+        int r;
+
+        /* Checks if the specified username is our current one. Passed string might be a UID or a user name. */
+
+        r = get_user_creds(&username, &uid, NULL, NULL, NULL, USER_CREDS_ALLOW_MISSING);
+        if (r < 0)
+                return r;
+
+        return uid == getuid();
+}
+
+const char *get_home_root(void) {
+        const char *e;
+
+        /* For debug purposes allow overriding where we look for home dirs */
+        e = secure_getenv("SYSTEMD_HOME_ROOT");
+        if (e && path_is_absolute(e) && path_is_normalized(e))
+                return e;
+
+        return "/home";
+}

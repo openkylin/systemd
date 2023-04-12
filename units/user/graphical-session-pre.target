@@ -1,4 +1,4 @@
-#  SPDX-License-Identifier: LGPL-2.1+
+#  SPDX-License-Identifier: LGPL-2.1-or-later
 #
 #  This file is part of systemd.
 #
@@ -12,4 +12,5 @@ Description=Session services which should run early before the graphical session
 Documentation=man:systemd.special(7)
 Requires=basic.target
 Before=graphical-session.target
+RefuseManualStart=yes
 StopWhenUnneeded=yes

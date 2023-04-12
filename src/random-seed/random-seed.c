@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <errno.h>
 #include <fcntl.h>
@@ -25,6 +25,8 @@
 #include "parse-util.h"
 #include "random-util.h"
 #include "string-util.h"
+#include "sync-util.h"
+#include "sha256.h"
 #include "util.h"
 #include "xattr-util.h"
 
@@ -102,15 +104,16 @@ static CreditEntropy may_credit(int seed_fd) {
 }
 
 static int run(int argc, char *argv[]) {
+        bool read_seed_file, write_seed_file, synchronous, hashed_old_seed = false;
         _cleanup_close_ int seed_fd = -1, random_fd = -1;
-        bool read_seed_file, write_seed_file, synchronous;
         _cleanup_free_ void* buf = NULL;
+        struct sha256_ctx hash_state;
         size_t buf_size;
         struct stat st;
-        ssize_t k;
+        ssize_t k, l;
         int r;
 
-        log_setup_service();
+        log_setup();
 
         if (argc != 2)
                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
@@ -210,6 +213,16 @@ static int run(int argc, char *argv[]) {
                 else {
                         CreditEntropy lets_credit;
 
+                        /* If we're going to later write out a seed file, initialize a hash state with
+                         * the contents of the seed file we just read, so that the new one can't regress
+                         * in entropy. */
+                        if (write_seed_file) {
+                                sha256_init_ctx(&hash_state);
+                                sha256_process_bytes(&k, sizeof(k), &hash_state); /* Hash length to distinguish from new seed. */
+                                sha256_process_bytes(buf, k, &hash_state);
+                                hashed_old_seed = true;
+                        }
+
                         (void) lseek(seed_fd, 0, SEEK_SET);
 
                         lets_credit = may_credit(seed_fd);
@@ -236,24 +249,10 @@ static int run(int argc, char *argv[]) {
                                 }
                         }
 
-                        if (IN_SET(lets_credit, CREDIT_ENTROPY_YES_PLEASE, CREDIT_ENTROPY_YES_FORCED)) {
-                                _cleanup_free_ struct rand_pool_info *info = NULL;
-
-                                info = malloc(offsetof(struct rand_pool_info, buf) + k);
-                                if (!info)
-                                        return log_oom();
-
-                                info->entropy_count = k * 8;
-                                info->buf_size = k;
-                                memcpy(info->buf, buf, k);
-
-                                if (ioctl(random_fd, RNDADDENTROPY, info) < 0)
-                                        return log_warning_errno(errno, "Failed to credit entropy, ignoring: %m");
-                        } else {
-                                r = loop_write(random_fd, buf, (size_t) k, false);
-                                if (r < 0)
-                                        log_error_errno(r, "Failed to write seed to /dev/urandom: %m");
-                        }
+                        r = random_write_entropy(random_fd, buf, k,
+                                                 IN_SET(lets_credit, CREDIT_ENTROPY_YES_PLEASE, CREDIT_ENTROPY_YES_FORCED));
+                        if (r < 0)
+                                log_error_errno(r, "Failed to write seed to /dev/urandom: %m");
                 }
         }
 
@@ -264,7 +263,7 @@ static int run(int argc, char *argv[]) {
                  * ourselves the mode and owner should be correct anyway. */
                 r = fchmod_and_chown(seed_fd, 0600, 0, 0);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to adjust seed file ownership and access mode.");
+                        return log_error_errno(r, "Failed to adjust seed file ownership and access mode: %m");
 
                 /* Let's make this whole job asynchronous, i.e. let's make ourselves a barrier for
                  * proper initialization of the random pool. */
@@ -276,7 +275,7 @@ static int run(int argc, char *argv[]) {
                 if (k < 0)
                         log_debug_errno(errno, "Failed to read random data with getrandom(), falling back to /dev/urandom: %m");
                 else if ((size_t) k < buf_size)
-                        log_debug("Short read from getrandom(), falling back to /dev/urandom: %m");
+                        log_debug("Short read from getrandom(), falling back to /dev/urandom.");
                 else
                         getrandom_worked = true;
 
@@ -288,6 +287,18 @@ static int run(int argc, char *argv[]) {
                         if (k == 0)
                                 return log_error_errno(SYNTHETIC_ERRNO(EIO),
                                                        "Got EOF while reading from /dev/urandom.");
+                }
+
+                /* If we previously read in a seed file, then hash the new seed into the old one,
+                 * and replace the last 32 bytes of the seed with the hash output, so that the
+                 * new seed file can't regress in entropy. */
+                if (hashed_old_seed) {
+                        uint8_t hash[32];
+                        sha256_process_bytes(&k, sizeof(k), &hash_state); /* Hash length to distinguish from old seed. */
+                        sha256_process_bytes(buf, k, &hash_state);
+                        sha256_finish_ctx(&hash_state, hash);
+                        l = MIN((size_t)k, sizeof(hash));
+                        memcpy((uint8_t *)buf + k - l, hash, l);
                 }
 
                 r = loop_write(seed_fd, buf, (size_t) k, false);
@@ -305,7 +316,7 @@ static int run(int argc, char *argv[]) {
                  * entropy later on. Let's keep that in mind by setting an extended attribute. on the file */
                 if (getrandom_worked)
                         if (fsetxattr(seed_fd, "user.random-seed-creditable", "1", 1, 0) < 0)
-                                log_full_errno(IN_SET(errno, ENOSYS, EOPNOTSUPP) ? LOG_DEBUG : LOG_WARNING, errno,
+                                log_full_errno(ERRNO_IS_NOT_SUPPORTED(errno) ? LOG_DEBUG : LOG_WARNING, errno,
                                                "Failed to mark seed file as creditable, ignoring: %m");
         }
 

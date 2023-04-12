@@ -1,4 +1,4 @@
-#  SPDX-License-Identifier: LGPL-2.1+
+#  SPDX-License-Identifier: LGPL-2.1-or-later
 #
 #  This file is part of systemd.
 #
@@ -13,12 +13,11 @@ Documentation=man:systemd-fsck@.service(8)
 DefaultDependencies=no
 BindsTo=%i.device
 Conflicts=shutdown.target
-Wants=systemd-fsckd.socket
-After=%i.device systemd-fsck-root.service local-fs-pre.target systemd-fsckd.socket
+After=%i.device systemd-fsck-root.service local-fs-pre.target
 Before=systemd-quotacheck.service shutdown.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=@rootlibexecdir@/systemd-fsck %f
+ExecStart={{ROOTLIBEXECDIR}}/systemd-fsck %f
 TimeoutSec=0

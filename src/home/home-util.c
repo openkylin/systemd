@@ -1,7 +1,6 @@
-/* SPDX-License-Identifier: LGPL-2.1+ */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include "dns-domain.h"
-#include "errno-util.h"
 #include "home-util.h"
 #include "libcrypt-util.h"
 #include "memory-util.h"
@@ -64,6 +63,12 @@ int suitable_image_path(const char *path) {
                 path_is_absolute(path);
 }
 
+bool supported_fstype(const char *fstype) {
+        /* Limit the set of supported file systems a bit, as protection against little tested kernel file
+         * systems. Also, we only support the resize ioctls for these file systems. */
+        return STR_IN_SET(fstype, "ext4", "btrfs", "xfs");
+}
+
 int split_user_name_realm(const char *t, char **ret_user_name, char **ret_realm) {
         _cleanup_free_ char *user_name = NULL, *realm = NULL;
         const char *c;
@@ -124,37 +129,11 @@ int bus_message_append_secret(sd_bus_message *m, UserRecord *secret) {
         if (r < 0)
                 return r;
 
+        (void) sd_bus_message_sensitive(m);
+
         return sd_bus_message_append(m, "s", formatted);
 }
 
-int test_password_one(const char *hashed_password, const char *password) {
-        struct crypt_data cc = {};
-        const char *k;
-        bool b;
-
-        errno = 0;
-        k = crypt_r(password, hashed_password, &cc);
-        if (!k) {
-                explicit_bzero_safe(&cc, sizeof(cc));
-                return errno_or_else(EINVAL);
-        }
-
-        b = streq(k, hashed_password);
-        explicit_bzero_safe(&cc, sizeof(cc));
-        return b;
-}
-
-int test_password_many(char **hashed_password, const char *password) {
-        char **hpw;
-        int r;
-
-        STRV_FOREACH(hpw, hashed_password) {
-                r = test_password_one(*hpw, password);
-                if (r < 0)
-                        return r;
-                if (r > 0)
-                        return true;
-        }
-
-        return false;
+const char *home_record_dir(void) {
+        return secure_getenv("SYSTEMD_HOME_RECORD_DIR") ?: "/var/lib/systemd/home/";
 }
