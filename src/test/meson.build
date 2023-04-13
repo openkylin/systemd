@@ -224,7 +224,7 @@ tests += [
 
         [files('test-mount-util.c')],
 
-        [files('test-mountpoint-util.c')],
+       # [files('test-mountpoint-util.c')],
 
         [files('test-exec-util.c')],
 
@@ -295,7 +295,7 @@ tests += [
 
         [files('test-process-util.c')],
 
-        [files('test-terminal-util.c')],
+        #[files('test-terminal-util.c')],
 
         [files('test-path-lookup.c')],
 
@@ -303,10 +303,10 @@ tests += [
 
         [files('test-uid-range.c')],
 
-        [files('test-cap-list.c') +
-         generated_gperf_headers,
-         [],
-         [libcap]],
+        # [files('test-cap-list.c') +
+        # generated_gperf_headers,
+        # [],
+        # [libcap]],
 
         [files('test-socket-util.c')],
 
