@@ -14,6 +14,8 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
  src/timedate/timedated.c | 31 +++++++++++++++++++++++++------
  2 files changed, 52 insertions(+), 13 deletions(-)
 
+diff --git a/src/hostname/hostnamed.c b/src/hostname/hostnamed.c
+index 5f09e6d..60f9ae5 100644
 --- a/src/hostname/hostnamed.c
 +++ b/src/hostname/hostnamed.c
 @@ -28,6 +28,7 @@
@@ -24,7 +26,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
  #include "sd-device.h"
  #include "selinux-util.h"
  #include "service-util.h"
-@@ -94,6 +95,25 @@
+@@ -94,6 +95,25 @@ static void context_destroy(Context *c) {
          bus_verify_polkit_async_registry_free(c->polkit_registry);
  }
  
@@ -50,7 +52,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
  static void context_read_etc_hostname(Context *c) {
          struct stat current_stat = {};
          int r;
-@@ -119,7 +139,7 @@
+@@ -119,7 +139,7 @@ static void context_read_machine_info(Context *c) {
  
          assert(c);
  
@@ -59,7 +61,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
              stat_inode_unmodified(&c->etc_machine_info_stat, &current_stat))
                  return;
  
-@@ -132,7 +152,7 @@
+@@ -132,7 +152,7 @@ static void context_read_machine_info(Context *c) {
                        (UINT64_C(1) << PROP_HARDWARE_VENDOR) |
                        (UINT64_C(1) << PROP_HARDWARE_MODEL));
  
@@ -68,7 +70,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
                             "PRETTY_HOSTNAME", &c->data[PROP_PRETTY_HOSTNAME],
                             "ICON_NAME", &c->data[PROP_ICON_NAME],
                             "CHASSIS", &c->data[PROP_CHASSIS],
-@@ -507,14 +527,14 @@
+@@ -507,14 +527,14 @@ static int context_write_data_static_hostname(Context *c) {
          s = &c->etc_hostname_stat;
  
          if (isempty(c->data[PROP_STATIC_HOSTNAME])) {
@@ -85,7 +87,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
          if (r < 0)
                  return r;
  
-@@ -540,7 +560,7 @@
+@@ -540,7 +560,7 @@ static int context_write_data_machine_info(Context *c) {
           * already, even if we can't make it hit the disk. */
          s = &c->etc_machine_info_stat;
  
@@ -94,7 +96,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
          if (r < 0 && r != -ENOENT)
                  return r;
  
-@@ -553,14 +573,14 @@
+@@ -553,14 +573,14 @@ static int context_write_data_machine_info(Context *c) {
          }
  
          if (strv_isempty(l)) {
@@ -111,9 +113,11 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
          if (r < 0)
                  return r;
  
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index 7b09a4c..8fcc842 100644
 --- a/src/timedate/timedated.c
 +++ b/src/timedate/timedated.c
-@@ -293,6 +293,25 @@
+@@ -293,6 +293,25 @@ static int context_read_data(Context *c) {
          return 0;
  }
  
@@ -139,7 +143,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
  static int context_write_data_timezone(Context *c) {
          _cleanup_free_ char *p = NULL;
          const char *source;
-@@ -310,10 +329,10 @@
+@@ -310,10 +329,10 @@ static int context_write_data_timezone(Context *c) {
  
                  if (access("/usr/share/zoneinfo/UTC", F_OK) < 0) {
  
@@ -152,7 +156,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
                                  r = -errno;
  
                          return r;
-@@ -328,12 +347,12 @@
+@@ -328,12 +347,12 @@ static int context_write_data_timezone(Context *c) {
                  source = p;
          }
  
@@ -168,7 +172,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/1227520
                  if (r < 0)
                          return r;
          }
-@@ -399,7 +418,7 @@
+@@ -399,7 +418,7 @@ static int context_write_data_local_rtc(Context *c) {
                  *(char*) mempcpy(stpcpy(stpcpy(mempcpy(w, s, a), prepend), c->local_rtc ? "LOCAL" : "UTC"), e, b) = 0;
  
                  if (streq(w, NULL_ADJTIME_UTC)) {

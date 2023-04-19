@@ -1,12 +1,20 @@
-Description: Workaround timezone issues cause by Ubuntu Core's read-only /etc
- This is another patch in a series of existing ones working around this issue
- on Ubuntu Core.
-Author: Nick Rosbrook <nick.rosbrook@canonical.com>
+From: Nick Rosbrook <nick.rosbrook@canonical.com>
+Date: Fri, 21 Apr 2023 03:13:54 +0000
+Subject: Workaround timezone issues cause by Ubuntu Core's read-only /etc
+
 Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1981042
 Bug-Ubuntu: https://bugs.launchpad.net/snappy/+bug/1953172
 Forwarded: not-needed (part of read-only /etc workaround)
 Last-Update: 2022-07-20
+
+This is another patch in a series of existing ones working around this issue
+on Ubuntu Core.
+Last-Update: 2022-07-20
 ---
+ src/core/manager.c        | 23 +++++++++++++++++++++--
+ src/firstboot/firstboot.c | 25 ++++++++++++++++++++++---
+ 2 files changed, 43 insertions(+), 5 deletions(-)
+
 diff --git a/src/core/manager.c b/src/core/manager.c
 index 296b759..230e5c8 100644
 --- a/src/core/manager.c

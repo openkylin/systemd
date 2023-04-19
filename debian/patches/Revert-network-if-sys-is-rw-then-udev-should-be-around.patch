@@ -8,9 +8,11 @@ This reverts commit 96d7083c5499b264ecebd6a30a92e0e8fda14cd5.
 
 LP: #1857123
 ---
- src/network/networkd-link.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ src/network/networkd-link.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 95f4bbe..0b7c0e7 100644
 --- a/src/network/networkd-link.c
 +++ b/src/network/networkd-link.c
 @@ -66,6 +66,7 @@
@@ -21,7 +23,7 @@ LP: #1857123
  #include "vrf.h"
  
  bool link_ipv4ll_enabled(Link *link) {
-@@ -1456,7 +1457,7 @@
+@@ -1456,7 +1457,7 @@ static int link_check_initialized(Link *link) {
  
          assert(link);
  

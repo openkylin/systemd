@@ -1,8 +1,9 @@
-From 137d162c42ed858613afc3d7493d08d4ae6d5c1b Mon Sep 17 00:00:00 2001
 From: Dan Streetman <ddstreet@ieee.org>
 Date: Fri, 16 Sep 2022 10:50:59 -0400
-Subject: [PATCH] add CAP_LINUX_IMMUTABLE to systemd-machined, so it can handle
- machinectl read-only requests
+Subject: [PATCH] add CAP_LINUX_IMMUTABLE to systemd-machined,
+ so it can handle machinectl read-only requests
+
+From 137d162c42ed858613afc3d7493d08d4ae6d5c1b Mon Sep 17 00:00:00 2001
 Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1991829
 Origin: upstream, https://github.com/systemd/systemd/pull/24697
 
@@ -12,7 +13,7 @@ Without this, the 'machinectl read-only ...' command always fails.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/units/systemd-machined.service.in b/units/systemd-machined.service.in
-index e92f436dfd..d3f8abd9e4 100644
+index e92f436..d3f8abd 100644
 --- a/units/systemd-machined.service.in
 +++ b/units/systemd-machined.service.in
 @@ -18,7 +18,7 @@ RequiresMountsFor=/var/lib/machines
@@ -24,6 +25,3 @@ index e92f436dfd..d3f8abd9e4 100644
  ExecStart={{ROOTLIBEXECDIR}}/systemd-machined
  IPAddressDeny=any
  LockPersonality=yes
--- 
-2.34.1
-

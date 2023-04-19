@@ -1,6 +1,7 @@
 From: Nick Rosbrook <nick.rosbrook@canonical.com>
 Date: Tue, 28 Jun 2022 16:48:21 -0400
 Subject: test: copy libgcc_s.so.1 to TPM2 test image on Debian-like systems
+
 Forwarded: https://github.com/systemd/systemd/pull/23858
 
 On Debian, cryptsetup does not link against libgcc_s.so.1 which leads to

@@ -1,24 +1,30 @@
-Description: Fix retrieving timezone on read-only /etc
- get_timezone() retrieve it by reading the link destination of
- /etc/localtime, which on systems with read-only /etc will always point
- to /etc/writable. Makes this function aware of the /etc/writable
- redirection and handle it.
- .
- [ratchanan@ubports.com: add descrtiption and other metadata.]
- .
- This patch can be dropped once LP: #1953172 got resolved
-Author: Michael Vogt <michael.vogt@ubuntu.com>
+From: Michael Vogt <michael.vogt@ubuntu.com>
+Date: Fri, 21 Apr 2023 03:13:53 +0000
+Subject: Fix retrieving timezone on read-only /etc
+
 Origin: vendor, https://bugs.launchpad.net/snappy/+bug/1650688/comments/46
 Bug-Ubuntu: https://bugs.launchpad.net/snappy/+bug/1650688
 Forwarded: not-needed (part of read-only /etc workaround)
 Last-Update: 2021-09-24
+
+get_timezone() retrieve it by reading the link destination of
+/etc/localtime, which on systems with read-only /etc will always point
+to /etc/writable. Makes this function aware of the /etc/writable
+redirection and handle it.
+
+[ratchanan@ubports.com: add descrtiption and other metadata.]
+
+This patch can be dropped once LP: #1953172 got resolved
+Last-Update: 2021-09-24
 ---
-This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+ src/basic/time-util.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
 diff --git a/src/basic/time-util.c b/src/basic/time-util.c
-index d7028ac..b9bb4da 100644
+index f0f0ef4..447ac5a 100644
 --- a/src/basic/time-util.c
 +++ b/src/basic/time-util.c
-@@ -1391,6 +1391,25 @@ bool clock_supported(clockid_t clock) {
+@@ -1472,6 +1472,25 @@ bool clock_supported(clockid_t clock) {
          }
  }
  
@@ -44,7 +50,7 @@ index d7028ac..b9bb4da 100644
  int get_timezone(char **ret) {
          _cleanup_free_ char *t = NULL;
          const char *e;
-@@ -1398,7 +1417,7 @@ int get_timezone(char **ret) {
+@@ -1479,7 +1498,7 @@ int get_timezone(char **ret) {
          int r;
          bool use_utc_fallback = false;
  

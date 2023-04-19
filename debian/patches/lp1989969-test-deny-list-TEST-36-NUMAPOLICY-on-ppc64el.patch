@@ -3,7 +3,6 @@ Date: Fri, 16 Sep 2022 10:05:38 -0400
 Subject: test: deny-list TEST-36-NUMAPOLICY on ppc64el
 
 Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1989969
-
 ---
  test/TEST-36-NUMAPOLICY/deny-list-upstream-ci-ppc64el | 1 +
  1 file changed, 1 insertion(+)

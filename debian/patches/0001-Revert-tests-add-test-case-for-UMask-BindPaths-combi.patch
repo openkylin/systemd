@@ -1,5 +1,4 @@
-From b368907b3e978f6909991d17cbe23035a6a8110b Mon Sep 17 00:00:00 2001
-From: Lukas Märdian <slyon@ubuntu.com>
+From: =?utf-8?q?Lukas_M=C3=A4rdian?= <slyon@ubuntu.com>
 Date: Tue, 25 Jan 2022 16:13:22 +0100
 Subject: [PATCH] Revert "tests: add test case for UMask=+BindPaths=
  combination"
@@ -8,14 +7,16 @@ This test currently fails inside privileged LXD containers (LP: #1959013)
 
 This reverts commit ae53f4b5e48860b473c4d05958486a77f84ecc6d.
 ---
- src/test/test-execute.c                        |  5 -----
+ src/test/test-execute.c                        | 11 -----------
  test/test-execute/exec-umask-namespace.service | 12 ------------
- 2 files changed, 17 deletions(-)
+ 2 files changed, 23 deletions(-)
  delete mode 100644 test/test-execute/exec-umask-namespace.service
 
+diff --git a/src/test/test-execute.c b/src/test/test-execute.c
+index 92ccf3f..1b50a40 100644
 --- a/src/test/test-execute.c
 +++ b/src/test/test-execute.c
-@@ -1142,16 +1142,6 @@
+@@ -1147,16 +1147,6 @@ static void test_exec_condition(Manager *m) {
          test_service(m, "exec-condition-skip.service", SERVICE_SKIP_CONDITION);
  }
  
@@ -32,7 +33,7 @@ This reverts commit ae53f4b5e48860b473c4d05958486a77f84ecc6d.
  typedef struct test_entry {
          test_function_t f;
          const char *name;
-@@ -1234,7 +1224,6 @@
+@@ -1239,7 +1229,6 @@ int main(int argc, char *argv[]) {
                  entry(test_exec_specifier),
                  entry(test_exec_execsearchpath_specifier),
                  entry(test_exec_systemcallfilter_system),
@@ -40,6 +41,9 @@ This reverts commit ae53f4b5e48860b473c4d05958486a77f84ecc6d.
                  {},
          };
          int r;
+diff --git a/test/test-execute/exec-umask-namespace.service b/test/test-execute/exec-umask-namespace.service
+deleted file mode 100644
+index 8419c86..0000000
 --- a/test/test-execute/exec-umask-namespace.service
 +++ /dev/null
 @@ -1,12 +0,0 @@

@@ -66,7 +66,7 @@ index c071599..0584add 100644
      <para><function>sd_hwdb_ref()</function> always returns the argument.
      </para>
 diff --git a/src/libsystemd/libsystemd.sym b/src/libsystemd/libsystemd.sym
-index ccc321e..e568c80 100644
+index ccc321e..528e86b 100644
 --- a/src/libsystemd/libsystemd.sym
 +++ b/src/libsystemd/libsystemd.sym
 @@ -778,3 +778,8 @@ global:
