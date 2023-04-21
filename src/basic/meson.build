@@ -70,6 +70,7 @@ basic_sources = files(
         'recurse-dir.c',
         'replace-var.c',
         'rlimit-util.c',
+        'ro-etc-hack.c',
         'sigbus.c',
         'signal-util.c',
         'siphash24.c',

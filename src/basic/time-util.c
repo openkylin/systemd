@@ -22,6 +22,7 @@
 #include "parse-util.h"
 #include "path-util.h"
 #include "process-util.h"
+#include "ro-etc-hack.h"
 #include "stat-util.h"
 #include "string-table.h"
 #include "string-util.h"
@@ -1479,7 +1480,7 @@ int get_timezone(char **ret) {
         char *z;
         int r;
 
-        r = readlink_malloc("/etc/localtime", &t);
+        r = readlink_malloc(writable_filename("/etc/localtime"), &t);
         if (r == -ENOENT) {
                 /* If the symlink does not exist, assume "UTC", like glibc does */
                 z = strdup("UTC");
