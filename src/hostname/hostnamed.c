@@ -28,6 +28,7 @@
 #include "os-util.h"
 #include "parse-util.h"
 #include "path-util.h"
+#include "ro-etc-hack.h"
 #include "sd-device.h"
 #include "selinux-util.h"
 #include "service-util.h"
@@ -119,7 +120,7 @@ static void context_read_machine_info(Context *c) {
 
         assert(c);
 
-        if (stat("/etc/machine-info", &current_stat) >= 0 &&
+        if (stat(writable_filename("/etc/machine-info"), &current_stat) >= 0 &&
             stat_inode_unmodified(&c->etc_machine_info_stat, &current_stat))
                 return;
 
@@ -132,7 +133,7 @@ static void context_read_machine_info(Context *c) {
                       (UINT64_C(1) << PROP_HARDWARE_VENDOR) |
                       (UINT64_C(1) << PROP_HARDWARE_MODEL));
 
-        r = parse_env_file(NULL, "/etc/machine-info",
+        r = parse_env_file(NULL, writable_filename("/etc/machine-info"),
                            "PRETTY_HOSTNAME", &c->data[PROP_PRETTY_HOSTNAME],
                            "ICON_NAME", &c->data[PROP_ICON_NAME],
                            "CHASSIS", &c->data[PROP_CHASSIS],
@@ -603,14 +604,14 @@ static int context_write_data_static_hostname(Context *c) {
         s = &c->etc_hostname_stat;
 
         if (isempty(c->data[PROP_STATIC_HOSTNAME])) {
-                if (unlink("/etc/hostname") < 0 && errno != ENOENT)
+                if (unlink(writable_filename("/etc/hostname")) < 0 && errno != ENOENT)
                         return -errno;
 
                 TAKE_PTR(s);
                 return 0;
         }
 
-        r = write_string_file_atomic_label("/etc/hostname", c->data[PROP_STATIC_HOSTNAME]);
+        r = write_string_file_atomic_label(writable_filename("/etc/hostname"), c->data[PROP_STATIC_HOSTNAME]);
         if (r < 0)
                 return r;
 
@@ -636,7 +637,7 @@ static int context_write_data_machine_info(Context *c) {
          * already, even if we can't make it hit the disk. */
         s = &c->etc_machine_info_stat;
 
-        r = load_env_file(NULL, "/etc/machine-info", &l);
+        r = load_env_file(NULL, writable_filename("/etc/machine-info"), &l);
         if (r < 0 && r != -ENOENT)
                 return r;
 
@@ -649,14 +650,14 @@ static int context_write_data_machine_info(Context *c) {
         }
 
         if (strv_isempty(l)) {
-                if (unlink("/etc/machine-info") < 0 && errno != ENOENT)
+                if (unlink(writable_filename("/etc/machine-info")) < 0 && errno != ENOENT)
                         return -errno;
 
                 TAKE_PTR(s);
                 return 0;
         }
 
-        r = write_env_file_label(AT_FDCWD, "/etc/machine-info", NULL, l);
+        r = write_env_file_label(AT_FDCWD, writable_filename("/etc/machine-info"), NULL, l);
         if (r < 0)
                 return r;
 
