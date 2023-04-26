@@ -1,8 +1,8 @@
-systemd (251.4-ok1.1) yangtze; urgency=medium
+systemd (251.4-ok1.2) yangtze; urgency=medium
 
   * rebuild source for openKylin
 
- -- liaoxianfu <liaoxianfu@kylinos.cn>  Wed, 19 Apr 2023 17:19:31 +0800
+ -- liaoxianfu <liaoxianfu@kylinos.cn>  Wed, 26 Apr 2023 15:08:17 +0800
 
 systemd (251.4-ok1) yangtze; urgency=medium
 
