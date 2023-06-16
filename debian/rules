@@ -9,7 +9,7 @@ include /usr/share/dpkg/default.mk
 #include /usr/share/debhelper/dh_package_notes/package-notes.mk
 
 ifeq ($(DEB_VENDOR),Ubuntu)
-    DEFAULT_NTP_SERVERS = ntp.ubuntu.com
+    DEFAULT_NTP_SERVERS = ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
     SUPPORT_URL = http://www.ubuntu.com/support
     CONFFLAGS_DISTRO =
 ifeq ($(DEB_HOST_ARCH),amd64)
@@ -18,7 +18,7 @@ ifeq ($(DEB_HOST_ARCH),amd64)
 export DEB_LDFLAGS_MAINT_APPEND=-fcf-protection
 endif
 else
-    DEFAULT_NTP_SERVERS = 0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org
+    DEFAULT_NTP_SERVERS = ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
     SUPPORT_URL = https://www.debian.org/support
     CONFFLAGS_DISTRO =
 endif
