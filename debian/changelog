@@ -1,3 +1,10 @@
+systemd (251.4-ok1.3) yangtze; urgency=medium
+
+  * modify ntp server to modify ntp server to ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
+    fix bug (#I73IWB)
+
+ -- shilongzhen <shilongzhen@kylinos.cn>  Fri, 16 Jun 2023 13:38:36 +0800
+
 systemd (251.4-ok1.2) yangtze; urgency=medium
 
   * rebuild source for openKylin
