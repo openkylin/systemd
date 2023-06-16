@@ -53,3 +53,4 @@ test-denylist-TEST-29-PORTABLE-again.patch
 lp1989969-test-deny-list-TEST-36-NUMAPOLICY-on-ppc64el.patch
 lp1991829-add-CAP_LINUX_IMMUTABLE-to-systemd-machined-so-it-ca.patch
 fix-build-error.patch
+changelog-251.4-ok1.3.patch
