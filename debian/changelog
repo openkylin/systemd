@@ -1,3 +1,9 @@
+systemd (251.4-ok1.4) yangtze; urgency=medium
+
+  * tianqisu [CVE-2022-4415]: This security flaw can cause a local information leak due to systemd-coredump not respecting the fs.suid_dumpable kernel setting.
+
+ -- sutianqi <2019302050042@whu.edu.cn>  Thu, 27 Jul 2023 18:45:16 +0800
+
 systemd (251.4-ok1.3) yangtze; urgency=medium
 
   * modify ntp server to modify ntp server to ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
