@@ -424,6 +424,11 @@ if cc.get_id() == 'gcc'
         possible_common_cc_flags += '-Wno-unused-result'
 endif
 
+# Disable -Wformat-overflow on gcc with -O3 to prevent false positives.
+if cc.get_id() == 'gcc' and '-O3' in c_args
+        possible_common_cc_flags += '-Wno-format-overflow'
+endif
+
 # --as-needed and --no-undefined are provided by meson by default,
 # run 'meson configure' to see what is enabled
 possible_link_flags = [
