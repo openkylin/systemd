@@ -1,3 +1,9 @@
+systemd (251.4-ok1.5) yangtze; urgency=medium
+
+  * modify control info
+
+ -- liaoxianfu <liaoxianfu@kylinos.cn>  Fri, 25 Aug 2023 14:03:22 +0800
+
 systemd (251.4-ok1.4) yangtze; urgency=medium
 
   * tianqisu [CVE-2022-4415]: This security flaw can cause a local information leak due to systemd-coredump not respecting the fs.suid_dumpable kernel setting.
