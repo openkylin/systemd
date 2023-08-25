@@ -1,18 +1,11 @@
 Source: systemd
 Section: admin
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-XSBC-Original-Maintainer: Debian systemd Maintainers <pkg-systemd-maintainers@lists.alioth.debian.org>
-Uploaders: Michael Biebl <biebl@debian.org>,
-           Marco d'Itri <md@linux.it>,
-           Sjoerd Simons <sjoerd@debian.org>,
-           Martin Pitt <mpitt@debian.org>,
-           Felipe Sateler <fsateler@debian.org>,
-           Luca Boccassi <bluca@debian.org>,
+Maintainer: OpenKylin Developers <packaging@lists.openkylin.top>
 Standards-Version: 4.6.1
 Rules-Requires-Root: no
-Vcs-Git: https://git.launchpad.net/~ubuntu-core-dev/ubuntu/+source/systemd
-Vcs-Browser:  https://git.launchpad.net/~ubuntu-core-dev/ubuntu/+source/systemd
+Vcs-Git: https://gitee.com/openkylin/systemd.git
+Vcs-Browser:  https://gitee.com/openkylin/systemd
 Homepage: https://www.freedesktop.org/wiki/Software/systemd
 Build-Depends: debhelper-compat (= 13),
                dh-sequence-installnss,
