@@ -31,14 +31,13 @@ int bus_image_method_remove(
                 void *userdata,
                 sd_bus_error *error) {
 
-        _cleanup_close_pair_ int errno_pipe_fd[2] = { -1, -1 };
-        Image *image = userdata;
+        _cleanup_close_pair_ int errno_pipe_fd[2] = PIPE_EBADF;
+        Image *image = ASSERT_PTR(userdata);
         Manager *m = image->userdata;
         pid_t child;
         int r;
 
         assert(message);
-        assert(image);
 
         if (m->n_operations >= OPERATIONS_MAX)
                 return sd_bus_error_set(error, SD_BUS_ERROR_LIMITS_EXCEEDED, "Too many ongoing operations.");
@@ -89,7 +88,7 @@ int bus_image_method_remove(
                 return r;
         }
 
-        errno_pipe_fd[0] = -1;
+        errno_pipe_fd[0] = -EBADF;
 
         return 1;
 }
@@ -99,13 +98,12 @@ int bus_image_method_rename(
                 void *userdata,
                 sd_bus_error *error) {
 
-        Image *image = userdata;
+        Image *image = ASSERT_PTR(userdata);
         Manager *m = image->userdata;
         const char *new_name;
         int r;
 
         assert(message);
-        assert(image);
 
         r = sd_bus_message_read(message, "s", &new_name);
         if (r < 0)
@@ -147,16 +145,14 @@ int bus_image_method_clone(
                 void *userdata,
                 sd_bus_error *error) {
 
-        _cleanup_close_pair_ int errno_pipe_fd[2] = { -1, -1 };
-        Image *image = userdata;
-        Manager *m = image->userdata;
+        _cleanup_close_pair_ int errno_pipe_fd[2] = PIPE_EBADF;
+        Image *image = ASSERT_PTR(userdata);
+        Manager *m = ASSERT_PTR(image->userdata);
         const char *new_name;
         int r, read_only;
         pid_t child;
 
         assert(message);
-        assert(image);
-        assert(m);
 
         if (m->n_operations >= OPERATIONS_MAX)
                 return sd_bus_error_set(error, SD_BUS_ERROR_LIMITS_EXCEEDED, "Too many ongoing operations.");
@@ -215,7 +211,7 @@ int bus_image_method_clone(
                 return r;
         }
 
-        errno_pipe_fd[0] = -1;
+        errno_pipe_fd[0] = -EBADF;
 
         return 1;
 }
@@ -389,10 +385,9 @@ int bus_image_method_get_os_release(
 }
 
 static int image_flush_cache(sd_event_source *s, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(s);
-        assert(m);
 
         hashmap_clear(m->image_cache);
         return 0;

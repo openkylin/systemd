@@ -16,6 +16,7 @@
 #include "fd-util.h"
 #include "fileio.h"
 #include "macro.h"
+#include "missing_threads.h"
 #include "process-util.h"
 #include "stat-util.h"
 #include "string-table.h"
@@ -50,6 +51,8 @@ static Virtualization detect_vm_cpuid(void) {
                 { "QNXQVMBSQG",   VIRTUALIZATION_QNX       },
                 /* https://projectacrn.org */
                 { "ACRNACRNACRN", VIRTUALIZATION_ACRN      },
+                /* https://www.lockheedmartin.com/en-us/products/Hardened-Security-for-Intel-Processors.html */
+                { "SRESRESRESRE", VIRTUALIZATION_SRE       },
         };
 
         uint32_t eax, ebx, ecx, edx;
@@ -100,6 +103,7 @@ static Virtualization detect_vm_device_tree(void) {
         r = read_one_line_file("/proc/device-tree/hypervisor/compatible", &hvtype);
         if (r == -ENOENT) {
                 _cleanup_closedir_ DIR *dir = NULL;
+                _cleanup_free_ char *compat = NULL;
 
                 if (access("/proc/device-tree/ibm,partition-name", F_OK) == 0 &&
                     access("/proc/device-tree/hmc-managed?", F_OK) == 0 &&
@@ -120,6 +124,14 @@ static Virtualization detect_vm_device_tree(void) {
                                 log_debug("Virtualization QEMU: \"fw-cfg\" present in /proc/device-tree/%s", de->d_name);
                                 return VIRTUALIZATION_QEMU;
                         }
+
+                r = read_one_line_file("/proc/device-tree/compatible", &compat);
+                if (r < 0 && r != -ENOENT)
+                        return r;
+                if (r >= 0 && streq(compat, "qemu,pseries")) {
+                        log_debug("Virtualization %s found in /proc/device-tree/compatible", compat);
+                        return VIRTUALIZATION_QEMU;
+                }
 
                 log_debug("No virtualization found in /proc/device-tree/*");
                 return VIRTUALIZATION_NONE;
@@ -156,21 +168,22 @@ static Virtualization detect_vm_dmi_vendor(void) {
                 const char *vendor;
                 Virtualization id;
         } dmi_vendor_table[] = {
-                { "KVM",                 VIRTUALIZATION_KVM       },
-                { "OpenStack",           VIRTUALIZATION_KVM       }, /* Detect OpenStack instance as KVM in non x86 architecture */
-                { "KubeVirt",            VIRTUALIZATION_KVM       }, /* Detect KubeVirt instance as KVM in non x86 architecture */
-                { "Amazon EC2",          VIRTUALIZATION_AMAZON    },
-                { "QEMU",                VIRTUALIZATION_QEMU      },
-                { "VMware",              VIRTUALIZATION_VMWARE    }, /* https://kb.vmware.com/s/article/1009458 */
-                { "VMW",                 VIRTUALIZATION_VMWARE    },
-                { "innotek GmbH",        VIRTUALIZATION_ORACLE    },
-                { "VirtualBox",          VIRTUALIZATION_ORACLE    },
-                { "Xen",                 VIRTUALIZATION_XEN       },
-                { "Bochs",               VIRTUALIZATION_BOCHS     },
-                { "Parallels",           VIRTUALIZATION_PARALLELS },
+                { "KVM",                  VIRTUALIZATION_KVM       },
+                { "OpenStack",            VIRTUALIZATION_KVM       }, /* Detect OpenStack instance as KVM in non x86 architecture */
+                { "KubeVirt",             VIRTUALIZATION_KVM       }, /* Detect KubeVirt instance as KVM in non x86 architecture */
+                { "Amazon EC2",           VIRTUALIZATION_AMAZON    },
+                { "QEMU",                 VIRTUALIZATION_QEMU      },
+                { "VMware",               VIRTUALIZATION_VMWARE    }, /* https://kb.vmware.com/s/article/1009458 */
+                { "VMW",                  VIRTUALIZATION_VMWARE    },
+                { "innotek GmbH",         VIRTUALIZATION_ORACLE    },
+                { "VirtualBox",           VIRTUALIZATION_ORACLE    },
+                { "Xen",                  VIRTUALIZATION_XEN       },
+                { "Bochs",                VIRTUALIZATION_BOCHS     },
+                { "Parallels",            VIRTUALIZATION_PARALLELS },
                 /* https://wiki.freebsd.org/bhyve */
-                { "BHYVE",               VIRTUALIZATION_BHYVE     },
-                { "Hyper-V",             VIRTUALIZATION_MICROSOFT },
+                { "BHYVE",                VIRTUALIZATION_BHYVE     },
+                { "Hyper-V",              VIRTUALIZATION_MICROSOFT },
+                { "Apple Virtualization", VIRTUALIZATION_APPLE     },
         };
         int r;
 
@@ -251,6 +264,7 @@ static Virtualization detect_vm_dmi(void) {
                          * so we fallback to using the product name which is less restricted
                          * to distinguish metal systems from virtualized instances */
                         _cleanup_free_ char *s = NULL;
+                        const char *e;
 
                         r = read_full_virtual_file("/sys/class/dmi/id/product_name", &s, NULL);
                         /* In EC2, virtualized is much more common than metal, so if for some reason
@@ -260,8 +274,9 @@ static Virtualization detect_vm_dmi(void) {
                                                 " assuming virtualized: %m");
                                 return VIRTUALIZATION_AMAZON;
                         }
-                        if (endswith(truncate_nl(s), ".metal")) {
-                                log_debug("DMI product name ends with '.metal', assuming no virtualization");
+                        e = strstrafter(truncate_nl(s), ".metal");
+                        if (e && IN_SET(*e, 0, '-')) {
+                                log_debug("DMI product name has '.metal', assuming no virtualization");
                                 return VIRTUALIZATION_NONE;
                         } else
                                 return VIRTUALIZATION_AMAZON;
@@ -775,7 +790,7 @@ translate_name:
                 /* Some images hardcode container=oci, but OCI is not a specific container manager.
                  * Try to detect one based on well-known files. */
                 v = detect_container_files();
-                if (v != VIRTUALIZATION_NONE)
+                if (v == VIRTUALIZATION_NONE)
                         v = VIRTUALIZATION_CONTAINER_OTHER;
                 goto finish;
         }
@@ -866,10 +881,26 @@ int running_in_userns(void) {
 int running_in_chroot(void) {
         int r;
 
+        /* If we're PID1, /proc may not be mounted (and most likely we're not in a chroot). But PID1 will
+         * mount /proc, so all other programs can assume that if /proc is *not* available, we're in some
+         * chroot. */
+
         if (getenv_bool("SYSTEMD_IGNORE_CHROOT") > 0)
                 return 0;
 
+        if (getpid_cached() == 1)
+                return false;  /* We're PID 1, we can't be in a chroot. */
+
         r = files_same("/proc/1/root", "/", 0);
+        if (r == -ENOENT) {
+                r = proc_mounted();
+                if (r == 0) {
+                        log_debug("/proc is not mounted, assuming we're in a chroot.");
+                        return 1;
+                }
+                if (r > 0)  /* If we have fake /proc/, we can't do the check properly. */
+                        return -ENOSYS;
+        }
         if (r < 0)
                 return r;
 
@@ -883,68 +914,68 @@ struct cpuid_table_entry {
 };
 
 static const struct cpuid_table_entry leaf1_edx[] = {
-        {  0, "fpu" },
-        {  1, "vme" },
-        {  2, "de" },
-        {  3, "pse" },
-        {  4, "tsc" },
-        {  5, "msr" },
-        {  6, "pae" },
-        {  7, "mce" },
-        {  8, "cx8" },
-        {  9, "apic" },
-        { 11, "sep" },
-        { 12, "mtrr" },
-        { 13, "pge" },
-        { 14, "mca" },
-        { 15, "cmov" },
-        { 16, "pat" },
-        { 17, "pse36" },
+        {  0, "fpu"     },
+        {  1, "vme"     },
+        {  2, "de"      },
+        {  3, "pse"     },
+        {  4, "tsc"     },
+        {  5, "msr"     },
+        {  6, "pae"     },
+        {  7, "mce"     },
+        {  8, "cx8"     },
+        {  9, "apic"    },
+        { 11, "sep"     },
+        { 12, "mtrr"    },
+        { 13, "pge"     },
+        { 14, "mca"     },
+        { 15, "cmov"    },
+        { 16, "pat"     },
+        { 17, "pse36"   },
         { 19, "clflush" },
-        { 23, "mmx" },
-        { 24, "fxsr" },
-        { 25, "sse" },
-        { 26, "sse2" },
-        { 28, "ht" },
+        { 23, "mmx"     },
+        { 24, "fxsr"    },
+        { 25, "sse"     },
+        { 26, "sse2"    },
+        { 28, "ht"      },
 };
 
 static const struct cpuid_table_entry leaf1_ecx[] = {
-        {  0, "pni" },
-        {  1, "pclmul" },
+        {  0, "pni"     },
+        {  1, "pclmul"  },
         {  3, "monitor" },
-        {  9, "ssse3" },
-        { 12, "fma3" },
-        { 13, "cx16" },
-        { 19, "sse4_1" },
-        { 20, "sse4_2" },
-        { 22, "movbe" },
-        { 23, "popcnt" },
-        { 25, "aes" },
-        { 26, "xsave" },
+        {  9, "ssse3"   },
+        { 12, "fma3"    },
+        { 13, "cx16"    },
+        { 19, "sse4_1"  },
+        { 20, "sse4_2"  },
+        { 22, "movbe"   },
+        { 23, "popcnt"  },
+        { 25, "aes"     },
+        { 26, "xsave"   },
         { 27, "osxsave" },
-        { 28, "avx" },
-        { 29, "f16c" },
-        { 30, "rdrand" },
+        { 28, "avx"     },
+        { 29, "f16c"    },
+        { 30, "rdrand"  },
 };
 
 static const struct cpuid_table_entry leaf7_ebx[] = {
-        {  3, "bmi1" },
-        {  5, "avx2" },
-        {  8, "bmi2" },
+        {  3, "bmi1"   },
+        {  5, "avx2"   },
+        {  8, "bmi2"   },
         { 18, "rdseed" },
-        { 19, "adx" },
+        { 19, "adx"    },
         { 29, "sha_ni" },
 };
 
 static const struct cpuid_table_entry leaf81_edx[] = {
         { 11, "syscall" },
-        { 27, "rdtscp" },
-        { 29, "lm" },
+        { 27, "rdtscp"  },
+        { 29, "lm"      },
 };
 
 static const struct cpuid_table_entry leaf81_ecx[] = {
         {  0, "lahf_lm" },
-        {  5, "abm" },
+        {  5, "abm"     },
 };
 
 static const struct cpuid_table_entry leaf87_edx[] = {
@@ -1002,34 +1033,36 @@ bool has_cpu_with_flag(const char *flag) {
 }
 
 static const char *const virtualization_table[_VIRTUALIZATION_MAX] = {
-        [VIRTUALIZATION_NONE] = "none",
-        [VIRTUALIZATION_KVM] = "kvm",
-        [VIRTUALIZATION_AMAZON] = "amazon",
-        [VIRTUALIZATION_QEMU] = "qemu",
-        [VIRTUALIZATION_BOCHS] = "bochs",
-        [VIRTUALIZATION_XEN] = "xen",
-        [VIRTUALIZATION_UML] = "uml",
-        [VIRTUALIZATION_VMWARE] = "vmware",
-        [VIRTUALIZATION_ORACLE] = "oracle",
-        [VIRTUALIZATION_MICROSOFT] = "microsoft",
-        [VIRTUALIZATION_ZVM] = "zvm",
-        [VIRTUALIZATION_PARALLELS] = "parallels",
-        [VIRTUALIZATION_BHYVE] = "bhyve",
-        [VIRTUALIZATION_QNX] = "qnx",
-        [VIRTUALIZATION_ACRN] = "acrn",
-        [VIRTUALIZATION_POWERVM] = "powervm",
-        [VIRTUALIZATION_VM_OTHER] = "vm-other",
+        [VIRTUALIZATION_NONE]            = "none",
+        [VIRTUALIZATION_KVM]             = "kvm",
+        [VIRTUALIZATION_AMAZON]          = "amazon",
+        [VIRTUALIZATION_QEMU]            = "qemu",
+        [VIRTUALIZATION_BOCHS]           = "bochs",
+        [VIRTUALIZATION_XEN]             = "xen",
+        [VIRTUALIZATION_UML]             = "uml",
+        [VIRTUALIZATION_VMWARE]          = "vmware",
+        [VIRTUALIZATION_ORACLE]          = "oracle",
+        [VIRTUALIZATION_MICROSOFT]       = "microsoft",
+        [VIRTUALIZATION_ZVM]             = "zvm",
+        [VIRTUALIZATION_PARALLELS]       = "parallels",
+        [VIRTUALIZATION_BHYVE]           = "bhyve",
+        [VIRTUALIZATION_QNX]             = "qnx",
+        [VIRTUALIZATION_ACRN]            = "acrn",
+        [VIRTUALIZATION_POWERVM]         = "powervm",
+        [VIRTUALIZATION_APPLE]           = "apple",
+        [VIRTUALIZATION_SRE]             = "sre",
+        [VIRTUALIZATION_VM_OTHER]        = "vm-other",
 
-        [VIRTUALIZATION_SYSTEMD_NSPAWN] = "systemd-nspawn",
-        [VIRTUALIZATION_LXC_LIBVIRT] = "lxc-libvirt",
-        [VIRTUALIZATION_LXC] = "lxc",
-        [VIRTUALIZATION_OPENVZ] = "openvz",
-        [VIRTUALIZATION_DOCKER] = "docker",
-        [VIRTUALIZATION_PODMAN] = "podman",
-        [VIRTUALIZATION_RKT] = "rkt",
-        [VIRTUALIZATION_WSL] = "wsl",
-        [VIRTUALIZATION_PROOT] = "proot",
-        [VIRTUALIZATION_POUCH] = "pouch",
+        [VIRTUALIZATION_SYSTEMD_NSPAWN]  = "systemd-nspawn",
+        [VIRTUALIZATION_LXC_LIBVIRT]     = "lxc-libvirt",
+        [VIRTUALIZATION_LXC]             = "lxc",
+        [VIRTUALIZATION_OPENVZ]          = "openvz",
+        [VIRTUALIZATION_DOCKER]          = "docker",
+        [VIRTUALIZATION_PODMAN]          = "podman",
+        [VIRTUALIZATION_RKT]             = "rkt",
+        [VIRTUALIZATION_WSL]             = "wsl",
+        [VIRTUALIZATION_PROOT]           = "proot",
+        [VIRTUALIZATION_POUCH]           = "pouch",
         [VIRTUALIZATION_CONTAINER_OTHER] = "container-other",
 };
 

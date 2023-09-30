@@ -10,6 +10,8 @@
 #include <sys/quota.h>
 #include <sys/stat.h>
 
+#include "sd-id128.h"
+
 #include "btrfs-util.h"
 #include "bus-common-errors.h"
 #include "bus-error.h"
@@ -23,6 +25,7 @@
 #include "fileio.h"
 #include "format-util.h"
 #include "fs-util.h"
+#include "glyph-util.h"
 #include "gpt.h"
 #include "home-util.h"
 #include "homed-conf.h"
@@ -118,10 +121,9 @@ static void manager_watch_home(Manager *m) {
 
 static int on_home_inotify(sd_event_source *s, const struct inotify_event *event, void *userdata) {
         _cleanup_free_ char *j = NULL;
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         const char *e, *n;
 
-        assert(m);
         assert(event);
 
         if ((event->mask & (IN_Q_OVERFLOW|IN_MOVE_SELF|IN_DELETE_SELF|IN_IGNORED|IN_UNMOUNT)) != 0) {
@@ -858,7 +860,7 @@ static int manager_assess_image(
 
         if (S_ISDIR(st.st_mode)) {
                 _cleanup_free_ char *n = NULL, *user_name = NULL, *realm = NULL;
-                _cleanup_close_ int fd = -1;
+                _cleanup_close_ int fd = -EBADF;
                 UserStorage storage;
 
                 if (!directory_suffix)
@@ -1020,9 +1022,9 @@ static int manager_bind_varlink(Manager *m) {
                 return log_error_errno(r, "Failed to attach varlink connection to event loop: %m");
 
         assert(!m->userdb_service);
-        m->userdb_service = strdup(basename(socket_path));
-        if (!m->userdb_service)
-                return log_oom();
+        r = path_extract_filename(socket_path, &m->userdb_service);
+        if (r < 0)
+                return log_error_errno(r, "Failed to extra filename from socket path '%s': %m", socket_path);
 
         /* Avoid recursion */
         if (setenv("SYSTEMD_BYPASS_USERDB", m->userdb_service, 1) < 0)
@@ -1039,7 +1041,7 @@ static ssize_t read_datagram(
 
         CMSG_BUFFER_TYPE(CMSG_SPACE(sizeof(struct ucred)) + CMSG_SPACE(sizeof(int))) control;
         _cleanup_free_ void *buffer = NULL;
-        _cleanup_close_ int passed_fd = -1;
+        _cleanup_close_ int passed_fd = -EBADF;
         struct ucred *sender = NULL;
         struct cmsghdr *cmsg;
         struct msghdr mh;
@@ -1117,14 +1119,13 @@ static ssize_t read_datagram(
 static int on_notify_socket(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
         _cleanup_strv_free_ char **l = NULL;
         _cleanup_free_ void *datagram = NULL;
-        _cleanup_close_ int passed_fd = -1;
+        _cleanup_close_ int passed_fd = -EBADF;
         struct ucred sender = UCRED_INVALID;
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         ssize_t n;
         Home *h;
 
         assert(s);
-        assert(m);
 
         n = read_datagram(fd, &sender, &datagram, &passed_fd);
         if (n < 0) {
@@ -1153,7 +1154,7 @@ static int on_notify_socket(sd_event_source *s, int fd, uint32_t revents, void *
 }
 
 static int manager_listen_notify(Manager *m) {
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         union sockaddr_union sa = {
                 .un.sun_family = AF_UNIX,
                 .un.sun_path = "/run/systemd/home/notify",
@@ -1238,7 +1239,7 @@ static int manager_add_device(Manager *m, sd_device *d) {
                 return 0;
         if (r < 0)
                 return log_error_errno(r, "Failed to acquire ID_PART_ENTRY_TYPE device property, ignoring: %m");
-        if (id128_equal_string(parttype, GPT_USER_HOME) <= 0) {
+        if (sd_id128_string_equal(parttype, SD_GPT_USER_HOME) <= 0) {
                 log_debug("Found partition (%s) we don't care about, ignoring.", sysfs);
                 return 0;
         }
@@ -1268,10 +1269,9 @@ static int manager_add_device(Manager *m, sd_device *d) {
 }
 
 static int manager_on_device(sd_device_monitor *monitor, sd_device *d, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         int r;
 
-        assert(m);
         assert(d);
 
         if (device_for_action(d, SD_DEVICE_REMOVE)) {
@@ -1505,7 +1505,11 @@ static int manager_load_public_key_one(Manager *m, const char *path) {
 
         assert(m);
 
-        if (streq(basename(path), "local.public")) /* we already loaded the private key, which includes the public one */
+        r = path_extract_filename(path, &fn);
+        if (r < 0)
+                return log_error_errno(r, "Failed to extract filename of path '%s': %m", path);
+
+        if (streq(fn, "local.public")) /* we already loaded the private key, which includes the public one */
                 return 0;
 
         f = fopen(path, "re");
@@ -1533,10 +1537,6 @@ static int manager_load_public_key_one(Manager *m, const char *path) {
         pkey = PEM_read_PUBKEY(f, &pkey, NULL, NULL);
         if (!pkey)
                 return log_error_errno(SYNTHETIC_ERRNO(EIO), "Failed to parse public key file %s.", path);
-
-        fn = strdup(basename(path));
-        if (!fn)
-                return log_oom();
 
         r = hashmap_put(m->public_keys, fn, pkey);
         if (r < 0)
@@ -1616,7 +1616,7 @@ void manager_revalidate_image(Manager *m, Home *h) {
         assert(h);
 
         /* Frees an automatically discovered image, if it's synthetic and its image disappeared. Unmounts any
-         * image if it's mounted but it's image vanished. */
+         * image if it's mounted but its image vanished. */
 
         if (h->current_operation || !ordered_set_isempty(h->pending_operations))
                 return;
@@ -1695,9 +1695,7 @@ int manager_gc_images(Manager *m) {
 }
 
 static int on_deferred_rescan(sd_event_source *s, void *userdata) {
-        Manager *m = userdata;
-
-        assert(m);
+        Manager *m = ASSERT_PTR(userdata);
 
         m->deferred_rescan_event_source = sd_event_source_disable_unref(m->deferred_rescan_event_source);
 
@@ -1733,9 +1731,7 @@ int manager_enqueue_rescan(Manager *m) {
 }
 
 static int on_deferred_gc(sd_event_source *s, void *userdata) {
-        Manager *m = userdata;
-
-        assert(m);
+        Manager *m = ASSERT_PTR(userdata);
 
         m->deferred_gc_event_source = sd_event_source_disable_unref(m->deferred_gc_event_source);
 
@@ -1936,8 +1932,10 @@ static int manager_rebalance_calculate(Manager *m) {
                     (m->rebalance_state == REBALANCE_GROWING && h->rebalance_goal < h->rebalance_size))
                         h->rebalance_pending = false;
                 else {
-                        log_debug("Rebalancing home directory '%s' %s → %s.", h->user_name,
-                                  FORMAT_BYTES(h->rebalance_size), FORMAT_BYTES(h->rebalance_goal));
+                        log_debug("Rebalancing home directory '%s' %s %s %s.", h->user_name,
+                                  FORMAT_BYTES(h->rebalance_size),
+                                  special_glyph(SPECIAL_GLYPH_ARROW_RIGHT),
+                                  FORMAT_BYTES(h->rebalance_goal));
                         h->rebalance_pending = true;
                 }
 
@@ -2090,10 +2088,9 @@ finish:
 }
 
 static int on_rebalance_timer(sd_event_source *s, usec_t t, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(s);
-        assert(m);
         assert(IN_SET(m->rebalance_state, REBALANCE_WAITING, REBALANCE_PENDING, REBALANCE_SHRINKING, REBALANCE_GROWING));
 
         (void) manager_rebalance_now(m);

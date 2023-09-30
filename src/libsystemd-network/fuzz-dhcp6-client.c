@@ -10,7 +10,7 @@
 #include "fd-util.h"
 #include "fuzz.h"
 
-static int test_dhcp_fd[2] = { -1, -1 };
+static int test_dhcp_fd[2] = PIPE_EBADF;
 
 int dhcp6_network_send_udp_socket(int s, struct in6_addr *server_address, const void *packet, size_t len) {
         return len;
@@ -48,7 +48,7 @@ static void fuzz_client(sd_dhcp6_client *client, const uint8_t *data, size_t siz
                         assert_se(IN_SET(client->state, DHCP6_STATE_REQUEST, DHCP6_STATE_BOUND));
                         break;
                 case DHCP6_STATE_REQUEST:
-                        assert_se(client->state == DHCP6_STATE_BOUND);
+                        assert_se(IN_SET(client->state, DHCP6_STATE_BOUND, DHCP6_STATE_SOLICITATION));
                         break;
                 default:
                         assert_not_reached();

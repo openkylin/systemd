@@ -9,12 +9,11 @@ test_hashmap_ordered_c = custom_target(
         capture : true,
         build_by_default : want_tests != 'false')
 
-test_include_dir = include_directories('.')
-
 path = run_command(sh, '-c', 'echo "$PATH"', check: true).stdout().strip()
 test_env = environment()
 test_env.set('SYSTEMD_LANGUAGE_FALLBACK_MAP', language_fallback_map)
 test_env.set('PATH', project_build_root + ':' + path)
+test_env.set('PROJECT_BUILD_ROOT', project_build_root)
 
 ############################################################
 
@@ -41,6 +40,8 @@ test_dlopen_c = files('test-dlopen.c')
 ############################################################
 
 tests += [
+        [files('test-argv-util.c')],
+
         [files('test-device-nodes.c')],
 
         [files('test-ether-addr-util.c')],
@@ -74,7 +75,9 @@ tests += [
          [],
          core_includes],
 
-        [files('test-dlopen-so.c')],
+        [files('test-dlopen-so.c'),
+         [],
+         libp11kit_cflags],
 
         [files('test-job-type.c'),
          [libcore,
@@ -205,9 +208,19 @@ tests += [
 
         [files('test-ratelimit.c')],
 
-        [files('test-util.c')],
+        [files('test-raw-clone.c')],
+
+        [files('test-limits-util.c')],
+
+        [files('test-logarithm.c')],
 
         [files('test-macro.c')],
+
+        [files('test-math-util.c'),
+         [],
+         [libm]],
+
+        [files('test-memory-util.c')],
 
         [files('test-mkdir.c')],
 
@@ -228,6 +241,8 @@ tests += [
 
         [files('test-exec-util.c')],
 
+        [files('test-execve.c')],
+
         [files('test-hexdecoct.c')],
 
         [files('test-alloc-util.c')],
@@ -243,6 +258,8 @@ tests += [
         [files('test-install-file.c')],
 
         [files('test-umask-util.c')],
+
+        [files('test-creds.c')],
 
         [files('test-proc-cmdline.c')],
 
@@ -543,6 +560,8 @@ tests += [
 
         [files('test-strv.c')],
 
+        [files('test-nulstr-util.c')],
+
         [files('test-path-util.c')],
 
         [files('test-rm-rf.c')],
@@ -609,10 +628,15 @@ tests += [
         [files('test-errno-list.c') +
          generated_gperf_headers],
 
+        [files('test-errno-util.c')],
+
         [files('test-ip-protocol-list.c') +
          shared_generated_gperf_headers],
 
         [files('test-journal-importer.c')],
+
+        [files('test-utmp.c'),
+         [], [], [], 'ENABLE_UTMP'],
 
         [files('test-udev.c'),
          [libudevd_core,
@@ -635,15 +659,13 @@ tests += [
          [], 'HAVE_OPENSSL_OR_GCRYPT'],
 
         [files('test-nss-hosts.c',
-               'nss-test-util.c',
-               'nss-test-util.h'),
+               'nss-test-util.c'),
          [],
          [libdl],
          [], 'ENABLE_NSS', 'timeout=120'],
 
         [files('test-nss-users.c',
-               'nss-test-util.c',
-               'nss-test-util.h'),
+               'nss-test-util.c'),
          [],
          [libdl],
          [], 'ENABLE_NSS'],
@@ -670,6 +692,8 @@ tests += [
         [files('test-hmac.c')],
 
         [files('test-sha256.c')],
+
+        [files('test-open-file.c')],
 ]
 
 ############################################################

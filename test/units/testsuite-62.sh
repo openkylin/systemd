@@ -5,7 +5,6 @@ set -o pipefail
 
 setup() {
     systemd-analyze log-level debug
-    systemd-analyze log-target console
 
     for i in {0..3};
     do
@@ -61,6 +60,6 @@ systemctl start --wait testsuite-62-3.service
 systemctl start --wait testsuite-62-4.service
 systemctl start --wait testsuite-62-5.service
 
-echo OK > /testok
+echo OK >/testok
 
 exit 0

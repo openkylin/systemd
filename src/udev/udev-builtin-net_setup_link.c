@@ -2,16 +2,19 @@
 
 #include "alloc-util.h"
 #include "device-util.h"
+#include "escape.h"
 #include "errno-util.h"
 #include "link-config.h"
 #include "log.h"
 #include "string-util.h"
+#include "strv.h"
 #include "udev-builtin.h"
 
 static LinkConfigContext *ctx = NULL;
 
 static int builtin_net_setup_link(sd_device *dev, sd_netlink **rtnl, int argc, char **argv, bool test) {
         _cleanup_(link_freep) Link *link = NULL;
+        _cleanup_free_ char *joined = NULL;
         int r;
 
         if (argc > 1)
@@ -48,6 +51,19 @@ static int builtin_net_setup_link(sd_device *dev, sd_netlink **rtnl, int argc, c
         if (link->new_name)
                 udev_builtin_add_property(dev, test, "ID_NET_NAME", link->new_name);
 
+        STRV_FOREACH(d, link->config->dropins) {
+                _cleanup_free_ char *escaped = NULL;
+
+                escaped = xescape(*d, ":");
+                if (!escaped)
+                        return log_oom();
+
+                if (!strextend_with_separator(&joined, ":", escaped))
+                        return log_oom();
+        }
+
+        udev_builtin_add_property(dev, test, "ID_NET_LINK_FILE_DROPINS", joined);
+
         return 0;
 }
 
@@ -74,12 +90,16 @@ static void builtin_net_setup_link_exit(void) {
         log_debug("Unloaded link configuration context.");
 }
 
-static bool builtin_net_setup_link_validate(void) {
-        log_debug("Check if link configuration needs reloading.");
+static bool builtin_net_setup_link_should_reload(void) {
         if (!ctx)
                 return false;
 
-        return link_config_should_reload(ctx);
+        if (link_config_should_reload(ctx)) {
+                log_debug("Link configuration context needs reloading.");
+                return true;
+        }
+
+        return false;
 }
 
 const UdevBuiltin udev_builtin_net_setup_link = {
@@ -87,7 +107,7 @@ const UdevBuiltin udev_builtin_net_setup_link = {
         .cmd = builtin_net_setup_link,
         .init = builtin_net_setup_link_init,
         .exit = builtin_net_setup_link_exit,
-        .validate = builtin_net_setup_link_validate,
+        .should_reload = builtin_net_setup_link_should_reload,
         .help = "Configure network link",
         .run_once = false,
 };

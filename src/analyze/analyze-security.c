@@ -7,6 +7,7 @@
 #include "analyze-security.h"
 #include "analyze-verify.h"
 #include "bus-error.h"
+#include "bus-locator.h"
 #include "bus-map-properties.h"
 #include "bus-unit-util.h"
 #include "bus-util.h"
@@ -198,9 +199,8 @@ static int assess_bool(
                 uint64_t *ret_badness,
                 char **ret_description) {
 
-        const bool *b = data;
+        const bool *b = ASSERT_PTR(data);
 
-        assert(b);
         assert(ret_badness);
         assert(ret_description);
 
@@ -567,8 +567,6 @@ static int assess_system_call_architectures(
 }
 
 static bool syscall_names_in_filter(Set *s, bool allow_list, const SyscallFilterSet *f, const char **ret_offending_syscall) {
-        const char *syscall;
-
         NULSTR_FOREACH(syscall, f->value) {
                 if (syscall[0] == '@') {
                         const SyscallFilterSet *g;
@@ -1959,14 +1957,13 @@ static int property_read_restrict_namespaces(
                 sd_bus_error *error,
                 void *userdata) {
 
-        SecurityInfo *info = userdata;
+        SecurityInfo *info = ASSERT_PTR(userdata);
         int r;
         uint64_t namespaces;
 
         assert(bus);
         assert(member);
         assert(m);
-        assert(info);
 
         r = sd_bus_message_read(m, "t", &namespaces);
         if (r < 0)
@@ -1984,14 +1981,13 @@ static int property_read_umask(
                 sd_bus_error *error,
                 void *userdata) {
 
-        SecurityInfo *info = userdata;
+        SecurityInfo *info = ASSERT_PTR(userdata);
         int r;
         uint32_t umask;
 
         assert(bus);
         assert(member);
         assert(m);
-        assert(info);
 
         r = sd_bus_message_read(m, "u", &umask);
         if (r < 0)
@@ -2069,13 +2065,12 @@ static int property_read_syscall_archs(
                 sd_bus_error *error,
                 void *userdata) {
 
-        SecurityInfo *info = userdata;
+        SecurityInfo *info = ASSERT_PTR(userdata);
         int r;
 
         assert(bus);
         assert(member);
         assert(m);
-        assert(info);
 
         r = sd_bus_message_enter_container(m, 'a', "s");
         if (r < 0)
@@ -2815,11 +2810,9 @@ static int analyze_security(sd_bus *bus,
                 _cleanup_strv_free_ char **list = NULL;
                 size_t n = 0;
 
-                r = sd_bus_call_method(
+                r = bus_call_method(
                                 bus,
-                                "org.freedesktop.systemd1",
-                                "/org/freedesktop/systemd1",
-                                "org.freedesktop.systemd1.Manager",
+                                bus_systemd_mgr,
                                 "ListUnits",
                                 &error,
                                 &reply,

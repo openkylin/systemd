@@ -15,10 +15,10 @@
 #include "bus-error.h"
 #include "bus-util.h"
 #include "chase-symlinks.h"
+#include "constants.h"
 #include "copy.h"
 #include "dbus-socket.h"
 #include "dbus-unit.h"
-#include "def.h"
 #include "errno-list.h"
 #include "exit-status.h"
 #include "fd-util.h"
@@ -739,16 +739,14 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
                 switch (p->type) {
                 case SOCKET_SOCKET: {
                         _cleanup_free_ char *k = NULL;
-                        const char *t;
                         int r;
 
                         r = socket_address_print(&p->address, &k);
-                        if (r < 0)
-                                t = strerror_safe(r);
-                        else
-                                t = k;
-
-                        fprintf(f, "%s%s: %s\n", prefix, listen_lookup(socket_address_family(&p->address), p->address.type), t);
+                        if (r < 0) {
+                                errno = -r;
+                                fprintf(f, "%s%s: %m\n", prefix, listen_lookup(socket_address_family(&p->address), p->address.type));
+                        } else
+                                fprintf(f, "%s%s: %s\n", prefix, listen_lookup(socket_address_family(&p->address), p->address.type), k);
                         break;
                 }
                 case SOCKET_SPECIAL:
@@ -858,14 +856,12 @@ static int instance_from_socket(int fd, unsigned nr, char **instance) {
                                      be16toh(remote.in6.sin6_port)) < 0)
                                 return -ENOMEM;
                 } else {
-                        char a[INET6_ADDRSTRLEN], b[INET6_ADDRSTRLEN];
-
                         if (asprintf(&r,
                                      "%u-%s:%u-%s:%u",
                                      nr,
-                                     inet_ntop(AF_INET6, &local.in6.sin6_addr, a, sizeof(a)),
+                                     IN6_ADDR_TO_STRING(&local.in6.sin6_addr),
                                      be16toh(local.in6.sin6_port),
-                                     inet_ntop(AF_INET6, &remote.in6.sin6_addr, b, sizeof(b)),
+                                     IN6_ADDR_TO_STRING(&remote.in6.sin6_addr),
                                      be16toh(remote.in6.sin6_port)) < 0)
                                 return -ENOMEM;
                 }
@@ -1120,7 +1116,7 @@ static int fifo_address_create(
                 mode_t directory_mode,
                 mode_t socket_mode) {
 
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         mode_t old_mask;
         struct stat st;
         int r;
@@ -1176,7 +1172,7 @@ fail:
 }
 
 static int special_address_create(const char *path, bool writable) {
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         struct stat st;
 
         assert(path);
@@ -1196,7 +1192,7 @@ static int special_address_create(const char *path, bool writable) {
 }
 
 static int usbffs_address_create(const char *path) {
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         struct stat st;
 
         assert(path);
@@ -1221,7 +1217,7 @@ static int mq_address_create(
                 long maxmsg,
                 long msgsize) {
 
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         struct stat st;
         mode_t old_mask;
         struct mq_attr _attr, *attr = NULL;
@@ -1284,7 +1280,8 @@ static int socket_symlink(Socket *s) {
                 }
 
                 if (r < 0)
-                        log_unit_warning_errno(UNIT(s), r, "Failed to create symlink %s → %s, ignoring: %m", p, *i);
+                        log_unit_warning_errno(UNIT(s), r, "Failed to create symlink %s %s %s, ignoring: %m",
+                                               p, special_glyph(SPECIAL_GLYPH_ARROW_RIGHT), *i);
         }
 
         return 0;
@@ -1410,39 +1407,40 @@ static int socket_determine_selinux_label(Socket *s, char **ret) {
         assert(s);
         assert(ret);
 
-        if (s->selinux_context_from_net) {
-                /* If this is requested, get the label from the network label */
+        Unit *service;
+        ExecCommand *c;
+        const char *exec_context;
+        _cleanup_free_ char *path = NULL;
 
-                r = mac_selinux_get_our_label(ret);
-                if (r == -EOPNOTSUPP)
-                        goto no_label;
+        r = socket_load_service_unit(s, -1, &service);
+        if (r == -ENODATA)
+                goto no_label;
+        if (r < 0)
+                return r;
 
-        } else {
-                /* Otherwise, get it from the executable we are about to start. */
+        exec_context = SERVICE(service)->exec_context.selinux_context;
+        if (exec_context) {
+                char *con;
 
-                Unit *service;
-                ExecCommand *c;
-                _cleanup_free_ char *path = NULL;
+                con = strdup(exec_context);
+                if (!con)
+                        return -ENOMEM;
 
-                r = socket_load_service_unit(s, -1, &service);
-                if (r == -ENODATA)
-                        goto no_label;
-                if (r < 0)
-                        return r;
-
-                c = SERVICE(service)->exec_command[SERVICE_EXEC_START];
-                if (!c)
-                        goto no_label;
-
-                r = chase_symlinks(c->path, SERVICE(service)->exec_context.root_directory, CHASE_PREFIX_ROOT, &path, NULL);
-                if (r < 0)
-                        goto no_label;
-
-                r = mac_selinux_get_create_label_from_exe(path, ret);
-                if (IN_SET(r, -EPERM, -EOPNOTSUPP))
-                        goto no_label;
+                *ret = TAKE_PTR(con);
+                return 0;
         }
 
+        c = SERVICE(service)->exec_command[SERVICE_EXEC_START];
+        if (!c)
+                goto no_label;
+
+        r = chase_symlinks(c->path, SERVICE(service)->exec_context.root_directory, CHASE_PREFIX_ROOT, &path, NULL);
+        if (r < 0)
+                goto no_label;
+
+        r = mac_selinux_get_create_label_from_exe(path, ret);
+        if (IN_SET(r, -EPERM, -EOPNOTSUPP))
+                goto no_label;
         return r;
 
 no_label:
@@ -1504,7 +1502,7 @@ static int socket_address_listen_in_cgroup(
                 const SocketAddress *address,
                 const char *label) {
 
-        _cleanup_close_pair_ int pair[2] = { -1, -1 };
+        _cleanup_close_pair_ int pair[2] = PIPE_EBADF;
         int fd, r;
         pid_t pid;
 
@@ -1920,10 +1918,10 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {
 
         _cleanup_(exec_params_clear) ExecParameters exec_params = {
                 .flags     = EXEC_APPLY_SANDBOXING|EXEC_APPLY_CHROOT|EXEC_APPLY_TTY_STDIN,
-                .stdin_fd  = -1,
-                .stdout_fd = -1,
-                .stderr_fd = -1,
-                .exec_fd   = -1,
+                .stdin_fd  = -EBADF,
+                .stdout_fd = -EBADF,
+                .stderr_fd = -EBADF,
+                .exec_fd   = -EBADF,
         };
         pid_t pid;
         int r;
@@ -2901,7 +2899,7 @@ static int socket_accept_do(Socket *s, int fd) {
 }
 
 static int socket_accept_in_cgroup(Socket *s, SocketPort *p, int fd) {
-        _cleanup_close_pair_ int pair[2] = { -1, -1 };
+        _cleanup_close_pair_ int pair[2] = PIPE_EBADF;
         int cfd, r;
         pid_t pid;
 
@@ -2979,10 +2977,9 @@ shortcut:
 }
 
 static int socket_dispatch_io(sd_event_source *source, int fd, uint32_t revents, void *userdata) {
-        SocketPort *p = userdata;
-        int cfd = -1;
+        SocketPort *p = ASSERT_PTR(userdata);
+        int cfd = -EBADF;
 
-        assert(p);
         assert(fd >= 0);
 
         if (p->socket->state != SOCKET_LISTENING)

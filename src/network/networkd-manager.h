@@ -38,6 +38,7 @@ struct Manager {
         bool manage_foreign_rules;
 
         Set *dirty_links;
+        Set *new_wlan_ifindices;
 
         char *state_file;
         LinkOperationalState operational_state;
@@ -55,8 +56,6 @@ struct Manager {
         OrderedHashmap *networks;
         OrderedSet *address_pools;
         Set *dhcp_pd_subnet_ids;
-
-        usec_t network_dirs_ts_usec;
 
         DUID dhcp_duid;
         DUID dhcp6_duid;
@@ -95,12 +94,13 @@ struct Manager {
         usec_t speed_meter_usec_new;
         usec_t speed_meter_usec_old;
 
-        bool dhcp4_prefix_root_cannot_set_table;
         bool bridge_mdb_on_master_not_supported;
 
         FirewallContext *fw_ctx;
 
         OrderedSet *request_queue;
+
+        Hashmap *tuntap_fds_by_name;
 };
 
 int manager_new(Manager **ret, bool test_mode);
@@ -110,11 +110,12 @@ int manager_setup(Manager *m);
 int manager_start(Manager *m);
 
 int manager_load_config(Manager *m);
-bool manager_should_reload(Manager *m);
 
 int manager_enumerate(Manager *m);
 
 int manager_set_hostname(Manager *m, const char *hostname);
 int manager_set_timezone(Manager *m, const char *timezone);
+
+int manager_reload(Manager *m);
 
 DEFINE_TRIVIAL_CLEANUP_FUNC(Manager*, manager_free);

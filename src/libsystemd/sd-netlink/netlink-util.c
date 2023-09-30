@@ -2,17 +2,19 @@
 
 #include "sd-netlink.h"
 
-#include "format-util.h"
+#include "fd-util.h"
+#include "io-util.h"
 #include "memory-util.h"
 #include "netlink-internal.h"
 #include "netlink-util.h"
 #include "parse-util.h"
+#include "process-util.h"
 #include "strv.h"
 
 int rtnl_set_link_name(sd_netlink **rtnl, int ifindex, const char *name) {
         _cleanup_(sd_netlink_message_unrefp) sd_netlink_message *message = NULL;
         _cleanup_strv_free_ char **alternative_names = NULL;
-        char old_name[IF_NAMESIZE] = {};
+        bool altname_deleted = false;
         int r;
 
         assert(rtnl);
@@ -33,31 +35,32 @@ int rtnl_set_link_name(sd_netlink **rtnl, int ifindex, const char *name) {
                         return log_debug_errno(r, "Failed to remove '%s' from alternative names on network interface %i: %m",
                                                name, ifindex);
 
-                r = format_ifname(ifindex, old_name);
-                if (r < 0)
-                        return log_debug_errno(r, "Failed to get current name of network interface %i: %m", ifindex);
+                altname_deleted = true;
         }
 
         r = sd_rtnl_message_new_link(*rtnl, &message, RTM_SETLINK, ifindex);
         if (r < 0)
-                return r;
+                goto fail;
 
         r = sd_netlink_message_append_string(message, IFLA_IFNAME, name);
         if (r < 0)
-                return r;
+                goto fail;
 
         r = sd_netlink_call(*rtnl, message, 0, NULL);
         if (r < 0)
-                return r;
-
-        if (!isempty(old_name)) {
-                r = rtnl_set_link_alternative_names(rtnl, ifindex, STRV_MAKE(old_name));
-                if (r < 0)
-                        log_debug_errno(r, "Failed to set '%s' as an alternative name on network interface %i, ignoring: %m",
-                                        old_name, ifindex);
-        }
+                goto fail;
 
         return 0;
+
+fail:
+        if (altname_deleted) {
+                int q = rtnl_set_link_alternative_names(rtnl, ifindex, STRV_MAKE(name));
+                if (q < 0)
+                        log_debug_errno(q, "Failed to restore '%s' as an alternative name on network interface %i, ignoring: %m",
+                                        name, ifindex);
+        }
+
+        return r;
 }
 
 int rtnl_set_link_properties(
@@ -184,7 +187,12 @@ int rtnl_get_link_alternative_names(sd_netlink **rtnl, int ifindex, char ***ret)
         return 0;
 }
 
-static int rtnl_update_link_alternative_names(sd_netlink **rtnl, uint16_t nlmsg_type, int ifindex, char * const *alternative_names) {
+static int rtnl_update_link_alternative_names(
+                sd_netlink **rtnl,
+                uint16_t nlmsg_type,
+                int ifindex,
+                char* const *alternative_names) {
+
         _cleanup_(sd_netlink_message_unrefp) sd_netlink_message *message = NULL;
         int r;
 
@@ -209,7 +217,7 @@ static int rtnl_update_link_alternative_names(sd_netlink **rtnl, uint16_t nlmsg_
         if (r < 0)
                 return r;
 
-        r = sd_netlink_message_append_strv(message, IFLA_ALT_IFNAME, alternative_names);
+        r = sd_netlink_message_append_strv(message, IFLA_ALT_IFNAME, (const char**) alternative_names);
         if (r < 0)
                 return r;
 
@@ -224,15 +232,19 @@ static int rtnl_update_link_alternative_names(sd_netlink **rtnl, uint16_t nlmsg_
         return 0;
 }
 
-int rtnl_set_link_alternative_names(sd_netlink **rtnl, int ifindex, char * const *alternative_names) {
+int rtnl_set_link_alternative_names(sd_netlink **rtnl, int ifindex, char* const *alternative_names) {
         return rtnl_update_link_alternative_names(rtnl, RTM_NEWLINKPROP, ifindex, alternative_names);
 }
 
-int rtnl_delete_link_alternative_names(sd_netlink **rtnl, int ifindex, char * const *alternative_names) {
+int rtnl_delete_link_alternative_names(sd_netlink **rtnl, int ifindex, char* const *alternative_names) {
         return rtnl_update_link_alternative_names(rtnl, RTM_DELLINKPROP, ifindex, alternative_names);
 }
 
-int rtnl_set_link_alternative_names_by_ifname(sd_netlink **rtnl, const char *ifname, char * const *alternative_names) {
+int rtnl_set_link_alternative_names_by_ifname(
+                sd_netlink **rtnl,
+                const char *ifname,
+                char* const *alternative_names) {
+
         _cleanup_(sd_netlink_message_unrefp) sd_netlink_message *message = NULL;
         int r;
 
@@ -260,7 +272,7 @@ int rtnl_set_link_alternative_names_by_ifname(sd_netlink **rtnl, const char *ifn
         if (r < 0)
                 return r;
 
-        r = sd_netlink_message_append_strv(message, IFLA_ALT_IFNAME, alternative_names);
+        r = sd_netlink_message_append_strv(message, IFLA_ALT_IFNAME, (const char**) alternative_names);
         if (r < 0)
                 return r;
 
@@ -627,4 +639,131 @@ int rtattr_read_nexthop(const struct rtnexthop *rtnh, size_t size, int family, O
         if (ret)
                 *ret = TAKE_PTR(set);
         return 0;
+}
+
+bool netlink_pid_changed(sd_netlink *nl) {
+        /* We don't support people creating an nl connection and
+         * keeping it around over a fork(). Let's complain. */
+        return ASSERT_PTR(nl)->original_pid != getpid_cached();
+}
+
+static int socket_open(int family) {
+        int fd;
+
+        fd = socket(AF_NETLINK, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, family);
+        if (fd < 0)
+                return -errno;
+
+        return fd_move_above_stdio(fd);
+}
+
+int netlink_open_family(sd_netlink **ret, int family) {
+        _cleanup_close_ int fd = -EBADF;
+        int r;
+
+        fd = socket_open(family);
+        if (fd < 0)
+                return fd;
+
+        r = sd_netlink_open_fd(ret, fd);
+        if (r < 0)
+                return r;
+        TAKE_FD(fd);
+
+        return 0;
+}
+
+static bool serial_used(sd_netlink *nl, uint32_t serial) {
+        assert(nl);
+
+        return
+                hashmap_contains(nl->reply_callbacks, UINT32_TO_PTR(serial)) ||
+                hashmap_contains(nl->rqueue_by_serial, UINT32_TO_PTR(serial)) ||
+                hashmap_contains(nl->rqueue_partial_by_serial, UINT32_TO_PTR(serial));
+}
+
+void netlink_seal_message(sd_netlink *nl, sd_netlink_message *m) {
+        uint32_t picked;
+
+        assert(nl);
+        assert(!netlink_pid_changed(nl));
+        assert(m);
+        assert(m->hdr);
+
+        /* Avoid collisions with outstanding requests */
+        do {
+                picked = nl->serial;
+
+                /* Don't use seq == 0, as that is used for broadcasts, so we would get confused by replies to
+                   such messages */
+                nl->serial = nl->serial == UINT32_MAX ? 1 : nl->serial + 1;
+
+        } while (serial_used(nl, picked));
+
+        m->hdr->nlmsg_seq = picked;
+        message_seal(m);
+}
+
+static int socket_writev_message(sd_netlink *nl, sd_netlink_message **m, size_t msgcount) {
+        _cleanup_free_ struct iovec *iovs = NULL;
+        ssize_t k;
+
+        assert(nl);
+        assert(m);
+        assert(msgcount > 0);
+
+        iovs = new(struct iovec, msgcount);
+        if (!iovs)
+                return -ENOMEM;
+
+        for (size_t i = 0; i < msgcount; i++) {
+                assert(m[i]->hdr);
+                assert(m[i]->hdr->nlmsg_len > 0);
+
+                iovs[i] = IOVEC_MAKE(m[i]->hdr, m[i]->hdr->nlmsg_len);
+        }
+
+        k = writev(nl->fd, iovs, msgcount);
+        if (k < 0)
+                return -errno;
+
+        return k;
+}
+
+int sd_netlink_sendv(
+                sd_netlink *nl,
+                sd_netlink_message **messages,
+                size_t msgcount,
+                uint32_t **ret_serial) {
+
+        _cleanup_free_ uint32_t *serials = NULL;
+        int r;
+
+        assert_return(nl, -EINVAL);
+        assert_return(!netlink_pid_changed(nl), -ECHILD);
+        assert_return(messages, -EINVAL);
+        assert_return(msgcount > 0, -EINVAL);
+
+        if (ret_serial) {
+                serials = new(uint32_t, msgcount);
+                if (!serials)
+                        return -ENOMEM;
+        }
+
+        for (size_t i = 0; i < msgcount; i++) {
+                assert_return(!messages[i]->sealed, -EPERM);
+
+                netlink_seal_message(nl, messages[i]);
+                if (serials)
+                        serials[i] = message_get_serial(messages[i]);
+        }
+
+        r = socket_writev_message(nl, messages, msgcount);
+        if (r < 0)
+                return r;
+
+        if (ret_serial)
+                *ret_serial = TAKE_PTR(serials);
+
+        return r;
 }

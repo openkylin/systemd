@@ -14,11 +14,15 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 
+#include "sd-bus.h"
 #include "sd-messages.h"
 
 #include "btrfs-util.h"
+#include "build.h"
 #include "bus-error.h"
-#include "def.h"
+#include "bus-locator.h"
+#include "bus-util.h"
+#include "constants.h"
 #include "exec-util.h"
 #include "fd-util.h"
 #include "fileio.h"
@@ -29,11 +33,13 @@
 #include "parse-util.h"
 #include "pretty-print.h"
 #include "sleep-config.h"
+#include "special.h"
 #include "stdio-util.h"
 #include "string-util.h"
 #include "strv.h"
 #include "time-util.h"
-#include "util.h"
+
+#define DEFAULT_HIBERNATE_DELAY_USEC_NO_BATTERY (2 * USEC_PER_HOUR)
 
 static SleepOperation arg_operation = _SLEEP_OPERATION_INVALID;
 
@@ -224,7 +230,7 @@ static int execute(
 
                 r = write_mode(modes);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to write mode to /sys/power/disk: %m");;
+                        return log_error_errno(r, "Failed to write mode to /sys/power/disk: %m");
         }
 
         /* Pass an action string to the call-outs. This is mostly our operation string, except if the
@@ -262,42 +268,181 @@ static int execute(
         return r;
 }
 
-static int execute_s2h(const SleepConfig *sleep_config) {
-        _cleanup_close_ int tfd = -1;
-        struct itimerspec ts = {};
+static int custom_timer_suspend(const SleepConfig *sleep_config) {
+        usec_t hibernate_timestamp;
         int r;
 
         assert(sleep_config);
 
-        tfd = timerfd_create(CLOCK_BOOTTIME_ALARM, TFD_NONBLOCK|TFD_CLOEXEC);
-        if (tfd < 0)
-                return log_error_errno(errno, "Error creating timerfd: %m");
+        hibernate_timestamp = usec_add(now(CLOCK_BOOTTIME), sleep_config->hibernate_delay_usec);
 
-        log_debug("Set timerfd wake alarm for %s",
-                  FORMAT_TIMESPAN(sleep_config->hibernate_delay_sec, USEC_PER_SEC));
+        while (battery_is_discharging_and_low() == 0) {
+                _cleanup_hashmap_free_ Hashmap *last_capacity = NULL, *current_capacity = NULL;
+                _cleanup_close_ int tfd = -EBADF;
+                struct itimerspec ts = {};
+                usec_t suspend_interval;
+                bool woken_by_timer;
 
-        timespec_store(&ts.it_value, sleep_config->hibernate_delay_sec);
+                tfd = timerfd_create(CLOCK_BOOTTIME_ALARM, TFD_NONBLOCK|TFD_CLOEXEC);
+                if (tfd < 0)
+                        return log_error_errno(errno, "Error creating timerfd: %m");
 
-        r = timerfd_settime(tfd, 0, &ts, NULL);
-        if (r < 0)
-                return log_error_errno(errno, "Error setting hibernate timer: %m");
+                /* Store current battery capacity before suspension */
+                r = fetch_batteries_capacity_by_name(&last_capacity);
+                if (r < 0)
+                        return log_error_errno(r, "Error fetching battery capacity percentage: %m");
 
-        r = execute(sleep_config, SLEEP_SUSPEND, NULL);
-        if (r < 0)
-                return r;
+                if (hashmap_isempty(last_capacity))
+                        /* In case of no battery, system suspend interval will be set to HibernateDelaySec= or 2 hours. */
+                        suspend_interval = timestamp_is_set(hibernate_timestamp)
+                                           ? sleep_config->hibernate_delay_usec : DEFAULT_HIBERNATE_DELAY_USEC_NO_BATTERY;
+                else {
+                        r = get_total_suspend_interval(last_capacity, &suspend_interval);
+                        if (r < 0) {
+                                log_debug_errno(r, "Failed to estimate suspend interval using previous discharge rate, ignoring: %m");
+                                /* In case of any errors, especially when we do not know the battery
+                                 * discharging rate, system suspend interval will be set to
+                                 * SuspendEstimationSec=. */
+                                suspend_interval = sleep_config->suspend_estimation_usec;
+                        }
+                }
 
-        r = fd_wait_for_event(tfd, POLLIN, 0);
-        if (r < 0)
-                return log_error_errno(r, "Error polling timerfd: %m");
-        if (!FLAGS_SET(r, POLLIN)) /* We woke up before the alarm time, we are done. */
+                /* Do not suspend more than HibernateDelaySec= */
+                usec_t before_timestamp = now(CLOCK_BOOTTIME);
+                suspend_interval = MIN(suspend_interval, usec_sub_unsigned(hibernate_timestamp, before_timestamp));
+                if (suspend_interval <= 0)
+                        break; /* system should hibernate */
+
+                log_debug("Set timerfd wake alarm for %s", FORMAT_TIMESPAN(suspend_interval, USEC_PER_SEC));
+                /* Wake alarm for system with or without battery to hibernate or estimate discharge rate whichever is applicable */
+                timespec_store(&ts.it_value, suspend_interval);
+
+                if (timerfd_settime(tfd, 0, &ts, NULL) < 0)
+                        return log_error_errno(errno, "Error setting battery estimate timer: %m");
+
+                r = execute(sleep_config, SLEEP_SUSPEND, NULL);
+                if (r < 0)
+                        return r;
+
+                r = fd_wait_for_event(tfd, POLLIN, 0);
+                if (r < 0)
+                        return log_error_errno(r, "Error polling timerfd: %m");
+                /* Store fd_wait status */
+                woken_by_timer = FLAGS_SET(r, POLLIN);
+
+                r = fetch_batteries_capacity_by_name(&current_capacity);
+                if (r < 0 || hashmap_isempty(current_capacity)) {
+                        /* In case of no battery or error while getting charge level, no need to measure
+                         * discharge rate. Instead the system should wake up if it is manual wakeup or
+                         * hibernate if this is a timer wakeup. */
+                        if (r < 0)
+                                log_debug_errno(r, "Battery capacity percentage unavailable, cannot estimate discharge rate: %m");
+                        else
+                                log_debug("No battery found.");
+                        if (!woken_by_timer)
+                                return 0;
+                        break;
+                }
+
+                usec_t after_timestamp = now(CLOCK_BOOTTIME);
+                log_debug("Attempting to estimate battery discharge rate after wakeup from %s sleep",
+                          FORMAT_TIMESPAN(after_timestamp - before_timestamp, USEC_PER_HOUR));
+
+                if (after_timestamp != before_timestamp) {
+                        r = estimate_battery_discharge_rate_per_hour(last_capacity, current_capacity, before_timestamp, after_timestamp);
+                        if (r < 0)
+                                log_warning_errno(r, "Failed to estimate and update battery discharge rate, ignoring: %m");
+                } else
+                        log_debug("System woke up too early to estimate discharge rate");
+
+                if (!woken_by_timer)
+                        /* Return as manual wakeup done. This also will return in case battery was charged during suspension */
+                        return 0;
+
+                r = check_wakeup_type();
+                if (r < 0)
+                        log_debug_errno(r, "Failed to check hardware wakeup type, ignoring: %m");
+                if (r > 0) {
+                        log_debug("wakeup type is APM timer");
+                        /* system should hibernate */
+                        break;
+                }
+        }
+
+        return 1;
+}
+
+/* Freeze when invoked and thaw on cleanup */
+static int freeze_thaw_user_slice(const char **method) {
+        _cleanup_(sd_bus_error_free) sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_(sd_bus_flush_close_unrefp) sd_bus *bus = NULL;
+        int r;
+
+        if (!method || !*method)
                 return 0;
 
-        tfd = safe_close(tfd);
+        r = bus_connect_system_systemd(&bus);
+        if (r < 0)
+                return log_debug_errno(r, "Failed to open connection to systemd: %m");
 
-        /* If woken up after alarm time, hibernate */
-        log_debug("Attempting to hibernate after waking from %s timer",
-                  FORMAT_TIMESPAN(sleep_config->hibernate_delay_sec, USEC_PER_SEC));
+        /* Wait for 1.5 seconds at maximum for freeze operation */
+        (void) sd_bus_set_method_call_timeout(bus, 1500 * USEC_PER_MSEC);
 
+        r = bus_call_method(bus, bus_systemd_mgr, *method, &error, NULL, "s", SPECIAL_USER_SLICE);
+        if (r < 0)
+                return log_debug_errno(r, "Failed to execute operation: %s", bus_error_message(&error, r));
+
+        return 1;
+}
+
+static int execute_s2h(const SleepConfig *sleep_config) {
+        _unused_ _cleanup_(freeze_thaw_user_slice) const char *auto_method_thaw = "ThawUnit";
+        int r;
+
+        assert(sleep_config);
+
+        r = freeze_thaw_user_slice(&(const char*) { "FreezeUnit" });
+        if (r < 0)
+                log_debug_errno(r, "Failed to freeze unit user.slice, ignoring: %m");
+
+        /* Only check if we have automated battery alarms if HibernateDelaySec= is not set, as in that case
+         * we'll busy poll for the configured interval instead */
+        if (!timestamp_is_set(sleep_config->hibernate_delay_usec)) {
+                r = check_wakeup_type();
+                if (r < 0)
+                        log_debug_errno(r, "Failed to check hardware wakeup type, ignoring: %m");
+                else {
+                        r = battery_trip_point_alarm_exists();
+                        if (r < 0)
+                                log_debug_errno(r, "Failed to check whether acpi_btp support is enabled or not, ignoring: %m");
+                }
+        } else
+                r = 0;  /* Force fallback path */
+
+        if (r > 0) { /* If we have both wakeup alarms and battery trip point support, use them */
+                log_debug("Attempting to suspend...");
+                r = execute(sleep_config, SLEEP_SUSPEND, NULL);
+                if (r < 0)
+                        return r;
+
+                r = check_wakeup_type();
+                if (r < 0)
+                        return log_debug_errno(r, "Failed to check hardware wakeup type: %m");
+
+                if (r == 0)
+                        /* For APM Timer wakeup, system should hibernate else wakeup */
+                        return 0;
+        } else {
+                r = custom_timer_suspend(sleep_config);
+                if (r < 0)
+                        return log_debug_errno(r, "Suspend cycle with manual battery discharge rate estimation failed: %m");
+                if (r == 0)
+                        /* manual wakeup */
+                        return 0;
+        }
+        /* For above custom timer, if 1 is returned, system will directly hibernate */
+
+        log_debug("Attempting to hibernate");
         r = execute(sleep_config, SLEEP_HIBERNATE, NULL);
         if (r < 0) {
                 log_notice("Couldn't hibernate, will try to suspend again.");

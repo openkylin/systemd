@@ -2,11 +2,8 @@
 
 systemd_oomd_sources = files(
         'oomd-manager-bus.c',
-        'oomd-manager-bus.h',
         'oomd-manager.c',
-        'oomd-manager.h',
         'oomd-util.c',
-        'oomd-util.h',
         'oomd.c',
 )
 
@@ -27,6 +24,7 @@ endif
 
 tests += [
         [files('test-oomd-util.c',
-               'oomd-util.c',
-               'oomd-util.h')],
+               'oomd-util.c'),
+	 [],
+	 [libatomic]]
 ]

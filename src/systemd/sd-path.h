@@ -14,7 +14,7 @@
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with systemd; If not, see <http://www.gnu.org/licenses/>.
+  along with systemd; If not, see <https://www.gnu.org/licenses/>.
 ***/
 
 #include <inttypes.h>
@@ -110,7 +110,13 @@ enum {
         /* systemd-networkd search paths */
         SD_PATH_SYSTEMD_SEARCH_NETWORK,
 
-        _SD_PATH_MAX,
+        /* systemd environment generators */
+        SD_PATH_SYSTEMD_SYSTEM_ENVIRONMENT_GENERATOR,
+        SD_PATH_SYSTEMD_USER_ENVIRONMENT_GENERATOR,
+        SD_PATH_SYSTEMD_SEARCH_SYSTEM_ENVIRONMENT_GENERATOR,
+        SD_PATH_SYSTEMD_SEARCH_USER_ENVIRONMENT_GENERATOR,
+
+        _SD_PATH_MAX
 };
 
 int sd_path_lookup(uint64_t type, const char *suffix, char **path);

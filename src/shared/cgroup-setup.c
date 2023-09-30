@@ -8,6 +8,7 @@
 #include "fd-util.h"
 #include "fileio.h"
 #include "fs-util.h"
+#include "missing_threads.h"
 #include "mkdir.h"
 #include "parse-util.h"
 #include "path-util.h"
@@ -171,6 +172,12 @@ int cg_weight_parse(const char *s, uint64_t *ret) {
 
         *ret = u;
         return 0;
+}
+
+int cg_cpu_weight_parse(const char *s, uint64_t *ret) {
+        if (streq_ptr(s, "idle"))
+                return *ret = CGROUP_WEIGHT_IDLE;
+        return cg_weight_parse(s, ret);
 }
 
 int cg_cpu_shares_parse(const char *s, uint64_t *ret) {
@@ -762,6 +769,8 @@ int cg_migrate_v1_controllers(CGroupMask supported, CGroupMask mask, const char 
                 /* Remember first error and try continuing */
                 q = cg_migrate_recursive_fallback(SYSTEMD_CGROUP_CONTROLLER, from, cgroup_controller_to_string(c), to, 0);
                 r = (r < 0) ? r : q;
+
+                done |= CGROUP_MASK_EXTEND_JOINED(bit);
         }
 
         return r;

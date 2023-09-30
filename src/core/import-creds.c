@@ -4,9 +4,12 @@
 
 #include "copy.h"
 #include "creds-util.h"
+#include "escape.h"
 #include "fileio.h"
 #include "format-util.h"
 #include "fs-util.h"
+#include "hexdecoct.h"
+#include "initrd-util.h"
 #include "import-creds.h"
 #include "io-util.h"
 #include "mkdir-label.h"
@@ -17,6 +20,7 @@
 #include "proc-cmdline.h"
 #include "recurse-dir.h"
 #include "strv.h"
+#include "virt.h"
 
 /* This imports credentials passed in from environments higher up (VM manager, boot loader, …) and rearranges
  * them so that later code can access them using our regular credential protocol
@@ -24,7 +28,7 @@
  * generators invoked by it) can acquire credentials from outside, to mimic how we support it for containers,
  * but on VM/physical environments.
  *
- * This does three things:
+ * This does four things:
  *
  * 1. It imports credentials picked up by sd-boot (and placed in the /.extra/credentials/ dir in the initrd)
  *    and puts them in /run/credentials/@encrypted/. Note that during the initrd→host transition the initrd root
@@ -40,6 +44,11 @@
  * 3. It imports credentials passed in through qemu's fw_cfg logic. Specifically, credential data passed in
  *    /sys/firmware/qemu_fw_cfg/by_name/opt/io.systemd.credentials/ is picked up and also placed in
  *    /run/credentials/@system/.
+ *
+ * 4. It imports credentials passed in via the DMI/SMBIOS OEM string tables, quite similar to fw_cfg. It
+ *    looks for strings starting with "io.systemd.credential:" and "io.systemd.credential.binary:". Both
+ *    expect a key=value assignment, but in the latter case the value is Base64 decoded, allowing binary
+ *    credentials to be passed in.
  *
  * If it picked up any credentials it will set the $CREDENTIALS_DIRECTORY and
  * $ENCRYPTED_CREDENTIALS_DIRECTORY environment variables to point to these directories, so that processes
@@ -138,7 +147,7 @@ static int finalize_credentials_dir(const char *dir, const char *envvar) {
 
 static int import_credentials_boot(void) {
         _cleanup_(import_credentials_context_free) ImportCredentialContext context = {
-                .target_dir_fd = -1,
+                .target_dir_fd = -EBADF,
         };
         int r;
 
@@ -157,7 +166,7 @@ static int import_credentials_boot(void) {
                        "/.extra/global_credentials/") { /* boot partition wide */
 
                 _cleanup_free_ DirectoryEntries *de = NULL;
-                _cleanup_close_ int source_dir_fd = -1;
+                _cleanup_close_ int source_dir_fd = -EBADF;
 
                 source_dir_fd = open(p, O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
                 if (source_dir_fd < 0) {
@@ -178,7 +187,7 @@ static int import_credentials_boot(void) {
 
                 for (size_t i = 0; i < de->n_entries; i++) {
                         const struct dirent *d = de->entries[i];
-                        _cleanup_close_ int cfd = -1, nfd = -1;
+                        _cleanup_close_ int cfd = -EBADF, nfd = -EBADF;
                         _cleanup_free_ char *n = NULL;
                         const char *e;
                         struct stat st;
@@ -286,7 +295,7 @@ static int acquire_credential_directory(ImportCredentialContext *c) {
 static int proc_cmdline_callback(const char *key, const char *value, void *data) {
         ImportCredentialContext *c = ASSERT_PTR(data);
         _cleanup_free_ char *n = NULL;
-        _cleanup_close_ int nfd = -1;
+        _cleanup_close_ int nfd = -EBADF;
         const char *colon;
         size_t l;
         int r;
@@ -357,10 +366,13 @@ static int import_credentials_proc_cmdline(ImportCredentialContext *c) {
 
 static int import_credentials_qemu(ImportCredentialContext *c) {
         _cleanup_free_ DirectoryEntries *de = NULL;
-        _cleanup_close_ int source_dir_fd = -1;
+        _cleanup_close_ int source_dir_fd = -EBADF;
         int r;
 
         assert(c);
+
+        if (detect_container() > 0) /* don't access /sys/ in a container */
+                return 0;
 
         source_dir_fd = open(QEMU_FWCFG_PATH, O_RDONLY|O_DIRECTORY|O_CLOEXEC);
         if (source_dir_fd < 0) {
@@ -381,7 +393,7 @@ static int import_credentials_qemu(ImportCredentialContext *c) {
 
         for (size_t i = 0; i < de->n_entries; i++) {
                 const struct dirent *d = de->entries[i];
-                _cleanup_close_ int vfd = -1, rfd = -1, nfd = -1;
+                _cleanup_close_ int vfd = -EBADF, rfd = -EBADF, nfd = -EBADF;
                 _cleanup_free_ char *szs = NULL;
                 uint64_t sz;
 
@@ -446,26 +458,180 @@ static int import_credentials_qemu(ImportCredentialContext *c) {
         return 0;
 }
 
+static int parse_smbios_strings(ImportCredentialContext *c, const char *data, size_t size) {
+        size_t left, skip;
+        const char *p;
+        int r;
+
+        assert(c);
+        assert(data || size == 0);
+
+        /* Unpacks a packed series of SMBIOS OEM vendor strings. These are a series of NUL terminated
+         * strings, one after the other. */
+
+        for (p = data, left = size; left > 0; p += skip, left -= skip) {
+                _cleanup_free_ void *buf = NULL;
+                _cleanup_free_ char *cn = NULL;
+                _cleanup_close_ int nfd = -EBADF;
+                const char *nul, *n, *eq;
+                const void *cdata;
+                size_t buflen, cdata_len;
+                bool unbase64;
+
+                nul = memchr(p, 0, left);
+                if (nul)
+                        skip = (nul - p) + 1;
+                else {
+                        nul = p + left;
+                        skip = left;
+                }
+
+                if (nul - p == 0) /* Skip empty strings */
+                        continue;
+
+                /* Only care about strings starting with either of these two prefixes */
+                if ((n = memory_startswith(p, nul - p, "io.systemd.credential:")))
+                        unbase64 = false;
+                else if ((n = memory_startswith(p, nul - p, "io.systemd.credential.binary:")))
+                        unbase64 = true;
+                else {
+                        _cleanup_free_ char *escaped = NULL;
+
+                        escaped = cescape_length(p, nul - p);
+                        log_debug("Ignoring OEM string: %s", strnull(escaped));
+                        continue;
+                }
+
+                eq = memchr(n, '=', nul - n);
+                if (!eq) {
+                        log_warning("SMBIOS OEM string lacks '=' character, ignoring.");
+                        continue;
+                }
+
+                cn = memdup_suffix0(n, eq - n);
+                if (!cn)
+                        return log_oom();
+
+                if (!credential_name_valid(cn)) {
+                        log_warning("SMBIOS credential name '%s' is not valid, ignoring: %m", cn);
+                        continue;
+                }
+
+                /* Optionally base64 decode the data, if requested, to allow binary credentials */
+                if (unbase64) {
+                        r = unbase64mem(eq + 1, nul - (eq + 1), &buf, &buflen);
+                        if (r < 0) {
+                                log_warning_errno(r, "Failed to base64 decode credential '%s', ignoring: %m", cn);
+                                continue;
+                        }
+
+                        cdata = buf;
+                        cdata_len = buflen;
+                } else {
+                        cdata = eq + 1;
+                        cdata_len = nul - (eq + 1);
+                }
+
+                if (!credential_size_ok(c, cn, cdata_len))
+                        continue;
+
+                r = acquire_credential_directory(c);
+                if (r < 0)
+                        return r;
+
+                nfd = open_credential_file_for_write(c->target_dir_fd, SYSTEM_CREDENTIALS_DIRECTORY, cn);
+                if (nfd == -EEXIST)
+                        continue;
+                if (nfd < 0)
+                        return nfd;
+
+                r = loop_write(nfd, cdata, cdata_len, /* do_poll= */ false);
+                if (r < 0) {
+                        (void) unlinkat(c->target_dir_fd, cn, 0);
+                        return log_error_errno(r, "Failed to write credential: %m");
+                }
+
+                c->size_sum += cdata_len;
+                c->n_credentials++;
+
+                log_debug("Successfully processed SMBIOS credential '%s'.", cn);
+        }
+
+        return 0;
+}
+
+static int import_credentials_smbios(ImportCredentialContext *c) {
+        int r;
+
+        /* Parses DMI OEM strings fields (SMBIOS type 11), as settable with qemu's -smbios type=11,value=… switch. */
+
+        if (detect_container() > 0) /* don't access /sys/ in a container */
+                return 0;
+
+        for (unsigned i = 0;; i++) {
+                struct dmi_field_header {
+                        uint8_t type;
+                        uint8_t length;
+                        uint16_t handle;
+                        uint8_t count;
+                        char contents[];
+                } _packed_ *dmi_field_header;
+                _cleanup_free_ char *p = NULL;
+                _cleanup_free_ void *data = NULL;
+                size_t size;
+
+                assert_cc(offsetof(struct dmi_field_header, contents) == 5);
+
+                if (asprintf(&p, "/sys/firmware/dmi/entries/11-%u/raw", i) < 0)
+                        return log_oom();
+
+                r = read_virtual_file(p, sizeof(dmi_field_header) + CREDENTIALS_TOTAL_SIZE_MAX, (char**) &data, &size);
+                if (r < 0) {
+                        /* Once we reach ENOENT there are no more DMI Type 11 fields around. */
+                        log_full_errno(r == -ENOENT ? LOG_DEBUG : LOG_WARNING, r, "Failed to open '%s', ignoring: %m", p);
+                        break;
+                }
+
+                if (size < offsetof(struct dmi_field_header, contents))
+                        return log_error_errno(SYNTHETIC_ERRNO(EBADMSG), "DMI field header of '%s' too short.", p);
+
+                dmi_field_header = data;
+                if (dmi_field_header->type != 11 ||
+                    dmi_field_header->length != offsetof(struct dmi_field_header, contents))
+                        return log_error_errno(SYNTHETIC_ERRNO(EBADMSG), "Invalid DMI field header.");
+
+                r = parse_smbios_strings(c, dmi_field_header->contents, size - offsetof(struct dmi_field_header, contents));
+                if (r < 0)
+                        return r;
+
+                if (i == UINT_MAX) /* Prevent overflow */
+                        break;
+        }
+
+        return 0;
+}
+
 static int import_credentials_trusted(void) {
         _cleanup_(import_credentials_context_free) ImportCredentialContext c = {
-                .target_dir_fd = -1,
+                .target_dir_fd = -EBADF,
         };
-        int q, r;
+        int q, w, r;
 
         r = import_credentials_qemu(&c);
+        w = import_credentials_smbios(&c);
         q = import_credentials_proc_cmdline(&c);
 
         if (c.n_credentials > 0) {
                 int z;
 
-                log_debug("Imported %u credentials from kernel command line/fw_cfg.", c.n_credentials);
+                log_debug("Imported %u credentials from kernel command line/smbios/fw_cfg.", c.n_credentials);
 
                 z = finalize_credentials_dir(SYSTEM_CREDENTIALS_DIRECTORY, "CREDENTIALS_DIRECTORY");
                 if (z < 0)
                         return z;
         }
 
-        return r < 0 ? r : q;
+        return r < 0 ? r : w < 0 ? w : q;
 }
 
 static int symlink_credential_dir(const char *envvar, const char *path, const char *where) {
@@ -545,6 +711,19 @@ int import_credentials(void) {
                 q = import_credentials_trusted();
                 if (r >= 0)
                         r = q;
+        }
+
+        if (r >= 0) {
+                _cleanup_free_ char *address = NULL;
+
+                r = read_credential("vmm.notify_socket", (void **)&address, /* ret_size= */ NULL);
+                if (r < 0 && !IN_SET(r, -ENOENT, -ENXIO))
+                        log_warning_errno(r, "Failed to read 'vmm.notify_socket' credential, ignoring: %m");
+                else if (r >= 0 && !isempty(address)) {
+                        r = setenv("NOTIFY_SOCKET", address, /* replace= */ 1);
+                        if (r < 0)
+                                log_warning_errno(errno, "Failed to set $NOTIFY_SOCKET environment variable, ignoring: %m");
+                }
         }
 
         return r;

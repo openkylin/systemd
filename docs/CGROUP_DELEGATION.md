@@ -24,13 +24,13 @@ container managers.
 
 Before you read on, please make sure you read the low-level kernel
 documentation about the
-[unified cgroup hierarchy](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html).
+[unified cgroup hierarchy](https://docs.kernel.org/admin-guide/cgroup-v2.html).
 This document then adds in the higher-level view from systemd.
 
 This document augments the existing documentation we already have:
 
-* [The New Control Group Interfaces](https://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface/)
-* [Writing VM and Container Managers](https://www.freedesktop.org/wiki/Software/systemd/writing-vm-managers/)
+* [The New Control Group Interfaces](https://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface)
+* [Writing VM and Container Managers](https://www.freedesktop.org/wiki/Software/systemd/writing-vm-managers)
 
 These wiki documents are not as up to date as they should be, currently, but
 the basic concepts still fully apply. You should read them too, if you do something
@@ -78,7 +78,7 @@ Note that cgroup v1 is currently the most deployed implementation, even though
 it's semantically broken in many ways, and in many cases doesn't actually do
 what people think it does. cgroup v2 is where things are going, and most new
 kernel features in this area are only added to cgroup v2, and not cgroup v1
-anymore. For example cgroup v2 provides proper cgroup-empty notifications, has
+anymore. For example, cgroup v2 provides proper cgroup-empty notifications, has
 support for all kinds of per-cgroup BPF magic, supports secure delegation of
 cgroup trees to less privileged processes and so on, which all are not
 available on cgroup v1.

@@ -8,21 +8,25 @@
 #include <linux/nexthop.h>
 #include <linux/nl80211.h>
 
-#include "sd-daemon.h"
 #include "sd-netlink.h"
 
 #include "alloc-util.h"
 #include "bus-error.h"
+#include "bus-locator.h"
 #include "bus-log-control-api.h"
 #include "bus-polkit.h"
 #include "bus-util.h"
 #include "conf-parser.h"
-#include "def.h"
+#include "constants.h"
+#include "daemon-util.h"
+#include "device-private.h"
+#include "device-util.h"
 #include "dns-domain.h"
 #include "fd-util.h"
 #include "fileio.h"
 #include "firewall-util.h"
 #include "fs-util.h"
+#include "initrd-util.h"
 #include "local-addresses.h"
 #include "netlink-util.h"
 #include "network-internal.h"
@@ -55,34 +59,18 @@
 #include "sysctl-util.h"
 #include "tclass.h"
 #include "tmpfile-util.h"
+#include "tuntap.h"
 #include "udev-util.h"
 
 /* use 128 MB for receive socket kernel queue. */
 #define RCVBUF_SIZE    (128*1024*1024)
 
-static int manager_reset_all(Manager *m) {
-        Link *link;
-        int r;
-
-        assert(m);
-
-        HASHMAP_FOREACH(link, m->links_by_index) {
-                r = link_reconfigure_after_sleep(link);
-                if (r < 0) {
-                        log_link_warning_errno(link, r, "Failed to reconfigure interface: %m");
-                        link_enter_failed(link);
-                }
-        }
-
-        return 0;
-}
-
 static int match_prepare_for_sleep(sd_bus_message *message, void *userdata, sd_bus_error *ret_error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
+        Link *link;
         int b, r;
 
         assert(message);
-        assert(m);
 
         r = sd_bus_message_read(message, "b", &b);
         if (r < 0) {
@@ -93,18 +81,23 @@ static int match_prepare_for_sleep(sd_bus_message *message, void *userdata, sd_b
         if (b)
                 return 0;
 
-        log_debug("Coming back from suspend, resetting all connections...");
+        log_debug("Coming back from suspend, reconfiguring all connections...");
 
-        (void) manager_reset_all(m);
+        HASHMAP_FOREACH(link, m->links_by_index) {
+                r = link_reconfigure(link, /* force = */ true);
+                if (r < 0) {
+                        log_link_warning_errno(link, r, "Failed to reconfigure interface: %m");
+                        link_enter_failed(link);
+                }
+        }
 
         return 0;
 }
 
 static int on_connected(sd_bus_message *message, void *userdata, sd_bus_error *ret_error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(message);
-        assert(m);
 
         /* Did we get a timezone or transient hostname from DHCP while D-Bus wasn't up yet? */
         if (m->dynamic_hostname)
@@ -168,6 +161,39 @@ static int manager_connect_bus(Manager *m) {
         return 0;
 }
 
+static int manager_process_uevent(sd_device_monitor *monitor, sd_device *device, void *userdata) {
+        Manager *m = ASSERT_PTR(userdata);
+        sd_device_action_t action;
+        const char *s;
+        int r;
+
+        assert(device);
+
+        r = sd_device_get_action(device, &action);
+        if (r < 0)
+                return log_device_warning_errno(device, r, "Failed to get udev action, ignoring: %m");
+
+        r = sd_device_get_subsystem(device, &s);
+        if (r < 0)
+                return log_device_warning_errno(device, r, "Failed to get subsystem, ignoring: %m");
+
+        if (streq(s, "net"))
+                r = manager_udev_process_link(m, device, action);
+        else if (streq(s, "ieee80211"))
+                r = manager_udev_process_wiphy(m, device, action);
+        else if (streq(s, "rfkill"))
+                r = manager_udev_process_rfkill(m, device, action);
+        else {
+                log_device_debug(device, "Received device with unexpected subsystem \"%s\", ignoring.", s);
+                return 0;
+        }
+        if (r < 0)
+                log_device_warning_errno(device, r, "Failed to process \"%s\" uevent, ignoring: %m",
+                                         device_action_to_string(action));
+
+        return 0;
+}
+
 static int manager_connect_udev(Manager *m) {
         int r;
 
@@ -186,35 +212,66 @@ static int manager_connect_udev(Manager *m) {
 
         r = sd_device_monitor_filter_add_match_subsystem_devtype(m->device_monitor, "net", NULL);
         if (r < 0)
-                return log_error_errno(r, "Could not add device monitor filter: %m");
+                return log_error_errno(r, "Could not add device monitor filter for net subsystem: %m");
+
+        r = sd_device_monitor_filter_add_match_subsystem_devtype(m->device_monitor, "ieee80211", NULL);
+        if (r < 0)
+                return log_error_errno(r, "Could not add device monitor filter for ieee80211 subsystem: %m");
+
+        r = sd_device_monitor_filter_add_match_subsystem_devtype(m->device_monitor, "rfkill", NULL);
+        if (r < 0)
+                return log_error_errno(r, "Could not add device monitor filter for rfkill subsystem: %m");
 
         r = sd_device_monitor_attach_event(m->device_monitor, m->event);
         if (r < 0)
                 return log_error_errno(r, "Failed to attach event to device monitor: %m");
 
-        r = sd_device_monitor_start(m->device_monitor, manager_udev_process_link, m);
+        r = sd_device_monitor_start(m->device_monitor, manager_process_uevent, m);
         if (r < 0)
                 return log_error_errno(r, "Failed to start device monitor: %m");
 
         return 0;
 }
 
-static int systemd_netlink_fd(void) {
-        int n, fd, rtnl_fd = -EINVAL;
+static int manager_listen_fds(Manager *m, int *ret_rtnl_fd) {
+        _cleanup_strv_free_ char **names = NULL;
+        int n, rtnl_fd = -EBADF;
 
-        n = sd_listen_fds(true);
-        if (n <= 0)
+        assert(m);
+        assert(ret_rtnl_fd);
+
+        n = sd_listen_fds_with_names(/* unset_environment = */ true, &names);
+        if (n < 0)
+                return n;
+
+        if (strv_length(names) != (size_t) n)
                 return -EINVAL;
 
-        for (fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START + n; fd ++)
+        for (int i = 0; i < n; i++) {
+                int fd = i + SD_LISTEN_FDS_START;
+
                 if (sd_is_socket(fd, AF_NETLINK, SOCK_RAW, -1) > 0) {
-                        if (rtnl_fd >= 0)
-                                return -EINVAL;
+                        if (rtnl_fd >= 0) {
+                                log_debug("Received multiple netlink socket, ignoring.");
+                                safe_close(fd);
+                                continue;
+                        }
 
                         rtnl_fd = fd;
+                        continue;
                 }
 
-        return rtnl_fd;
+                if (manager_add_tuntap_fd(m, fd, names[i]) >= 0)
+                        continue;
+
+                if (m->test_mode)
+                        safe_close(fd);
+                else
+                        close_and_notify_warn(fd, names[i]);
+        }
+
+        *ret_rtnl_fd = rtnl_fd;
+        return 0;
 }
 
 static int manager_connect_genl(Manager *m) {
@@ -226,7 +283,7 @@ static int manager_connect_genl(Manager *m) {
         if (r < 0)
                 return r;
 
-        r = sd_netlink_inc_rcvbuf(m->genl, RCVBUF_SIZE);
+        r = sd_netlink_increase_rxbuf(m->genl, RCVBUF_SIZE);
         if (r < 0)
                 log_warning_errno(r, "Failed to increase receive buffer size for general netlink socket, ignoring: %m");
 
@@ -281,24 +338,27 @@ static int manager_setup_rtnl_filter(Manager *manager) {
         return sd_netlink_attach_filter(manager->rtnl, ELEMENTSOF(filter), filter);
 }
 
-static int manager_connect_rtnl(Manager *m) {
-        int fd, r;
+static int manager_connect_rtnl(Manager *m, int fd) {
+        _unused_ _cleanup_close_ int fd_close = fd;
+        int r;
 
         assert(m);
 
-        fd = systemd_netlink_fd();
+        /* This takes input fd. */
+
         if (fd < 0)
                 r = sd_netlink_open(&m->rtnl);
         else
                 r = sd_netlink_open_fd(&m->rtnl, fd);
         if (r < 0)
                 return r;
+        TAKE_FD(fd_close);
 
         /* Bump receiver buffer, but only if we are not called via socket activation, as in that
          * case systemd sets the receive buffer size for us, and the value in the .socket unit
          * should take full effect. */
         if (fd < 0) {
-                r = sd_netlink_inc_rcvbuf(m->rtnl, RCVBUF_SIZE);
+                r = sd_netlink_increase_rxbuf(m->rtnl, RCVBUF_SIZE);
                 if (r < 0)
                         log_warning_errno(r, "Failed to increase receive buffer size for rtnl socket, ignoring: %m");
         }
@@ -375,11 +435,9 @@ static int manager_connect_rtnl(Manager *m) {
 }
 
 static int manager_dirty_handler(sd_event_source *s, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         Link *link;
         int r;
-
-        assert(m);
 
         if (m->dirty) {
                 r = manager_save(m);
@@ -397,9 +455,8 @@ static int manager_dirty_handler(sd_event_source *s, void *userdata) {
 }
 
 static int signal_terminate_callback(sd_event_source *s, const struct signalfd_siginfo *si, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
-        assert(m);
         m->restarting = false;
 
         log_debug("Terminate operation initiated.");
@@ -408,14 +465,21 @@ static int signal_terminate_callback(sd_event_source *s, const struct signalfd_s
 }
 
 static int signal_restart_callback(sd_event_source *s, const struct signalfd_siginfo *si, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
-        assert(m);
         m->restarting = true;
 
         log_debug("Restart operation initiated.");
 
         return sd_event_exit(sd_event_source_get_event(s), 0);
+}
+
+static int signal_reload_callback(sd_event_source *s, const struct signalfd_siginfo *si, void *userdata) {
+        Manager *m = ASSERT_PTR(userdata);
+
+        manager_reload(m);
+
+        return 0;
 }
 
 static int manager_set_keep_configuration(Manager *m) {
@@ -443,6 +507,7 @@ static int manager_set_keep_configuration(Manager *m) {
 }
 
 int manager_setup(Manager *m) {
+        _cleanup_close_ int rtnl_fd = -EBADF;
         int r;
 
         assert(m);
@@ -451,12 +516,11 @@ int manager_setup(Manager *m) {
         if (r < 0)
                 return r;
 
-        assert_se(sigprocmask_many(SIG_SETMASK, NULL, SIGINT, SIGTERM, SIGUSR2, -1) >= 0);
-
         (void) sd_event_set_watchdog(m->event, true);
-        (void) sd_event_add_signal(m->event, NULL, SIGTERM, signal_terminate_callback, m);
-        (void) sd_event_add_signal(m->event, NULL, SIGINT, signal_terminate_callback, m);
-        (void) sd_event_add_signal(m->event, NULL, SIGUSR2, signal_restart_callback, m);
+        (void) sd_event_add_signal(m->event, NULL, SIGTERM | SD_EVENT_SIGNAL_PROCMASK, signal_terminate_callback, m);
+        (void) sd_event_add_signal(m->event, NULL, SIGINT | SD_EVENT_SIGNAL_PROCMASK, signal_terminate_callback, m);
+        (void) sd_event_add_signal(m->event, NULL, SIGUSR2 | SD_EVENT_SIGNAL_PROCMASK, signal_restart_callback, m);
+        (void) sd_event_add_signal(m->event, NULL, SIGHUP | SD_EVENT_SIGNAL_PROCMASK, signal_reload_callback, m);
 
         r = sd_event_add_post(m->event, NULL, manager_dirty_handler, m);
         if (r < 0)
@@ -466,7 +530,11 @@ int manager_setup(Manager *m) {
         if (r < 0)
                 return r;
 
-        r = manager_connect_rtnl(m);
+        r = manager_listen_fds(m, &rtnl_fd);
+        if (r < 0)
+                return r;
+
+        r = manager_connect_rtnl(m, TAKE_FD(rtnl_fd));
         if (r < 0)
                 return r;
 
@@ -522,7 +590,7 @@ int manager_new(Manager **ret, bool test_mode) {
                 .online_state = _LINK_ONLINE_STATE_INVALID,
                 .manage_foreign_routes = true,
                 .manage_foreign_rules = true,
-                .ethtool_fd = -1,
+                .ethtool_fd = -EBADF,
                 .dhcp_duid.type = DUID_TYPE_EN,
                 .dhcp6_duid.type = DUID_TYPE_EN,
                 .duid_product_uuid.type = DUID_TYPE_UUID,
@@ -546,6 +614,7 @@ Manager* manager_free(Manager *m) {
         m->request_queue = ordered_set_free(m->request_queue);
 
         m->dirty_links = set_free_with_destructor(m->dirty_links, link_unref);
+        m->new_wlan_ifindices = set_free(m->new_wlan_ifindices);
         m->links_by_name = hashmap_free(m->links_by_name);
         m->links_by_hw_addr = hashmap_free(m->links_by_hw_addr);
         m->links_by_dhcp_pd_subnet_prefix = hashmap_free(m->links_by_dhcp_pd_subnet_prefix);
@@ -555,6 +624,8 @@ Manager* manager_free(Manager *m) {
         m->networks = ordered_hashmap_free_with_destructor(m->networks, network_unref);
 
         m->netdevs = hashmap_free_with_destructor(m->netdevs, netdev_unref);
+
+        m->tuntap_fds_by_name = hashmap_free(m->tuntap_fds_by_name);
 
         m->wiphy_by_name = hashmap_free(m->wiphy_by_name);
         m->wiphy_by_index = hashmap_free_with_destructor(m->wiphy_by_index, wiphy_free);
@@ -627,22 +698,17 @@ int manager_start(Manager *m) {
 int manager_load_config(Manager *m) {
         int r;
 
-        /* update timestamp */
-        paths_check_timestamp(NETWORK_DIRS, &m->network_dirs_ts_usec, true);
-
         r = netdev_load(m, false);
         if (r < 0)
                 return r;
+
+        manager_clear_unmanaged_tuntap_fds(m);
 
         r = network_load(m, &m->networks);
         if (r < 0)
                 return r;
 
         return manager_build_dhcp_pd_subnet_ids(m);
-}
-
-bool manager_should_reload(Manager *m) {
-        return paths_check_timestamp(NETWORK_DIRS, &m->network_dirs_ts_usec, false);
 }
 
 static int manager_enumerate_internal(
@@ -659,7 +725,7 @@ static int manager_enumerate_internal(
         assert(req);
         assert(process);
 
-        r = sd_netlink_message_request_dump(req, true);
+        r = sd_netlink_message_set_request_dump(req, true);
         if (r < 0)
                 return r;
 
@@ -949,12 +1015,10 @@ int manager_set_hostname(Manager *m, const char *hostname) {
                 return 0;
         }
 
-        r = sd_bus_call_method_async(
+        r = bus_call_method_async(
                         m->bus,
                         NULL,
-                        "org.freedesktop.hostname1",
-                        "/org/freedesktop/hostname1",
-                        "org.freedesktop.hostname1",
+                        bus_hostname,
                         "SetHostname",
                         set_hostname_handler,
                         m,
@@ -998,12 +1062,10 @@ int manager_set_timezone(Manager *m, const char *tz) {
                 return 0;
         }
 
-        r = sd_bus_call_method_async(
+        r = bus_call_method_async(
                         m->bus,
                         NULL,
-                        "org.freedesktop.timedate1",
-                        "/org/freedesktop/timedate1",
-                        "org.freedesktop.timedate1",
+                        bus_timedate,
                         "SetTimezone",
                         set_timezone_handler,
                         m,
@@ -1014,4 +1076,35 @@ int manager_set_timezone(Manager *m, const char *tz) {
                 return log_error_errno(r, "Could not set timezone: %m");
 
         return 0;
+}
+
+int manager_reload(Manager *m) {
+        Link *link;
+        int r;
+
+        assert(m);
+
+        (void) sd_notifyf(/* unset= */ false,
+                          "RELOADING=1\n"
+                          "STATUS=Reloading configuration...\n"
+                          "MONOTONIC_USEC=" USEC_FMT, now(CLOCK_MONOTONIC));
+
+        r = netdev_load(m, /* reload= */ true);
+        if (r < 0)
+                goto finish;
+
+        r = network_reload(m);
+        if (r < 0)
+                goto finish;
+
+        HASHMAP_FOREACH(link, m->links_by_index) {
+                r = link_reconfigure(link, /* force = */ false);
+                if (r < 0)
+                        goto finish;
+        }
+
+        r = 0;
+finish:
+        (void) sd_notify(/* unset= */ false, NOTIFY_READY);
+        return r;
 }

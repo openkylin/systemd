@@ -212,7 +212,7 @@ object. The following fields are currently defined:
 
 `userName` → The UNIX user name for this record. Takes a string with a valid
 UNIX user name. This field is the only mandatory field, all others are
-optional. Corresponds with the `pw_name` field of of `struct passwd` and the
+optional. Corresponds with the `pw_name` field of `struct passwd` and the
 `sp_namp` field of `struct spwd` (i.e. the shadow user record stored in
 `/etc/shadow`). See [User/Group Name Syntax](USER_NAMES.md) for
 the (relaxed) rules the various systemd components enforce on user/group names.
@@ -297,7 +297,7 @@ for all login sessions of the user.
 
 `environment` → An array of strings, each containing an environment variable
 and its value to set for the user's login session, in a format compatible with
-[`putenv()`](http://man7.org/linux/man-pages/man3/putenv.3.html). Any
+[`putenv()`](https://man7.org/linux/man-pages/man3/putenv.3.html). Any
 environment variable listed here is automatically set by
 [`pam_systemd`](https://www.freedesktop.org/software/systemd/man/pam_systemd.html)
 for all login sessions of the user.
@@ -320,7 +320,7 @@ variable, for example: `de_DE.UTF8`.
 [`pam_systemd`](https://www.freedesktop.org/software/systemd/man/pam_systemd.html)
 will automatically initialize the login process' nice level to this value with,
 which is then inherited by all the user's processes, see
-[`setpriority()`](http://man7.org/linux/man-pages/man2/setpriority.2.html) for
+[`setpriority()`](https://man7.org/linux/man-pages/man2/setpriority.2.html) for
 more information.
 
 `resourceLimits` → An object, where each key refers to a Linux resource limit
@@ -329,7 +329,7 @@ two keys `cur` and `max` for the soft and hard resource limit. When logging in
 [`pam_systemd`](https://www.freedesktop.org/software/systemd/man/pam_systemd.html)
 will automatically initialize the login process' resource limits to these
 values, which is then inherited by all the user's processes, see
-[`setrlimit()`](http://man7.org/linux/man-pages/man2/setrlimit.2.html) for more
+[`setrlimit()`](https://man7.org/linux/man-pages/man2/setrlimit.2.html) for more
 information.
 
 `locked` → A boolean value. If true, the user account is locked, the user may
@@ -490,15 +490,22 @@ the PBKDF operation for the LUKS storage mechanism.
 
 `luksPbkdfType` → A string, indicating the PBKDF type to use for the LUKS storage mechanism.
 
+`luksPbkdfForceIterations` → An unsigned 64bit integer, indicating the intended
+number of iterations for the PBKDF operation, when LUKS storage is used.
+
 `luksPbkdfTimeCostUSec` → An unsigned 64bit integer, indicating the intended
 time cost for the PBKDF operation, when the LUKS storage mechanism is used, in
-µs.
+µs. Ignored when `luksPbkdfForceIterations` is set.
 
 `luksPbkdfMemoryCost` → An unsigned 64bit integer, indicating the intended
 memory cost for the PBKDF operation, when LUKS storage is used, in bytes.
 
 `luksPbkdfParallelThreads` → An unsigned 64bit integer, indicating the intended
 required parallel threads for the PBKDF operation, when LUKS storage is used.
+
+`luksSectorSize` → An unsigned 64bit integer, indicating the sector size to
+use for the LUKS storage mechanism, in bytes. Must be a power of two between
+512 and 4096.
 
 `autoResizeMode` → A string, one of `off`, `grow`, `shrink-and-grow`. Unless
 set to `off`, controls whether the home area shall be grown automatically to
@@ -625,13 +632,13 @@ user to choose.
 
 `hashedPassword` → An array of strings, each containing a hashed UNIX password
 string, in the format
-[`crypt(3)`](http://man7.org/linux/man-pages/man3/crypt.3.html) generates. This
+[`crypt(3)`](https://man7.org/linux/man-pages/man3/crypt.3.html) generates. This
 corresponds with `sp_pwdp` field of `struct spwd` (and in a way the `pw_passwd`
 field of `struct passwd`).
 
 `sshAuthorizedKeys` → An array of strings, each listing an SSH public key that
 is authorized to access the account. The strings should follow the same format
-as the lines in the traditional `~/.ssh/authorized_key` file.
+as the lines in the traditional `~/.ssh/authorized_keys` file.
 
 `pkcs11EncryptedKey` → An array of objects. Each element of the array should be
 an object consisting of three string fields: `uri` shall contain a PKCS#11
@@ -733,8 +740,8 @@ that may be used in this section are identical to the equally named ones in the
 `gid`, `memberOf`, `fileSystemType`, `partitionUuid`, `luksUuid`,
 `fileSystemUuid`, `luksDiscard`, `luksOfflineDiscard`, `luksCipher`,
 `luksCipherMode`, `luksVolumeKeySize`, `luksPbkdfHashAlgorithm`,
-`luksPbkdfType`, `luksPbkdfTimeCostUSec`, `luksPbkdfMemoryCost`,
-`luksPbkdfParallelThreads`, `autoResizeMode`, `rebalanceWeight`,
+`luksPbkdfType`, `luksPbkdfForceIterations`, `luksPbkdfTimeCostUSec`, `luksPbkdfMemoryCost`,
+`luksPbkdfParallelThreads`, `luksSectorSize`, `autoResizeMode`, `rebalanceWeight`,
 `rateLimitIntervalUSec`, `rateLimitBurst`, `enforcePasswordPolicy`,
 `autoLogin`, `stopDelayUSec`, `killProcesses`, `passwordChangeMinUSec`,
 `passwordChangeMaxUSec`, `passwordChangeWarnUSec`,

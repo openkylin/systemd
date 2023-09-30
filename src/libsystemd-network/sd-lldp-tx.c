@@ -451,7 +451,7 @@ static int lldp_tx_create_packet(sd_lldp_tx *lldp_tx, size_t *ret_packet_size, u
 }
 
 static int lldp_tx_send_packet(sd_lldp_tx *lldp_tx, size_t packet_size, const uint8_t *packet) {
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         union sockaddr_union sa;
         ssize_t l;
 
@@ -547,10 +547,8 @@ static int lldp_tx_reset_timer(sd_lldp_tx *lldp_tx) {
 }
 
 static int on_timer_event(sd_event_source *s, uint64_t usec, void *userdata) {
-        sd_lldp_tx *lldp_tx = userdata;
+        sd_lldp_tx *lldp_tx = ASSERT_PTR(userdata);
         int r;
-
-        assert(lldp_tx);
 
         r = lldp_tx_send(lldp_tx);
         if (r < 0)

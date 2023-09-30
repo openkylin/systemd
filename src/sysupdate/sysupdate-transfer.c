@@ -101,11 +101,10 @@ static int config_parse_protect_version(
                 void *userdata) {
 
         _cleanup_free_ char *resolved = NULL;
-        char ***protected_versions = data;
+        char ***protected_versions = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
         r = specifier_printf(rvalue, NAME_MAX, specifier_table, arg_root, NULL, &resolved);
         if (r < 0) {
@@ -140,11 +139,10 @@ static int config_parse_min_version(
                 void *userdata) {
 
         _cleanup_free_ char *resolved = NULL;
-        char **version = data;
+        char **version = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
         r = specifier_printf(rvalue, NAME_MAX, specifier_table, arg_root, NULL, &resolved);
         if (r < 0) {
@@ -175,11 +173,10 @@ static int config_parse_current_symlink(
                 void *userdata) {
 
         _cleanup_free_ char *resolved = NULL;
-        char **current_symlink = data;
+        char **current_symlink = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
         r = specifier_printf(rvalue, NAME_MAX, specifier_table, arg_root, NULL, &resolved);
         if (r < 0) {
@@ -247,11 +244,10 @@ static int config_parse_resource_pattern(
                 void *data,
                 void *userdata) {
 
-        char ***patterns = data;
+        char ***patterns = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
         if (isempty(rvalue)) {
                 *patterns = strv_free(*patterns);
@@ -303,11 +299,10 @@ static int config_parse_resource_path(
                 void *userdata) {
 
         _cleanup_free_ char *resolved = NULL;
-        Resource *rr = data;
+        Resource *rr = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
         if (streq(rvalue, "auto")) {
                 rr->path_auto = true;
@@ -344,13 +339,12 @@ static int config_parse_resource_ptype(
                 void *data,
                 void *userdata) {
 
-        Resource *rr = data;
+        Resource *rr = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
-        r = gpt_partition_type_uuid_from_string(rvalue, &rr->partition_type);
+        r = gpt_partition_type_from_string(rvalue, &rr->partition_type);
         if (r < 0) {
                 log_syntax(unit, LOG_WARNING, filename, line, r,
                            "Failed parse partition type, ignoring: %s", rvalue);
@@ -373,11 +367,10 @@ static int config_parse_partition_uuid(
                 void *data,
                 void *userdata) {
 
-        Transfer *t = data;
+        Transfer *t = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
         r = sd_id128_from_string(rvalue, &t->partition_uuid);
         if (r < 0) {
@@ -402,11 +395,10 @@ static int config_parse_partition_flags(
                 void *data,
                 void *userdata) {
 
-        Transfer *t = data;
+        Transfer *t = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(data);
 
         r = safe_atou64(rvalue, &t->partition_flags);
         if (r < 0) {
@@ -662,18 +654,18 @@ int transfer_vacuum(
                 if (t->target.n_empty + t->target.n_instances < 2)
                         return log_error_errno(SYNTHETIC_ERRNO(ENOSPC),
                                                "Partition table has less than two partition slots of the right type " SD_ID128_UUID_FORMAT_STR " (%s), refusing.",
-                                               SD_ID128_FORMAT_VAL(t->target.partition_type),
-                                               gpt_partition_type_uuid_to_string(t->target.partition_type));
+                                               SD_ID128_FORMAT_VAL(t->target.partition_type.uuid),
+                                               gpt_partition_type_uuid_to_string(t->target.partition_type.uuid));
                 if (space > t->target.n_empty + t->target.n_instances)
                         return log_error_errno(SYNTHETIC_ERRNO(ENOSPC),
                                                "Partition table does not have enough partition slots of right type " SD_ID128_UUID_FORMAT_STR " (%s) for operation.",
-                                               SD_ID128_FORMAT_VAL(t->target.partition_type),
-                                               gpt_partition_type_uuid_to_string(t->target.partition_type));
+                                               SD_ID128_FORMAT_VAL(t->target.partition_type.uuid),
+                                               gpt_partition_type_uuid_to_string(t->target.partition_type.uuid));
                 if (space == t->target.n_empty + t->target.n_instances)
                         return log_error_errno(SYNTHETIC_ERRNO(ENOSPC),
                                                "Asked to empty all partition table slots of the right type " SD_ID128_UUID_FORMAT_STR " (%s), can't allow that. One instance must always remain.",
-                                               SD_ID128_FORMAT_VAL(t->target.partition_type),
-                                               gpt_partition_type_uuid_to_string(t->target.partition_type));
+                                               SD_ID128_FORMAT_VAL(t->target.partition_type.uuid),
+                                               gpt_partition_type_uuid_to_string(t->target.partition_type.uuid));
 
                 rm = LESS_BY(space, t->target.n_empty);
                 remain = LESS_BY(t->target.n_instances, rm);
@@ -866,7 +858,7 @@ int transfer_acquire_instance(Transfer *t, Instance *i) {
                 r = find_suitable_partition(
                                 t->target.path,
                                 i->metadata.size,
-                                t->target.partition_type_set ? &t->target.partition_type : NULL,
+                                t->target.partition_type_set ? &t->target.partition_type.uuid : NULL,
                                 &t->partition_info);
                 if (r < 0)
                         return r;
@@ -1237,9 +1229,13 @@ int transfer_install_instance(
 
                         r = symlink_atomic(relative, link_path);
                         if (r < 0)
-                                return log_error_errno(r, "Failed to update current symlink '%s' → '%s': %m", link_path, relative);
+                                return log_error_errno(r, "Failed to update current symlink '%s' %s '%s': %m",
+                                                       link_path,
+                                                       special_glyph(SPECIAL_GLYPH_ARROW_RIGHT),
+                                                       relative);
 
-                        log_info("Updated symlink '%s' → '%s'.", link_path, relative);
+                        log_info("Updated symlink '%s' %s '%s'.",
+                                 link_path, special_glyph(SPECIAL_GLYPH_ARROW_RIGHT), relative);
                 }
         }
 

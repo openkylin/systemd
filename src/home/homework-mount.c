@@ -9,6 +9,7 @@
 #include "alloc-util.h"
 #include "fd-util.h"
 #include "format-util.h"
+#include "glyph-util.h"
 #include "home-util.h"
 #include "homework-mount.h"
 #include "homework.h"
@@ -185,7 +186,7 @@ static int append_identity_range(char **text, uid_t start, uid_t next_start, uid
 
 static int make_userns(uid_t stored_uid, uid_t exposed_uid) {
         _cleanup_free_ char *text = NULL;
-        _cleanup_close_ int userns_fd = -1;
+        _cleanup_close_ int userns_fd = -EBADF;
         int r;
 
         assert(uid_is_valid(stored_uid));
@@ -201,7 +202,7 @@ static int make_userns(uid_t stored_uid, uid_t exposed_uid) {
                 return log_oom();
 
         /* Now map the UID we are doing this for to the target UID. */
-        r = strextendf(&text, UID_FMT " " UID_FMT " " UID_FMT "\n", stored_uid, exposed_uid, 1);
+        r = strextendf(&text, UID_FMT " " UID_FMT " " UID_FMT "\n", stored_uid, exposed_uid, 1u);
         if (r < 0)
                 return log_oom();
 
@@ -220,7 +221,7 @@ static int make_userns(uid_t stored_uid, uid_t exposed_uid) {
 
         /* Map nspawn's mapped root UID as identity mapping so that people can run nspawn uidmap mounted
          * containers off $HOME, if they want. */
-        r = strextendf(&text, UID_FMT " " UID_FMT " " UID_FMT "\n", UID_MAPPED_ROOT, UID_MAPPED_ROOT, 1);
+        r = strextendf(&text, UID_FMT " " UID_FMT " " UID_FMT "\n", UID_MAPPED_ROOT, UID_MAPPED_ROOT, 1u);
         if (r < 0)
                 return log_oom();
 
@@ -237,7 +238,7 @@ static int make_userns(uid_t stored_uid, uid_t exposed_uid) {
 }
 
 int home_shift_uid(int dir_fd, const char *target, uid_t stored_uid, uid_t exposed_uid, int *ret_mount_fd) {
-        _cleanup_close_ int mount_fd = -1, userns_fd = -1;
+        _cleanup_close_ int mount_fd = -EBADF, userns_fd = -EBADF;
         int r;
 
         assert(dir_fd >= 0);
@@ -260,7 +261,7 @@ int home_shift_uid(int dir_fd, const char *target, uid_t stored_uid, uid_t expos
                         log_debug_errno(errno, "The open_tree() syscall is not supported, not setting up UID shift mount: %m");
 
                         if (ret_mount_fd)
-                                *ret_mount_fd = -1;
+                                *ret_mount_fd = -EBADF;
 
                         return 0;
                 }
@@ -283,7 +284,7 @@ int home_shift_uid(int dir_fd, const char *target, uid_t stored_uid, uid_t expos
                         log_debug_errno(errno, "UID/GID mapping for shifted mount not available, not setting it up: %m");
 
                         if (ret_mount_fd)
-                                *ret_mount_fd = -1;
+                                *ret_mount_fd = -EBADF;
 
                         return 0;
                 }
@@ -298,7 +299,8 @@ int home_shift_uid(int dir_fd, const char *target, uid_t stored_uid, uid_t expos
         if (r < 0)
                 return log_error_errno(errno, "Failed to apply UID/GID map: %m");
 
-        log_debug("Applied uidmap mount to %s. Mapping is " UID_FMT " → " UID_FMT ".", strna(target), stored_uid, exposed_uid);
+        log_debug("Applied uidmap mount to %s. Mapping is " UID_FMT " %s " UID_FMT ".",
+                  strna(target), stored_uid, special_glyph(SPECIAL_GLYPH_ARROW_RIGHT), exposed_uid);
 
         if (ret_mount_fd)
                 *ret_mount_fd = TAKE_FD(mount_fd);

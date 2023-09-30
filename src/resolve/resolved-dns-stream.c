@@ -264,9 +264,7 @@ static ssize_t dns_stream_read(DnsStream *s, void *buf, size_t count) {
 }
 
 static int on_stream_timeout(sd_event_source *es, usec_t usec, void *userdata) {
-        DnsStream *s = userdata;
-
-        assert(s);
+        DnsStream *s = ASSERT_PTR(userdata);
 
         return dns_stream_complete(s, ETIMEDOUT);
 }
@@ -525,7 +523,7 @@ int dns_stream_new(
 
         *s = (DnsStream) {
                 .n_ref = 1,
-                .fd = -1,
+                .fd = -EBADF,
                 .protocol = protocol,
                 .type = type,
         };

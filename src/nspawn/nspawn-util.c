@@ -20,9 +20,12 @@ int systemd_installation_has_version(const char *root, const char *minimal_versi
                        /* /lib works for systems without usr-merge, and for systems with a sane
                         * usr-merge, where /lib is a symlink to /usr/lib. /usr/lib is necessary
                         * for Gentoo which does a merge without making /lib a symlink.
+                        * Also support multiarch paths von Debian/Ubuntu; *-linux-* is a small
+                        * optimization based on the naming scheme of existing multiarch tuples.
                         */
                        "/lib/systemd/libsystemd-shared-*.so",
                        "/lib64/systemd/libsystemd-shared-*.so",
+                       "/usr/lib/*-linux-*/systemd/libsystemd-shared-*.so",
                        "/usr/lib/systemd/libsystemd-shared-*.so",
                        "/usr/lib64/systemd/libsystemd-shared-*.so") {
 
@@ -44,10 +47,14 @@ int systemd_installation_has_version(const char *root, const char *minimal_versi
                 *c = '\0'; /* truncate the glob part */
 
                 STRV_FOREACH(name, names) {
+                        _cleanup_free_ char *bn = NULL;
                         /* This is most likely to run only once, hence let's not optimize anything. */
                         char *t, *t2;
 
-                        t = startswith(*name, path);
+                        if (path_extract_filename(*name, &bn) < 0)
+                                continue;
+
+                        t = startswith(bn, "libsystemd-shared-");
                         if (!t)
                                 continue;
 

@@ -18,7 +18,6 @@
 #include "socket-util.h"
 #include "string-table.h"
 #include "string-util.h"
-#include "util.h"
 
 static void security_association_clear(SecurityAssociation *sa) {
         if (!sa)
@@ -841,7 +840,7 @@ int config_parse_macsec_key_id(
         }
         if (l > MACSEC_KEYID_LEN) {
                 log_syntax(unit, LOG_WARNING, filename, line, 0,
-                           "Specified KeyId= is larger then the allowed maximum (%zu > %u), ignoring: %s",
+                           "Specified KeyId= is larger then the allowed maximum (%zu > %i), ignoring: %s",
                            l, MACSEC_KEYID_LEN, rvalue);
                 return 0;
         }

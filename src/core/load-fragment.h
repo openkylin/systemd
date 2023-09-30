@@ -78,6 +78,7 @@ CONFIG_PARSER_PROTOTYPE(config_parse_pass_environ);
 CONFIG_PARSER_PROTOTYPE(config_parse_unset_environ);
 CONFIG_PARSER_PROTOTYPE(config_parse_unit_slice);
 CONFIG_PARSER_PROTOTYPE(config_parse_cg_weight);
+CONFIG_PARSER_PROTOTYPE(config_parse_cg_cpu_weight);
 CONFIG_PARSER_PROTOTYPE(config_parse_cpu_shares);
 CONFIG_PARSER_PROTOTYPE(config_parse_memory_limit);
 CONFIG_PARSER_PROTOTYPE(config_parse_tasks_max);
@@ -114,7 +115,6 @@ CONFIG_PARSER_PROTOTYPE(config_parse_bus_name);
 CONFIG_PARSER_PROTOTYPE(config_parse_exec_utmp_mode);
 CONFIG_PARSER_PROTOTYPE(config_parse_working_directory);
 CONFIG_PARSER_PROTOTYPE(config_parse_fdname);
-CONFIG_PARSER_PROTOTYPE(config_parse_sec_fix_0);
 CONFIG_PARSER_PROTOTYPE(config_parse_user_group_compat);
 CONFIG_PARSER_PROTOTYPE(config_parse_user_group_strv_compat);
 CONFIG_PARSER_PROTOTYPE(config_parse_restrict_namespaces);
@@ -150,6 +150,8 @@ CONFIG_PARSER_PROTOTYPE(config_parse_cgroup_socket_bind);
 CONFIG_PARSER_PROTOTYPE(config_parse_restrict_network_interfaces);
 CONFIG_PARSER_PROTOTYPE(config_parse_watchdog_sec);
 CONFIG_PARSER_PROTOTYPE(config_parse_tty_size);
+CONFIG_PARSER_PROTOTYPE(config_parse_log_filter_patterns);
+CONFIG_PARSER_PROTOTYPE(config_parse_open_file);
 
 /* gperf prototypes */
 const struct ConfigPerfItem* load_fragment_gperf_lookup(const char *key, GPERF_LEN_TYPE length);

@@ -18,6 +18,7 @@
 #include "env-util.h"
 #include "errno-list.h"
 #include "macro.h"
+#include "namespace-util.h"
 #include "nsflags.h"
 #include "nulstr-util.h"
 #include "process-util.h"
@@ -80,6 +81,11 @@ uint32_t seccomp_local_archs[] = {
                 SCMP_ARCH_MIPSEL64,
                 SCMP_ARCH_MIPS64N32,
                 SCMP_ARCH_MIPSEL64N32, /* native */
+#elif defined(__hppa64__) && defined(SCMP_ARCH_PARISC) && defined(SCMP_ARCH_PARISC64)
+                SCMP_ARCH_PARISC,
+                SCMP_ARCH_PARISC64,    /* native */
+#elif defined(__hppa__) && defined(SCMP_ARCH_PARISC)
+                SCMP_ARCH_PARISC,
 #elif defined(__powerpc64__) && __BYTE_ORDER == __BIG_ENDIAN
                 SCMP_ARCH_PPC,
                 SCMP_ARCH_PPC64LE,
@@ -132,6 +138,14 @@ const char* seccomp_arch_to_string(uint32_t c) {
                 return "mips64-le";
         case SCMP_ARCH_MIPSEL64N32:
                 return "mips64-le-n32";
+#ifdef SCMP_ARCH_PARISC
+        case SCMP_ARCH_PARISC:
+                return "parisc";
+#endif
+#ifdef SCMP_ARCH_PARISC64
+        case SCMP_ARCH_PARISC64:
+                return "parisc64";
+#endif
         case SCMP_ARCH_PPC:
                 return "ppc";
         case SCMP_ARCH_PPC64:
@@ -181,6 +195,14 @@ int seccomp_arch_from_string(const char *n, uint32_t *ret) {
                 *ret = SCMP_ARCH_MIPSEL64;
         else if (streq(n, "mips64-le-n32"))
                 *ret = SCMP_ARCH_MIPSEL64N32;
+#ifdef SCMP_ARCH_PARISC
+        else if (streq(n, "parisc"))
+                *ret = SCMP_ARCH_PARISC;
+#endif
+#ifdef SCMP_ARCH_PARISC64
+        else if (streq(n, "parisc64"))
+                *ret = SCMP_ARCH_PARISC64;
+#endif
         else if (streq(n, "ppc"))
                 *ret = SCMP_ARCH_PPC;
         else if (streq(n, "ppc64"))
@@ -300,6 +322,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "exit_group\0"
                 "futex\0"
                 "futex_time64\0"
+                "futex_waitv\0"
                 "get_robust_list\0"
                 "get_thread_area\0"
                 "getegid\0"
@@ -334,6 +357,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "pause\0"
                 "prlimit64\0"
                 "restart_syscall\0"
+                "riscv_flush_icache\0"
                 "rseq\0"
                 "rt_sigreturn\0"
                 "sched_getaffinity\0"
@@ -425,9 +449,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "pidfd_getfd\0"
                 "ptrace\0"
                 "rtas\0"
-#if defined __s390__ || defined __s390x__
                 "s390_runtime_instr\0"
-#endif
                 "sys_debug_setcontext\0"
         },
         [SYSCALL_FILTER_SET_FILE_SYSTEM] = {
@@ -698,6 +720,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "open_by_handle_at\0"
                 "pivot_root\0"
                 "quotactl\0"
+                "quotactl_fd\0"
                 "setdomainname\0"
                 "setfsuid\0"
                 "setfsuid32\0"
@@ -751,10 +774,8 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "pciconfig_iobase\0"
                 "pciconfig_read\0"
                 "pciconfig_write\0"
-#if defined __s390__ || defined __s390x__
                 "s390_pci_mmio_read\0"
                 "s390_pci_mmio_write\0"
-#endif
         },
         [SYSCALL_FILTER_SET_REBOOT] = {
                 .name = "@reboot",
@@ -778,6 +799,7 @@ const SyscallFilterSet syscall_filter_sets[_SYSCALL_FILTER_SET_MAX] = {
                 "sched_setparam\0"
                 "sched_setscheduler\0"
                 "set_mempolicy\0"
+                "set_mempolicy_home_node\0"
                 "setpriority\0"
                 "setrlimit\0"
         },
@@ -1020,7 +1042,6 @@ static int add_syscall_filter_set(
                 bool log_missing,
                 char ***added) {
 
-        const char *sys;
         int r;
 
         /* Any syscalls that are handled are added to the *added strv. It needs to be initialized. */
@@ -1049,7 +1070,7 @@ int seccomp_load_syscall_filter_set(uint32_t default_action, const SyscallFilter
         SECCOMP_FOREACH_LOCAL_ARCH(arch) {
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
 
-                log_debug("Operating on architecture: %s", seccomp_arch_to_string(arch));
+                log_trace("Operating on architecture: %s", seccomp_arch_to_string(arch));
 
                 r = seccomp_init_for_arch(&seccomp, arch, default_action);
                 if (r < 0)
@@ -1083,7 +1104,7 @@ int seccomp_load_syscall_filter_set_raw(uint32_t default_action, Hashmap* filter
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
                 void *syscall_id, *val;
 
-                log_debug("Operating on architecture: %s", seccomp_arch_to_string(arch));
+                log_trace("Operating on architecture: %s", seccomp_arch_to_string(arch));
 
                 r = seccomp_init_for_arch(&seccomp, arch, default_action);
                 if (r < 0)
@@ -1150,7 +1171,6 @@ int seccomp_parse_syscall_filter(
 
         if (name[0] == '@') {
                 const SyscallFilterSet *set;
-                const char *i;
 
                 set = syscall_filter_set_find(name);
                 if (!set) {
@@ -1225,7 +1245,7 @@ int seccomp_restrict_namespaces(unsigned long retain) {
         SECCOMP_FOREACH_LOCAL_ARCH(arch) {
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
 
-                log_debug("Operating on architecture: %s", seccomp_arch_to_string(arch));
+                log_trace("Operating on architecture: %s", seccomp_arch_to_string(arch));
 
                 r = seccomp_init_for_arch(&seccomp, arch, SCMP_ACT_ALLOW);
                 if (r < 0)
@@ -1268,16 +1288,16 @@ int seccomp_restrict_namespaces(unsigned long retain) {
                         continue;
                 }
 
-                for (unsigned i = 0; namespace_flag_map[i].name; i++) {
+                for (unsigned i = 0; namespace_info[i].proc_name; i++) {
                         unsigned long f;
 
-                        f = namespace_flag_map[i].flag;
+                        f = namespace_info[i].clone_flag;
                         if (FLAGS_SET(retain, f)) {
-                                log_debug("Permitting %s.", namespace_flag_map[i].name);
+                                log_debug("Permitting %s.", namespace_info[i].proc_name);
                                 continue;
                         }
 
-                        log_debug("Blocking %s.", namespace_flag_map[i].name);
+                        log_trace("Blocking %s.", namespace_info[i].proc_name);
 
                         r = seccomp_rule_add_exact(
                                         seccomp,
@@ -1343,7 +1363,7 @@ int seccomp_protect_sysctl(void) {
         SECCOMP_FOREACH_LOCAL_ARCH(arch) {
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
 
-                log_debug("Operating on architecture: %s", seccomp_arch_to_string(arch));
+                log_trace("Operating on architecture: %s", seccomp_arch_to_string(arch));
 
                 if (IN_SET(arch,
                            SCMP_ARCH_AARCH64,
@@ -1419,7 +1439,7 @@ int seccomp_restrict_address_families(Set *address_families, bool allow_list) {
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
                 bool supported;
 
-                log_debug("Operating on architecture: %s", seccomp_arch_to_string(arch));
+                log_trace("Operating on architecture: %s", seccomp_arch_to_string(arch));
 
                 switch (arch) {
 
@@ -1443,6 +1463,12 @@ int seccomp_restrict_address_families(Set *address_families, bool allow_list) {
                 case SCMP_ARCH_X86:
                 case SCMP_ARCH_MIPSEL:
                 case SCMP_ARCH_MIPS:
+#ifdef SCMP_ARCH_PARISC
+                case SCMP_ARCH_PARISC:
+#endif
+#ifdef SCMP_ARCH_PARISC64
+                case SCMP_ARCH_PARISC64:
+#endif
                 case SCMP_ARCH_PPC:
                 case SCMP_ARCH_PPC64:
                 case SCMP_ARCH_PPC64LE:
@@ -1575,7 +1601,7 @@ int seccomp_restrict_address_families(Set *address_families, bool allow_list) {
         return 0;
 }
 
-int seccomp_restrict_realtime(void) {
+int seccomp_restrict_realtime_full(int error_code) {
         static const int permitted_policies[] = {
                 SCHED_OTHER,
                 SCHED_BATCH,
@@ -1586,6 +1612,8 @@ int seccomp_restrict_realtime(void) {
         uint32_t arch;
         unsigned i;
 
+        assert(error_code > 0);
+
         /* Determine the highest policy constant we want to allow */
         for (i = 0; i < ELEMENTSOF(permitted_policies); i++)
                 if (permitted_policies[i] > max_policy)
@@ -1595,7 +1623,7 @@ int seccomp_restrict_realtime(void) {
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
                 int p;
 
-                log_debug("Operating on architecture: %s", seccomp_arch_to_string(arch));
+                log_trace("Operating on architecture: %s", seccomp_arch_to_string(arch));
 
                 r = seccomp_init_for_arch(&seccomp, arch, SCMP_ACT_ALLOW);
                 if (r < 0)
@@ -1619,7 +1647,7 @@ int seccomp_restrict_realtime(void) {
                         /* Deny this policy */
                         r = seccomp_rule_add_exact(
                                         seccomp,
-                                        SCMP_ACT_ERRNO(EPERM),
+                                        SCMP_ACT_ERRNO(error_code),
                                         SCMP_SYS(sched_setscheduler),
                                         1,
                                         SCMP_A1(SCMP_CMP_EQ, p));
@@ -1633,7 +1661,7 @@ int seccomp_restrict_realtime(void) {
                  * are unsigned here, hence no need no check for < 0 values. */
                 r = seccomp_rule_add_exact(
                                 seccomp,
-                                SCMP_ACT_ERRNO(EPERM),
+                                SCMP_ACT_ERRNO(error_code),
                                 SCMP_SYS(sched_setscheduler),
                                 1,
                                 SCMP_A1(SCMP_CMP_GT, max_policy));
@@ -1687,13 +1715,17 @@ int seccomp_memory_deny_write_execute(void) {
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
                 int filter_syscall = 0, block_syscall = 0, shmat_syscall = 0, r;
 
-                log_debug("Operating on architecture: %s", seccomp_arch_to_string(arch));
+                log_trace("Operating on architecture: %s", seccomp_arch_to_string(arch));
 
                 switch (arch) {
 
                 /* Note that on some architectures shmat() isn't available, and the call is multiplexed through ipc().
                  * We ignore that here, which means there's still a way to get writable/executable
-                 * memory, if an IPC key is mapped like this. That's a pity, but no total loss. */
+                 * memory, if an IPC key is mapped like this. That's a pity, but no total loss.
+                 *
+                 * Also, PARISC isn't here right now because it still needs executable memory, but work is in progress
+                 * on that front (kernel work done in 5.18).
+                 */
 
                 case SCMP_ARCH_X86:
                 case SCMP_ARCH_S390:
@@ -1727,7 +1759,7 @@ int seccomp_memory_deny_write_execute(void) {
 
                 /* Please add more definitions here, if you port systemd to other architectures! */
 
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__arm__) && !defined(__aarch64__) && !defined(__s390__) && !defined(__s390x__) && !(defined(__riscv) && __riscv_xlen == 64)
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__hppa__) && !defined(__hppa64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__arm__) && !defined(__aarch64__) && !defined(__s390__) && !defined(__s390x__) && !(defined(__riscv) && __riscv_xlen == 64)
 #warning "Consider adding the right mmap() syscall definitions here!"
 #endif
                 }
@@ -1878,7 +1910,6 @@ int parse_syscall_archs(char **l, Set **ret_archs) {
 }
 
 int seccomp_filter_set_add(Hashmap *filter, bool add, const SyscallFilterSet *set) {
-        const char *i;
         int r;
 
         assert(set);
@@ -2277,7 +2308,6 @@ int seccomp_suppress_sync(void) {
 
         SECCOMP_FOREACH_LOCAL_ARCH(arch) {
                 _cleanup_(seccomp_releasep) scmp_filter_ctx seccomp = NULL;
-                const char *c;
 
                 r = seccomp_init_for_arch(&seccomp, arch, SCMP_ACT_ALLOW);
                 if (r < 0)

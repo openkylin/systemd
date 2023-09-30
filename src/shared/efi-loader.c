@@ -2,10 +2,12 @@
 
 #include "alloc-util.h"
 #include "efi-loader.h"
+#include "env-util.h"
 #include "parse-util.h"
 #include "path-util.h"
 #include "stat-util.h"
 #include "strv.h"
+#include "tpm-pcr.h"
 #include "utf8.h"
 
 #if ENABLE_EFI
@@ -60,7 +62,8 @@ int efi_loader_get_boot_usec(usec_t *ret_firmware, usec_t *ret_loader) {
 
 int efi_loader_get_device_part_uuid(sd_id128_t *ret) {
         _cleanup_free_ char *p = NULL;
-        int r, parsed[16];
+        int r;
+        unsigned parsed[16];
 
         if (!is_efi_boot())
                 return -EOPNOTSUPP;
@@ -185,6 +188,95 @@ int efi_loader_get_features(uint64_t *ret) {
 
         memcpy(ret, v, sizeof(uint64_t));
         return 0;
+}
+
+int efi_stub_get_features(uint64_t *ret) {
+        _cleanup_free_ void *v = NULL;
+        size_t s;
+        int r;
+
+        assert(ret);
+
+        if (!is_efi_boot()) {
+                *ret = 0;
+                return 0;
+        }
+
+        r = efi_get_variable(EFI_LOADER_VARIABLE(StubFeatures), NULL, &v, &s);
+        if (r == -ENOENT) {
+                _cleanup_free_ char *info = NULL;
+
+                /* The new (v252+) StubFeatures variable is not supported, let's see if it's systemd-stub at all */
+                r = efi_get_variable_string(EFI_LOADER_VARIABLE(StubInfo), &info);
+                if (r < 0) {
+                        if (r != -ENOENT)
+                                return r;
+
+                        /* Variable not set, definitely means not systemd-stub */
+
+                } else if (first_word(info, "systemd-stub")) {
+
+                        /* An older systemd-stub version. Let's hardcode the feature set, since it was pretty
+                         * static in all its versions. */
+
+                        *ret = EFI_STUB_FEATURE_REPORT_BOOT_PARTITION;
+                        return 0;
+                }
+
+                /* No features supported */
+                *ret = 0;
+                return 0;
+        }
+        if (r < 0)
+                return r;
+
+        if (s != sizeof(uint64_t))
+                return log_debug_errno(SYNTHETIC_ERRNO(EINVAL),
+                                       "StubFeatures EFI variable doesn't have the right size.");
+
+        memcpy(ret, v, sizeof(uint64_t));
+        return 0;
+}
+
+int efi_stub_measured(int log_level) {
+        _cleanup_free_ char *pcr_string = NULL;
+        unsigned pcr_nr;
+        int r;
+
+        /* Checks if we are booted on a kernel with sd-stub which measured the kernel into PCR 11. Or in
+         * other words, if we are running on a TPM enabled UKI.
+         *
+         * Returns == 0 and > 0 depending on the result of the test. Returns -EREMOTE if we detected a stub
+         * being used, but it measured things into a different PCR than we are configured for in
+         * userspace. (i.e. we expect PCR 11 being used for this by both sd-stub and us) */
+
+        r = getenv_bool_secure("SYSTEMD_FORCE_MEASURE"); /* Give user a chance to override the variable test,
+                                                          * for debugging purposes */
+        if (r >= 0)
+                return r;
+        if (r != -ENXIO)
+                log_debug_errno(r, "Failed to parse $SYSTEMD_FORCE_MEASURE, ignoring: %m");
+
+        if (!is_efi_boot())
+                return 0;
+
+        r = efi_get_variable_string(EFI_LOADER_VARIABLE(StubPcrKernelImage), &pcr_string);
+        if (r == -ENOENT)
+                return 0;
+        if (r < 0)
+                return log_full_errno(log_level, r,
+                                      "Failed to get StubPcrKernelImage EFI variable: %m");
+
+        r = safe_atou(pcr_string, &pcr_nr);
+        if (r < 0)
+                return log_full_errno(log_level, r,
+                                      "Failed to parse StubPcrKernelImage EFI variable: %s", pcr_string);
+        if (pcr_nr != TPM_PCR_INDEX_KERNEL_IMAGE)
+                return log_full_errno(log_level, SYNTHETIC_ERRNO(EREMOTE),
+                                      "Kernel stub measured kernel image into PCR %u, which is different than expected %u.",
+                                      pcr_nr, TPM_PCR_INDEX_KERNEL_IMAGE);
+
+        return 1;
 }
 
 int efi_loader_get_config_timeout_one_shot(usec_t *ret) {

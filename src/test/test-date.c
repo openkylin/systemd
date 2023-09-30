@@ -46,7 +46,7 @@ static void test_should_fail(const char *p) {
 }
 
 static void test_one(const char *p) {
-        _cleanup_free_ char *with_utc;
+        _cleanup_free_ char *with_utc = NULL;
 
         with_utc = strjoin(p, " UTC");
         test_should_pass(p);
@@ -54,7 +54,7 @@ static void test_one(const char *p) {
 }
 
 static void test_one_noutc(const char *p) {
-        _cleanup_free_ char *with_utc;
+        _cleanup_free_ char *with_utc = NULL;
 
         with_utc = strjoin(p, " UTC");
         test_should_pass(p);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
         test_should_parse("1970-1-1 UTC");
         test_should_pass("1970-1-1 00:00:01 UTC");
         test_should_fail("1969-12-31 UTC");
-        test_should_fail("-100y");
+        test_should_fail("-1000y");
         test_should_fail("today UTC UTC");
         test_should_fail("now Asia/Seoul");
         test_should_fail("+2d Asia/Seoul");

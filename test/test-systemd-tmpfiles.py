@@ -72,7 +72,7 @@ def test_uninitialized_t():
         return
 
     test_line('w /foo - - - - "specifier for --user %t"',
-              user=True, returncode=0, extra={'env':{}})
+              user=True, returncode=0, extra={'env':{'HOME': os.getenv('HOME')}})
 
 def test_content(line, expected, *, user, extra={}, subpath='/arg', path_cb=None):
     d = tempfile.TemporaryDirectory(prefix='test-systemd-tmpfiles.')
@@ -87,7 +87,7 @@ def test_content(line, expected, *, user, extra={}, subpath='/arg', path_cb=None
 
 def test_valid_specifiers(*, user):
     test_content('f {} - - - - two words', 'two words', user=user)
-    if id128:
+    if id128 and os.path.isfile('/etc/machine-id'):
         try:
             test_content('f {} - - - - %m', '{}'.format(id128.get_machine().hex), user=user)
         except AssertionError as e:
@@ -101,11 +101,21 @@ def test_valid_specifiers(*, user):
     test_content('f {} - - - - %U', '{}'.format(os.getuid() if user else 0), user=user)
     test_content('f {} - - - - %G', '{}'.format(os.getgid() if user else 0), user=user)
 
-    puser = pwd.getpwuid(os.getuid() if user else 0)
-    test_content('f {} - - - - %u', '{}'.format(puser.pw_name), user=user)
+    try:
+        puser = pwd.getpwuid(os.getuid() if user else 0)
+    except KeyError:
+        puser = None
 
-    pgroup = grp.getgrgid(os.getgid() if user else 0)
-    test_content('f {} - - - - %g', '{}'.format(pgroup.gr_name), user=user)
+    if puser:
+        test_content('f {} - - - - %u', '{}'.format(puser.pw_name), user=user)
+
+    try:
+        pgroup = grp.getgrgid(os.getgid() if user else 0)
+    except KeyError:
+        pgroup = None
+
+    if pgroup:
+        test_content('f {} - - - - %g', '{}'.format(pgroup.gr_name), user=user)
 
     # Note that %h is the only specifier in which we look the environment,
     # because we check $HOME. Should we even be doing that?
@@ -188,6 +198,14 @@ def test_hard_cleanup(*, user):
     label = 'valid_symlink-deep'
     test_content('f= {} - - - - ' + label, label, user=user, subpath='/deep/1/2', path_cb=valid_symlink)
 
+def test_base64():
+    test_line('f~ /tmp/base64-test - - - - UGlmZgpQYWZmClB1ZmYgCg==', user=False, returncode=0)
+
+    with open("/tmp/base64-test", mode='r') as f:
+        d = f.read()
+
+    assert d == "Piff\nPaff\nPuff \n"
+
 if __name__ == '__main__':
     test_invalids(user=False)
     test_invalids(user=True)
@@ -198,3 +216,5 @@ if __name__ == '__main__':
 
     test_hard_cleanup(user=False)
     test_hard_cleanup(user=True)
+
+    test_base64()
