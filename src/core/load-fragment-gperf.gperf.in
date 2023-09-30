@@ -52,6 +52,7 @@
 {{type}}.LogRateLimitIntervalSec,          config_parse_sec,                            0,                                  offsetof({{type}}, exec_context.log_ratelimit_interval_usec)
 {{type}}.LogRateLimitBurst,                config_parse_unsigned,                       0,                                  offsetof({{type}}, exec_context.log_ratelimit_burst)
 {{type}}.LogExtraFields,                   config_parse_log_extra_fields,               0,                                  offsetof({{type}}, exec_context)
+{{type}}.LogFilterPatterns,                config_parse_log_filter_patterns,            0,                                  offsetof({{type}}, exec_context)
 {{type}}.Capabilities,                     config_parse_warn_compat,                    DISABLED_LEGACY,                    offsetof({{type}}, exec_context)
 {{type}}.SecureBits,                       config_parse_exec_secure_bits,               0,                                  offsetof({{type}}, exec_context.secure_bits)
 {{type}}.CapabilityBoundingSet,            config_parse_capability_set,                 0,                                  offsetof({{type}}, exec_context.capability_bounding_set)
@@ -191,8 +192,8 @@
 {{type}}.AllowedMemoryNodes,               config_parse_allowed_cpuset,                 0,                                  offsetof({{type}}, cgroup_context.cpuset_mems)
 {{type}}.StartupAllowedMemoryNodes,        config_parse_allowed_cpuset,                 0,                                  offsetof({{type}}, cgroup_context.startup_cpuset_mems)
 {{type}}.CPUAccounting,                    config_parse_bool,                           0,                                  offsetof({{type}}, cgroup_context.cpu_accounting)
-{{type}}.CPUWeight,                        config_parse_cg_weight,                      0,                                  offsetof({{type}}, cgroup_context.cpu_weight)
-{{type}}.StartupCPUWeight,                 config_parse_cg_weight,                      0,                                  offsetof({{type}}, cgroup_context.startup_cpu_weight)
+{{type}}.CPUWeight,                        config_parse_cg_cpu_weight,                  0,                                  offsetof({{type}}, cgroup_context.cpu_weight)
+{{type}}.StartupCPUWeight,                 config_parse_cg_cpu_weight,                  0,                                  offsetof({{type}}, cgroup_context.startup_cpu_weight)
 {{type}}.CPUShares,                        config_parse_cpu_shares,                     0,                                  offsetof({{type}}, cgroup_context.cpu_shares)
 {{type}}.StartupCPUShares,                 config_parse_cpu_shares,                     0,                                  offsetof({{type}}, cgroup_context.startup_cpu_shares)
 {{type}}.CPUQuota,                         config_parse_cpu_quota,                      0,                                  offsetof({{type}}, cgroup_context)
@@ -205,6 +206,7 @@
 {{type}}.MemoryHigh,                       config_parse_memory_limit,                   0,                                  offsetof({{type}}, cgroup_context)
 {{type}}.MemoryMax,                        config_parse_memory_limit,                   0,                                  offsetof({{type}}, cgroup_context)
 {{type}}.MemorySwapMax,                    config_parse_memory_limit,                   0,                                  offsetof({{type}}, cgroup_context)
+{{type}}.MemoryZSwapMax,                   config_parse_memory_limit,                   0,                                  offsetof({{type}}, cgroup_context)
 {{type}}.MemoryLimit,                      config_parse_memory_limit,                   0,                                  offsetof({{type}}, cgroup_context)
 {{type}}.DeviceAllow,                      config_parse_device_allow,                   0,                                  offsetof({{type}}, cgroup_context)
 {{type}}.DevicePolicy,                     config_parse_device_policy,                  0,                                  offsetof({{type}}, cgroup_context.device_policy)
@@ -332,6 +334,7 @@ Unit.ConditionVirtualization,            config_parse_unit_condition_string,    
 Unit.ConditionHost,                      config_parse_unit_condition_string,          CONDITION_HOST,                     offsetof(Unit, conditions)
 Unit.ConditionKernelCommandLine,         config_parse_unit_condition_string,          CONDITION_KERNEL_COMMAND_LINE,      offsetof(Unit, conditions)
 Unit.ConditionKernelVersion,             config_parse_unit_condition_string,          CONDITION_KERNEL_VERSION,           offsetof(Unit, conditions)
+Unit.ConditionCredential,                config_parse_unit_condition_string,          CONDITION_CREDENTIAL,               offsetof(Unit, conditions)
 Unit.ConditionSecurity,                  config_parse_unit_condition_string,          CONDITION_SECURITY,                 offsetof(Unit, conditions)
 Unit.ConditionCapability,                config_parse_unit_condition_string,          CONDITION_CAPABILITY,               offsetof(Unit, conditions)
 Unit.ConditionACPower,                   config_parse_unit_condition_string,          CONDITION_AC_POWER,                 offsetof(Unit, conditions)
@@ -363,6 +366,7 @@ Unit.AssertVirtualization,               config_parse_unit_condition_string,    
 Unit.AssertHost,                         config_parse_unit_condition_string,          CONDITION_HOST,                     offsetof(Unit, asserts)
 Unit.AssertKernelCommandLine,            config_parse_unit_condition_string,          CONDITION_KERNEL_COMMAND_LINE,      offsetof(Unit, asserts)
 Unit.AssertKernelVersion,                config_parse_unit_condition_string,          CONDITION_KERNEL_VERSION,           offsetof(Unit, asserts)
+Unit.AssertCredential,                   config_parse_unit_condition_string,          CONDITION_CREDENTIAL,               offsetof(Unit, asserts)
 Unit.AssertSecurity,                     config_parse_unit_condition_string,          CONDITION_SECURITY,                 offsetof(Unit, asserts)
 Unit.AssertCapability,                   config_parse_unit_condition_string,          CONDITION_CAPABILITY,               offsetof(Unit, asserts)
 Unit.AssertACPower,                      config_parse_unit_condition_string,          CONDITION_AC_POWER,                 offsetof(Unit, asserts)
@@ -422,6 +426,8 @@ Service.BusPolicy,                       config_parse_warn_compat,              
 Service.USBFunctionDescriptors,          config_parse_unit_path_printf,               0,                                  offsetof(Service, usb_function_descriptors)
 Service.USBFunctionStrings,              config_parse_unit_path_printf,               0,                                  offsetof(Service, usb_function_strings)
 Service.OOMPolicy,                       config_parse_oom_policy,                     0,                                  offsetof(Service, oom_policy)
+Service.OpenFile,                        config_parse_open_file,                      0,                                  offsetof(Service, open_files)
+Service.ReloadSignal,                    config_parse_signal,                         0,                                  offsetof(Service, reload_signal)
 {{ EXEC_CONTEXT_CONFIG_ITEMS('Service') }}
 {{ CGROUP_CONTEXT_CONFIG_ITEMS('Service') }}
 {{ KILL_CONTEXT_CONFIG_ITEMS('Service') }}
@@ -553,6 +559,7 @@ Path.TriggerLimitBurst,                  config_parse_unsigned,                 
 Scope.RuntimeMaxSec,                     config_parse_sec,                            0,                                  offsetof(Scope, runtime_max_usec)
 Scope.RuntimeRandomizedExtraSec,         config_parse_sec,                            0,                                  offsetof(Scope, runtime_rand_extra_usec)
 Scope.TimeoutStopSec,                    config_parse_sec,                            0,                                  offsetof(Scope, timeout_stop_usec)
+Scope.OOMPolicy,                         config_parse_oom_policy,                     0,                                  offsetof(Scope, oom_policy)
 {# The [Install] section is ignored here #}
 Install.Alias,                           NULL,                                        0,                                  0
 Install.WantedBy,                        NULL,                                        0,                                  0

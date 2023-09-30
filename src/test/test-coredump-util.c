@@ -10,7 +10,7 @@ TEST(coredump_filter_to_from_string) {
                 const char *n;
 
                 assert_se(n = coredump_filter_to_string(i));
-                log_info("0x%x\t%s", 1<<i, n);
+                log_info("0x%x\t%s", 1u << i, n);
                 assert_se(coredump_filter_from_string(n) == i);
 
                 uint64_t f;
@@ -23,6 +23,8 @@ TEST(coredump_filter_mask_from_string) {
         uint64_t f;
         assert_se(coredump_filter_mask_from_string("default", &f) == 0);
         assert_se(f == COREDUMP_FILTER_MASK_DEFAULT);
+        assert_se(coredump_filter_mask_from_string("all", &f) == 0);
+        assert_se(f == COREDUMP_FILTER_MASK_ALL);
 
         assert_se(coredump_filter_mask_from_string("  default\tdefault\tdefault  ", &f) == 0);
         assert_se(f == COREDUMP_FILTER_MASK_DEFAULT);

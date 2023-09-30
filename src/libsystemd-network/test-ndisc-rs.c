@@ -10,6 +10,7 @@
 #include "sd-ndisc.h"
 
 #include "alloc-util.h"
+#include "fd-util.h"
 #include "hexdecoct.h"
 #include "icmp6-util.h"
 #include "socket-util.h"
@@ -105,7 +106,6 @@ static void router_dump(sd_ndisc_router *rt) {
                         unsigned prefix_len;
                         uint8_t pfl;
                         struct in6_addr a;
-                        char buff[INET6_ADDRSTRLEN];
 
                         assert_se(sd_ndisc_router_prefix_get_valid_lifetime(rt, &lifetime_valid) >= 0);
                         log_info("Valid Lifetime: %" PRIu32, lifetime_valid);
@@ -122,7 +122,7 @@ static void router_dump(sd_ndisc_router *rt) {
                         log_info("Prefix Length: %u", prefix_len);
 
                         assert_se(sd_ndisc_router_prefix_get_address(rt, &a) >= 0);
-                        log_info("Prefix: %s", inet_ntop(AF_INET6, &a, buff, sizeof(buff)));
+                        log_info("Prefix: %s", IN6_ADDR_TO_STRING(&a));
 
                         break;
                 }
@@ -135,10 +135,8 @@ static void router_dump(sd_ndisc_router *rt) {
                         n = sd_ndisc_router_rdnss_get_addresses(rt, &a);
                         assert_se(n > 0);
 
-                        for (i = 0; i < n; i++) {
-                                char buff[INET6_ADDRSTRLEN];
-                                log_info("DNS: %s", inet_ntop(AF_INET6, a + i, buff, sizeof(buff)));
-                        }
+                        for (i = 0; i < n; i++)
+                                log_info("DNS: %s", IN6_ADDR_TO_STRING(a + i));
 
                         assert_se(sd_ndisc_router_rdnss_get_lifetime(rt, &lt) >= 0);
                         log_info("Lifetime: %" PRIu32, lt);
@@ -258,8 +256,8 @@ static void test_callback(sd_ndisc *nd, sd_ndisc_event_t event, sd_ndisc_router 
 }
 
 TEST(rs) {
-        sd_event *e;
-        sd_ndisc *nd;
+        _cleanup_(sd_event_unrefp) sd_event *e = NULL;
+        _cleanup_(sd_ndisc_unrefp) sd_ndisc *nd = NULL;
 
         send_ra_function = send_ra;
 
@@ -282,17 +280,13 @@ TEST(rs) {
         assert_se(sd_ndisc_start(nd) >= 0);
         assert_se(sd_ndisc_start(nd) >= 0);
         assert_se(sd_ndisc_stop(nd) >= 0);
+        test_fd[1] = safe_close(test_fd[1]);
 
         assert_se(sd_ndisc_start(nd) >= 0);
 
         assert_se(sd_event_loop(e) >= 0);
 
-        nd = sd_ndisc_unref(nd);
-        assert_se(!nd);
-
-        close(test_fd[1]);
-
-        sd_event_unref(e);
+        test_fd[1] = safe_close(test_fd[1]);
 }
 
 static int test_timeout_value(uint8_t flags) {
@@ -345,8 +339,8 @@ static int test_timeout_value(uint8_t flags) {
 }
 
 TEST(timeout) {
-        sd_event *e;
-        sd_ndisc *nd;
+        _cleanup_(sd_event_unrefp) sd_event *e = NULL;
+        _cleanup_(sd_ndisc_unrefp) sd_ndisc *nd = NULL;
 
         send_ra_function = test_timeout_value;
 
@@ -370,9 +364,7 @@ TEST(timeout) {
 
         assert_se(sd_event_loop(e) >= 0);
 
-        nd = sd_ndisc_unref(nd);
-
-        sd_event_unref(e);
+        test_fd[1] = safe_close(test_fd[1]);
 }
 
 DEFINE_TEST_MAIN(LOG_DEBUG);

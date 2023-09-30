@@ -7,6 +7,7 @@ _systemd_headers = [
         'sd-daemon.h',
         'sd-device.h',
         'sd-event.h',
+        'sd-gpt.h',
         'sd-hwdb.h',
         'sd-id128.h',
         'sd-journal.h',
@@ -36,7 +37,6 @@ _not_installed_headers = [
         'sd-network.h',
         'sd-radv.h',
         'sd-resolve.h',
-        'sd-utf8.h',
 ]
 
 install_headers(
@@ -59,6 +59,10 @@ if cc.has_argument('-std=iso9899:2017')
         opts += [['c', '-std=iso9899:2017']]
 endif
 
+if cc.has_argument('-std=c2x')
+        opts += [['c', '-std=c2x']]
+endif
+
 if cxx_cmd != ''
         opts += [['c++'],
                  ['c++', '-std=c++98'],
@@ -71,6 +75,9 @@ if cxx_cmd != ''
         endif
         if cxx.has_argument('-std=c++20')
                 opts += [['c++', '-std=c++20']]
+        endif
+        if cxx.has_argument('-std=c++23')
+                opts += [['c++', '-std=c++23']]
         endif
 endif
 
@@ -86,6 +93,9 @@ foreach header : _systemd_headers + _not_installed_headers + [libudev_h_path]
                              '-Wall',
                              '-Wextra',
                              '-Werror',
+                             '-pedantic',
+                             '-Wno-long-long',
+                             '-Wno-variadic-macros',
                              '-include', meson.current_source_dir() / header,
                              '-o/dev/null',
                              '/dev/null'])

@@ -2,12 +2,6 @@
 
 #include <sys/sendfile.h>
 
-/* When we include libgen.h because we need dirname() we immediately
- * undefine basename() since libgen.h defines it as a macro to the POSIX
- * version which is really broken. We prefer GNU basename(). */
-#include <libgen.h>
-#undef basename
-
 #include "sd-daemon.h"
 
 #include "alloc-util.h"
@@ -22,7 +16,6 @@
 #include "stat-util.h"
 #include "string-util.h"
 #include "tmpfile-util.h"
-#include "util.h"
 
 #define COPY_BUFFER_SIZE (16*1024)
 
@@ -91,8 +84,8 @@ int raw_export_new(
                 return -ENOMEM;
 
         *e = (RawExport) {
-                .output_fd = -1,
-                .input_fd = -1,
+                .output_fd = -EBADF,
+                .input_fd = -EBADF,
                 .on_finished = on_finished,
                 .userdata = userdata,
                 .last_percent = UINT_MAX,
@@ -274,7 +267,7 @@ static int reflink_snapshot(int fd, const char *path) {
 }
 
 int raw_export_start(RawExport *e, const char *path, int fd, ImportCompressType compress) {
-        _cleanup_close_ int sfd = -1, tfd = -1;
+        _cleanup_close_ int sfd = -EBADF, tfd = -EBADF;
         int r;
 
         assert(e);

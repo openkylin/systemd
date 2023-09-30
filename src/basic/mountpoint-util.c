@@ -37,7 +37,6 @@ int name_to_handle_at_loop(
                 int *ret_mnt_id,
                 int flags) {
 
-        _cleanup_free_ struct file_handle *h = NULL;
         size_t n = ORIGINAL_MAX_HANDLE_SZ;
 
         assert((flags & ~(AT_SYMLINK_FOLLOW|AT_EMPTY_PATH)) == 0);
@@ -50,6 +49,7 @@ int name_to_handle_at_loop(
          * as NULL if there's no interest in either. */
 
         for (;;) {
+                _cleanup_free_ struct file_handle *h = NULL;
                 int mnt_id = -1;
 
                 h = malloc0(offsetof(struct file_handle, f_handle) + n);
@@ -91,15 +91,13 @@ int name_to_handle_at_loop(
                 n = h->handle_bytes;
                 if (offsetof(struct file_handle, f_handle) + n < n) /* check for addition overflow */
                         return -EOVERFLOW;
-
-                h = mfree(h);
         }
 }
 
 static int fd_fdinfo_mnt_id(int fd, const char *filename, int flags, int *ret_mnt_id) {
         char path[STRLEN("/proc/self/fdinfo/") + DECIMAL_STR_MAX(int)];
         _cleanup_free_ char *fdinfo = NULL;
-        _cleanup_close_ int subfd = -1;
+        _cleanup_close_ int subfd = -EBADF;
         char *p;
         int r;
 
@@ -118,7 +116,7 @@ static int fd_fdinfo_mnt_id(int fd, const char *filename, int flags, int *ret_mn
 
         r = read_full_virtual_file(path, &fdinfo, NULL);
         if (r == -ENOENT) /* The fdinfo directory is a relatively new addition */
-                return -EOPNOTSUPP;
+                return proc_mounted() > 0 ? -EOPNOTSUPP : -ENOSYS;
         if (r < 0)
                 return r;
 
@@ -182,12 +180,18 @@ int fd_is_mount_point(int fd, const char *filename, int flags) {
         int r;
 
         assert(fd >= 0);
-        assert(filename);
-        assert((flags & ~(AT_SYMLINK_FOLLOW|AT_EMPTY_PATH)) == 0);
+        assert((flags & ~AT_SYMLINK_FOLLOW) == 0);
 
-        /* Insist that the specified filename is actually a filename, and not a path, i.e. some inode further
-         * up or down the tree then immediately below the specified directory fd. */
-        if (!filename_possibly_with_slash_suffix(filename))
+        if (!filename) {
+                /* If the file name is specified as NULL we'll see if the specified 'fd' is a mount
+                 * point. That's only supported if the kernel supports statx(), or if the inode specified via
+                 * 'fd' refers to a directory. Otherwise, we'll have to fail (ENOTDIR), because we have no
+                 * kernel API to query the information we need. */
+                flags |= AT_EMPTY_PATH;
+                filename = "";
+        } else if (!filename_possibly_with_slash_suffix(filename))
+                /* Insist that the specified filename is actually a filename, and not a path, i.e. some inode further
+                 * up or down the tree then immediately below the specified directory fd. */
                 return -EINVAL;
 
         /* First we will try statx()' STATX_ATTR_MOUNT_ROOT attribute, which is our ideal API, available
@@ -234,7 +238,10 @@ int fd_is_mount_point(int fd, const char *filename, int flags) {
                 nosupp = true;
         }
 
-        r = name_to_handle_at_loop(fd, "", &h_parent, &mount_id_parent, AT_EMPTY_PATH);
+        if (isempty(filename))
+                r = name_to_handle_at_loop(fd, "..", &h_parent, &mount_id_parent, 0); /* can't work for non-directories 😢 */
+        else
+                r = name_to_handle_at_loop(fd, "", &h_parent, &mount_id_parent, AT_EMPTY_PATH);
         if (r < 0) {
                 if (is_name_to_handle_at_fatal_error(r))
                         return r;
@@ -266,12 +273,15 @@ int fd_is_mount_point(int fd, const char *filename, int flags) {
 
 fallback_fdinfo:
         r = fd_fdinfo_mnt_id(fd, filename, flags, &mount_id);
-        if (IN_SET(r, -EOPNOTSUPP, -EACCES, -EPERM))
+        if (IN_SET(r, -EOPNOTSUPP, -EACCES, -EPERM, -ENOSYS))
                 goto fallback_fstat;
         if (r < 0)
                 return r;
 
-        r = fd_fdinfo_mnt_id(fd, "", AT_EMPTY_PATH, &mount_id_parent);
+        if (isempty(filename))
+                r = fd_fdinfo_mnt_id(fd, "..", 0, &mount_id_parent); /* can't work for non-directories 😢 */
+        else
+                r = fd_fdinfo_mnt_id(fd, "", AT_EMPTY_PATH, &mount_id_parent);
         if (r < 0)
                 return r;
 
@@ -295,7 +305,11 @@ fallback_fstat:
         if (S_ISLNK(a.st_mode)) /* Symlinks are never mount points */
                 return false;
 
-        if (fstatat(fd, "", &b, AT_EMPTY_PATH) < 0)
+        if (isempty(filename))
+                r = fstatat(fd, "..", &b, 0);
+        else
+                r = fstatat(fd, "", &b, AT_EMPTY_PATH);
+        if (r < 0)
                 return -errno;
 
         /* A directory with same device and inode as its parent? Must be the root directory */
@@ -308,7 +322,7 @@ fallback_fstat:
 /* flags can be AT_SYMLINK_FOLLOW or 0 */
 int path_is_mount_point(const char *t, const char *root, int flags) {
         _cleanup_free_ char *canonical = NULL;
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         int r;
 
         assert(t);
@@ -375,6 +389,32 @@ bool fstype_is_network(const char *fstype) {
                           "glusterfs",
                           "lustre",
                           "sshfs");
+}
+
+bool fstype_needs_quota(const char *fstype) {
+       /* 1. quotacheck needs to be run for some filesystems after they are mounted
+        *    if the filesystem was not unmounted cleanly.
+        * 2. You may need to run quotaon to enable quota usage tracking and/or
+        *    enforcement.
+        * ext2     - needs 1) and 2)
+        * ext3     - needs 2) if configured using usrjquota/grpjquota mount options
+        * ext4     - needs 1) if created without journal, needs 2) if created without QUOTA
+        *            filesystem feature
+        * reiserfs - needs 2).
+        * jfs      - needs 2)
+        * f2fs     - needs 2) if configured using usrjquota/grpjquota/prjjquota mount options
+        * xfs      - nothing needed
+        * gfs2     - nothing needed
+        * ocfs2    - nothing needed
+        * btrfs    - nothing needed
+        * for reference see filesystem and quota manpages */
+        return STR_IN_SET(fstype,
+                          "ext2",
+                          "ext3",
+                          "ext4",
+                          "reiserfs",
+                          "jfs",
+                          "f2fs");
 }
 
 bool fstype_is_api_vfs(const char *fstype) {
@@ -451,6 +491,8 @@ int dev_is_devtmpfs(void) {
                 return r;
 
         r = fopen_unlocked("/proc/self/mountinfo", "re", &proc_self_mountinfo);
+        if (r == -ENOENT)
+                return proc_mounted() > 0 ? -ENOENT : -ENOSYS;
         if (r < 0)
                 return r;
 
@@ -470,19 +512,65 @@ int dev_is_devtmpfs(void) {
                 if (mid != mount_id)
                         continue;
 
-                e = strstr(line, " - ");
+                e = strstrafter(line, " - ");
                 if (!e)
                         continue;
 
                 /* accept any name that starts with the currently expected type */
-                if (startswith(e + 3, "devtmpfs"))
+                if (startswith(e, "devtmpfs"))
                         return true;
         }
 
         return false;
 }
 
-const char *mount_propagation_flags_to_string(unsigned long flags) {
+int mount_fd(const char *source,
+             int target_fd,
+             const char *filesystemtype,
+             unsigned long mountflags,
+             const void *data) {
+
+        if (mount(source, FORMAT_PROC_FD_PATH(target_fd), filesystemtype, mountflags, data) < 0) {
+                if (errno != ENOENT)
+                        return -errno;
+
+                /* ENOENT can mean two things: either that the source is missing, or that /proc/ isn't
+                 * mounted. Check for the latter to generate better error messages. */
+                if (proc_mounted() == 0)
+                        return -ENOSYS;
+
+                return -ENOENT;
+        }
+
+        return 0;
+}
+
+int mount_nofollow(
+                const char *source,
+                const char *target,
+                const char *filesystemtype,
+                unsigned long mountflags,
+                const void *data) {
+
+        _cleanup_close_ int fd = -EBADF;
+
+        /* In almost all cases we want to manipulate the mount table without following symlinks, hence
+         * mount_nofollow() is usually the way to go. The only exceptions are environments where /proc/ is
+         * not available yet, since we need /proc/self/fd/ for this logic to work. i.e. during the early
+         * initialization of namespacing/container stuff where /proc is not yet mounted (and maybe even the
+         * fs to mount) we can only use traditional mount() directly.
+         *
+         * Note that this disables following only for the final component of the target, i.e symlinks within
+         * the path of the target are honoured, as are symlinks in the source path everywhere. */
+
+        fd = open(target, O_PATH|O_CLOEXEC|O_NOFOLLOW);
+        if (fd < 0)
+                return -errno;
+
+        return mount_fd(source, fd, filesystemtype, mountflags, data);
+}
+
+const char *mount_propagation_flag_to_string(unsigned long flags) {
 
         switch (flags & (MS_SHARED|MS_SLAVE|MS_PRIVATE)) {
         case 0:
@@ -498,7 +586,7 @@ const char *mount_propagation_flags_to_string(unsigned long flags) {
         return NULL;
 }
 
-int mount_propagation_flags_from_string(const char *name, unsigned long *ret) {
+int mount_propagation_flag_from_string(const char *name, unsigned long *ret) {
 
         if (isempty(name))
                 *ret = 0;
@@ -511,4 +599,8 @@ int mount_propagation_flags_from_string(const char *name, unsigned long *ret) {
         else
                 return -EINVAL;
         return 0;
+}
+
+bool mount_propagation_flag_is_valid(unsigned long flag) {
+        return IN_SET(flag, 0, MS_SHARED, MS_PRIVATE, MS_SLAVE);
 }

@@ -14,7 +14,6 @@
 #include "strv.h"
 #include "unaligned.h"
 #include "utf8.h"
-#include "util.h"
 
 #define EDNS0_OPT_DO (1<<15)
 
@@ -1372,13 +1371,13 @@ int dns_packet_read_uint32(DnsPacket *p, uint32_t *ret, size_t *start) {
 }
 
 int dns_packet_read_string(DnsPacket *p, char **ret, size_t *start) {
-        assert(p);
-
         _cleanup_(rewind_dns_packet) DnsPacketRewinder rewinder = REWINDER_INIT(p);
+        _cleanup_free_ char *t = NULL;
         const void *d;
-        char *t;
         uint8_t c;
         int r;
+
+        assert(p);
 
         r = dns_packet_read_uint8(p, &c, NULL);
         if (r < 0)
@@ -1388,19 +1387,14 @@ int dns_packet_read_string(DnsPacket *p, char **ret, size_t *start) {
         if (r < 0)
                 return r;
 
-        if (memchr(d, 0, c))
+        r = make_cstring(d, c, MAKE_CSTRING_REFUSE_TRAILING_NUL, &t);
+        if (r < 0)
+                return r;
+
+        if (!utf8_is_valid(t))
                 return -EBADMSG;
 
-        t = memdup_suffix0(d, c);
-        if (!t)
-                return -ENOMEM;
-
-        if (!utf8_is_valid(t)) {
-                free(t);
-                return -EBADMSG;
-        }
-
-        *ret = t;
+        *ret = TAKE_PTR(t);
 
         if (start)
                 *start = rewinder.saved_rindex;
@@ -2353,13 +2347,17 @@ static int dns_packet_extract_answer(DnsPacket *p, DnsAnswer **ret_answer) {
 
                         /* According to RFC 4795, section 2.9. only the RRs from the Answer section shall be
                          * cached. Hence mark only those RRs as cacheable by default, but not the ones from
-                         * the Additional or Authority sections. */
+                         * the Additional or Authority sections.
+                         * This restriction does not apply to mDNS records (RFC 6762). */
                         if (i < DNS_PACKET_ANCOUNT(p))
                                 flags |= DNS_ANSWER_CACHEABLE|DNS_ANSWER_SECTION_ANSWER;
                         else if (i < DNS_PACKET_ANCOUNT(p) + DNS_PACKET_NSCOUNT(p))
                                 flags |= DNS_ANSWER_SECTION_AUTHORITY;
-                        else
+                        else {
                                 flags |= DNS_ANSWER_SECTION_ADDITIONAL;
+                                if (p->protocol == DNS_PROTOCOL_MDNS)
+                                        flags |= DNS_ANSWER_CACHEABLE;
+                        }
 
                         r = dns_answer_add(answer, rr, p->ifindex, flags, NULL);
                         if (r < 0)

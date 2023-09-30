@@ -40,7 +40,7 @@ static const sd_bus_vtable vtable[] = {
 
 static void* thread_server(void *p) {
         _cleanup_free_ char *suffixed = NULL, *suffixed2 = NULL, *d = NULL;
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         union sockaddr_union u;
         const char *path = p;
         int r;
@@ -53,8 +53,7 @@ static void* thread_server(void *p) {
         assert_se(mkdir_parents(path, 0755) >= 0);
         (void) usleep(100 * USEC_PER_MSEC);
 
-        d = dirname_malloc(path);
-        assert_se(d);
+        assert_se(path_extract_directory(path, &d) >= 0);
         assert_se(asprintf(&suffixed, "%s.%" PRIx64, d, random_u64()) >= 0);
         assert_se(rename(d, suffixed) >= 0);
         (void) usleep(100 * USEC_PER_MSEC);

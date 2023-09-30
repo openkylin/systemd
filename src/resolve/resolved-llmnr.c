@@ -72,13 +72,12 @@ eaddrinuse:
 static int on_llmnr_packet(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
         _cleanup_(dns_packet_unrefp) DnsPacket *p = NULL;
         DnsTransaction *t = NULL;
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         DnsScope *scope;
         int r;
 
         assert(s);
         assert(fd >= 0);
-        assert(m);
 
         r = manager_recv(m, fd, DNS_PROTOCOL_LLMNR, &p);
         if (r <= 0)
@@ -142,7 +141,7 @@ int manager_llmnr_ipv4_udp_fd(Manager *m) {
                 .in.sin_family = AF_INET,
                 .in.sin_port = htobe16(LLMNR_PORT),
         };
-        _cleanup_close_ int s = -1;
+        _cleanup_close_ int s = -EBADF;
         int r;
 
         assert(m);
@@ -212,7 +211,7 @@ int manager_llmnr_ipv6_udp_fd(Manager *m) {
                 .in6.sin6_family = AF_INET6,
                 .in6.sin6_port = htobe16(LLMNR_PORT),
         };
-        _cleanup_close_ int s = -1;
+        _cleanup_close_ int s = -EBADF;
         int r;
 
         assert(m);
@@ -345,7 +344,7 @@ int manager_llmnr_ipv4_tcp_fd(Manager *m) {
                 .in.sin_family = AF_INET,
                 .in.sin_port = htobe16(LLMNR_PORT),
         };
-        _cleanup_close_ int s = -1;
+        _cleanup_close_ int s = -EBADF;
         int r;
 
         assert(m);
@@ -411,7 +410,7 @@ int manager_llmnr_ipv6_tcp_fd(Manager *m) {
                 .in6.sin6_family = AF_INET6,
                 .in6.sin6_port = htobe16(LLMNR_PORT),
         };
-        _cleanup_close_ int s = -1;
+        _cleanup_close_ int s = -EBADF;
         int r;
 
         assert(m);

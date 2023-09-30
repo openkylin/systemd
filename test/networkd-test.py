@@ -291,8 +291,8 @@ Priority=23
         self.assertEqual(self.read_attr('port2', 'brport/path_cost'), '555')
         self.assertEqual(self.read_attr('port2', 'brport/multicast_fast_leave'), '1')
         self.assertEqual(self.read_attr('port2', 'brport/unicast_flood'), '1')
-        self.assertEqual(self.read_attr('port2', 'brport/bpdu_guard'), '1')
-        self.assertEqual(self.read_attr('port2', 'brport/root_block'), '1')
+        self.assertEqual(self.read_attr('port2', 'brport/bpdu_guard'), '0')
+        self.assertEqual(self.read_attr('port2', 'brport/root_block'), '0')
 
 class ClientTestBase(NetworkdTestingUtilities):
     """Provide common methods for testing networkd against servers."""
@@ -991,6 +991,9 @@ DNS=127.0.0.1
             time.sleep(0.1)
         self.assertIn('nameserver 192.168.42.1\n', contents)
         self.assertIn('nameserver 127.0.0.1\n', contents)
+
+        out = subprocess.check_output(['networkctl', 'status', 'dummy0'])
+        self.assertIn(b'test.network.d/dns.conf', out)
 
     def test_dhcp_timezone(self):
         '''networkd sets time zone from DHCP'''

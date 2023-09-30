@@ -74,7 +74,7 @@ static int dynamic_user_add(Manager *m, const char *name, int storage_socket[sta
 }
 
 static int dynamic_user_acquire(Manager *m, const char *name, DynamicUser** ret) {
-        _cleanup_close_pair_ int storage_socket[2] = { -1, -1 };
+        _cleanup_close_pair_ int storage_socket[2] = PIPE_EBADF;
         DynamicUser *d;
         int r;
 
@@ -127,7 +127,7 @@ static int dynamic_user_acquire(Manager *m, const char *name, DynamicUser** ret)
         if (r < 0)
                 return r;
 
-        storage_socket[0] = storage_socket[1] = -1;
+        storage_socket[0] = storage_socket[1] = -EBADF;
 
         if (ret) {
                 d->n_ref++;
@@ -211,7 +211,7 @@ static int pick_uid(char **suggested_paths, const char *name, uid_t *ret_uid) {
 
         for (;;) {
                 char lock_path[STRLEN("/run/systemd/dynamic-uid/") + DECIMAL_STR_MAX(uid_t) + 1];
-                _cleanup_close_ int lock_fd = -1;
+                _cleanup_close_ int lock_fd = -EBADF;
                 uid_t candidate;
                 ssize_t l;
 
@@ -328,8 +328,8 @@ static int dynamic_user_pop(DynamicUser *d, uid_t *ret_uid, int *ret_lock_fd) {
         assert(ret_uid);
         assert(ret_lock_fd);
 
-        /* Read the UID and lock fd that is stored in the storage AF_UNIX socket. This should be called with the lock
-         * on the socket taken. */
+        /* Read the UID and lock fd that is stored in the storage AF_UNIX socket. This should be called with
+         * the lock on the socket taken. */
 
         k = receive_one_fd_iov(d->storage_socket[0], &iov, 1, MSG_DONTWAIT, &lock_fd);
         if (k < 0)
@@ -373,7 +373,7 @@ static void unlockfp(int *fd_lock) {
         if (*fd_lock < 0)
                 return;
         lockf(*fd_lock, F_ULOCK, 0);
-        *fd_lock = -1;
+        *fd_lock = -EBADF;
 }
 
 static int dynamic_user_realize(
@@ -382,9 +382,9 @@ static int dynamic_user_realize(
                 uid_t *ret_uid, gid_t *ret_gid,
                 bool is_user) {
 
-        _cleanup_(unlockfp) int storage_socket0_lock = -1;
-        _cleanup_close_ int uid_lock_fd = -1;
-        _cleanup_close_ int etc_passwd_lock_fd = -1;
+        _cleanup_(unlockfp) int storage_socket0_lock = -EBADF;
+        _cleanup_close_ int uid_lock_fd = -EBADF;
+        _cleanup_close_ int etc_passwd_lock_fd = -EBADF;
         uid_t num = UID_INVALID; /* a uid if is_user, and a gid otherwise */
         gid_t gid = GID_INVALID; /* a gid if is_user, ignored otherwise */
         bool flush_cache = false;
@@ -524,14 +524,15 @@ static int dynamic_user_realize(
 }
 
 int dynamic_user_current(DynamicUser *d, uid_t *ret) {
-        _cleanup_(unlockfp) int storage_socket0_lock = -1;
-        _cleanup_close_ int lock_fd = -1;
+        _cleanup_(unlockfp) int storage_socket0_lock = -EBADF;
+        _cleanup_close_ int lock_fd = -EBADF;
         uid_t uid;
         int r;
 
         assert(d);
 
-        /* Get the currently assigned UID for the user, if there's any. This simply pops the data from the storage socket, and pushes it back in right-away. */
+        /* Get the currently assigned UID for the user, if there's any. This simply pops the data from the
+         * storage socket, and pushes it back in right-away. */
 
         r = lockfp(d->storage_socket[0], &storage_socket0_lock);
         if (r < 0)
@@ -555,9 +556,9 @@ static DynamicUser* dynamic_user_unref(DynamicUser *d) {
         if (!d)
                 return NULL;
 
-        /* Note that this doesn't actually release any resources itself. If a dynamic user should be fully destroyed
-         * and its UID released, use dynamic_user_destroy() instead. NB: the dynamic user table may contain entries
-         * with no references, which is commonly the case right before a daemon reload. */
+        /* Note that this doesn't actually release any resources itself. If a dynamic user should be fully
+         * destroyed and its UID released, use dynamic_user_destroy() instead. NB: the dynamic user table may
+         * contain entries with no references, which is commonly the case right before a daemon reload. */
 
         assert(d->n_ref > 0);
         d->n_ref--;
@@ -566,13 +567,13 @@ static DynamicUser* dynamic_user_unref(DynamicUser *d) {
 }
 
 static int dynamic_user_close(DynamicUser *d) {
-        _cleanup_(unlockfp) int storage_socket0_lock = -1;
-        _cleanup_close_ int lock_fd = -1;
+        _cleanup_(unlockfp) int storage_socket0_lock = -EBADF;
+        _cleanup_close_ int lock_fd = -EBADF;
         uid_t uid;
         int r;
 
-        /* Release the user ID, by releasing the lock on it, and emptying the storage socket. After this the user is
-         * unrealized again, much like it was after it the DynamicUser object was first allocated. */
+        /* Release the user ID, by releasing the lock on it, and emptying the storage socket. After this the
+         * user is unrealized again, much like it was after it the DynamicUser object was first allocated. */
 
         r = lockfp(d->storage_socket[0], &storage_socket0_lock);
         if (r < 0)

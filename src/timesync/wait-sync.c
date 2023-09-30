@@ -147,7 +147,7 @@ static int clock_state_update(
                 tx.time.tv_usec /= 1000;
         t = timeval_load(&tx.time);
 
-        log_info("adjtime state %d status %x time %s", sp->adjtime_state, tx.status,
+        log_info("adjtime state %i status %x time %s", sp->adjtime_state, (unsigned) tx.status,
                  FORMAT_TIMESTAMP_STYLE(t, TIMESTAMP_US_UTC) ?: "unrepresentable");
 
         sp->has_watchfile = access("/run/systemd/timesync/synchronized", F_OK) >= 0;
@@ -177,8 +177,8 @@ static int clock_state_update(
 static int run(int argc, char * argv[]) {
         _cleanup_(sd_event_unrefp) sd_event *event = NULL;
         _cleanup_(clock_state_release) ClockState state = {
-                .timerfd_fd = -1,
-                .inotify_fd = -1,
+                .timerfd_fd = -EBADF,
+                .inotify_fd = -EBADF,
                 .run_systemd_wd = -1,
                 .run_systemd_timesync_wd = -1,
         };

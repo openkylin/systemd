@@ -11,6 +11,7 @@ static const char * const dhcp6_state_table[_DHCP6_STATE_MAX] = {
         [DHCP6_STATE_BOUND]               = "bound",
         [DHCP6_STATE_RENEW]               = "renew",
         [DHCP6_STATE_REBIND]              = "rebind",
+        [DHCP6_STATE_STOPPING]            = "stopping",
 };
 
 DEFINE_STRING_TABLE_LOOKUP_TO_STRING(dhcp6_state, DHCP6State);
@@ -82,3 +83,14 @@ static const char * const dhcp6_message_status_table[_DHCP6_STATUS_MAX] = {
 };
 
 DEFINE_STRING_TABLE_LOOKUP(dhcp6_message_status, DHCP6Status);
+
+int dhcp6_message_status_to_errno(DHCP6Status s) {
+        switch (s) {
+        case DHCP6_STATUS_SUCCESS:
+                return 0;
+        case DHCP6_STATUS_NO_BINDING:
+                return -EADDRNOTAVAIL;
+        default:
+                return -EINVAL;
+        }
+}

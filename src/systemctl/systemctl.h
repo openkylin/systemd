@@ -65,6 +65,7 @@ extern bool arg_show_types;
 extern int arg_check_inhibitors;
 extern bool arg_dry_run;
 extern bool arg_quiet;
+extern bool arg_no_warn;
 extern bool arg_full;
 extern bool arg_recursive;
 extern bool arg_with_dependencies;
@@ -74,7 +75,7 @@ extern bool arg_ask_password;
 extern bool arg_runtime;
 extern UnitFilePresetMode arg_preset_mode;
 extern char **arg_wall;
-extern const char *arg_kill_who;
+extern const char *arg_kill_whom;
 extern int arg_signal;
 extern char *arg_root;
 extern usec_t arg_when;
@@ -96,6 +97,7 @@ extern TimestampStyle arg_timestamp_style;
 extern bool arg_read_only;
 extern bool arg_mkdir;
 extern bool arg_marked;
+extern const char *arg_drop_in;
 
 static inline const char* arg_job_mode(void) {
         return _arg_job_mode ?: "replace";

@@ -1,15 +1,19 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
-#include "analyze.h"
 #include "analyze-critical-chain.h"
 #include "analyze-time-data.h"
-#include "strv.h"
+#include "analyze.h"
+#include "bus-error.h"
 #include "copy.h"
 #include "path-util.h"
-#include "terminal-util.h"
 #include "sort-util.h"
 #include "special.h"
-#include "bus-error.h"
+#include "static-destruct.h"
+#include "strv.h"
+#include "terminal-util.h"
+
+static Hashmap *unit_times_hashmap = NULL;
+STATIC_DESTRUCTOR_REGISTER(unit_times_hashmap, hashmap_freep);
 
 static int list_dependencies_print(
                 const char *name,
@@ -54,8 +58,6 @@ static int list_dependencies_get_dependencies(sd_bus *bus, const char *name, cha
         return bus_get_unit_property_strv(bus, path, "After", deps);
 }
 
-static Hashmap *unit_times_hashmap;
-
 static int list_dependencies_compare(char *const *a, char *const *b) {
         usec_t usa = 0, usb = 0;
         UnitTimes *times;
@@ -91,12 +93,12 @@ static int list_dependencies_one(sd_bus *bus, const char *name, unsigned level, 
 
         typesafe_qsort(deps, strv_length(deps), list_dependencies_compare);
 
-        r = acquire_boot_times(bus, &boot);
+        r = acquire_boot_times(bus, /* require_finished = */ true, &boot);
         if (r < 0)
                 return r;
 
         STRV_FOREACH(c, deps) {
-                times = hashmap_get(unit_times_hashmap, *c); /* lgtm [cpp/inconsistent-null-check] */
+                times = hashmap_get(unit_times_hashmap, *c);
                 if (times_in_range(times, boot) && times->activated >= service_longest)
                         service_longest = times->activated;
         }
@@ -105,7 +107,7 @@ static int list_dependencies_one(sd_bus *bus, const char *name, unsigned level, 
                 return r;
 
         STRV_FOREACH(c, deps) {
-                times = hashmap_get(unit_times_hashmap, *c); /* lgtm [cpp/inconsistent-null-check] */
+                times = hashmap_get(unit_times_hashmap, *c);
                 if (times_in_range(times, boot) && service_longest - times->activated <= arg_fuzz)
                         to_print++;
         }
@@ -114,7 +116,7 @@ static int list_dependencies_one(sd_bus *bus, const char *name, unsigned level, 
                 return r;
 
         STRV_FOREACH(c, deps) {
-                times = hashmap_get(unit_times_hashmap, *c); /* lgtm [cpp/inconsistent-null-check] */
+                times = hashmap_get(unit_times_hashmap, *c);
                 if (!times_in_range(times, boot) || service_longest - times->activated > arg_fuzz)
                         continue;
 
@@ -176,7 +178,7 @@ static int list_dependencies(sd_bus *bus, const char *name) {
 
         times = hashmap_get(unit_times_hashmap, id);
 
-        r = acquire_boot_times(bus, &boot);
+        r = acquire_boot_times(bus, /* require_finished = */ true, &boot);
         if (r < 0)
                 return r;
 
@@ -197,27 +199,21 @@ static int list_dependencies(sd_bus *bus, const char *name) {
 int verb_critical_chain(int argc, char *argv[], void *userdata) {
         _cleanup_(sd_bus_flush_close_unrefp) sd_bus *bus = NULL;
         _cleanup_(unit_times_free_arrayp) UnitTimes *times = NULL;
-        Hashmap *h;
         int n, r;
 
         r = acquire_bus(&bus, NULL);
         if (r < 0)
                 return bus_log_connect_error(r, arg_transport);
 
-        n = acquire_time_data(bus, &times);
+        n = acquire_time_data(bus, /* require_finished = */ true, &times);
         if (n <= 0)
                 return n;
 
-        h = hashmap_new(&string_hash_ops);
-        if (!h)
-                return log_oom();
-
         for (UnitTimes *u = times; u->has_data; u++) {
-                r = hashmap_put(h, u->name, u);
+                r = hashmap_ensure_put(&unit_times_hashmap, &string_hash_ops, u->name, u);
                 if (r < 0)
                         return log_error_errno(r, "Failed to add entry to hashmap: %m");
         }
-        unit_times_hashmap = h;
 
         pager_open(arg_pager_flags);
 
@@ -230,6 +226,5 @@ int verb_critical_chain(int argc, char *argv[], void *userdata) {
         else
                 list_dependencies(bus, SPECIAL_DEFAULT_TARGET);
 
-        h = hashmap_free(h);
-        return 0;
+        return EXIT_SUCCESS;
 }

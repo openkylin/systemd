@@ -2,17 +2,14 @@
 
 libudev_sources = files(
         'libudev-device.c',
-        'libudev-device-internal.h',
         'libudev-enumerate.c',
         'libudev-hwdb.c',
         'libudev-list.c',
-        'libudev-list-internal.h',
         'libudev-monitor.c',
         'libudev-queue.c',
         'libudev-util.c',
-        'libudev-util.h',
         'libudev.c',
-        'libudev.h')
+)
 
 ############################################################
 
@@ -34,7 +31,7 @@ libudev_basic = static_library(
 static_libudev = get_option('static-libudev')
 static_libudev_pic = static_libudev == 'true' or static_libudev == 'pic'
 
-custom_target(
+libudev_pc = custom_target(
         'libudev.pc',
         input : 'libudev.pc.in',
         output : 'libudev.pc',

@@ -5,6 +5,7 @@
 #include "sd-bus.h"
 
 #include "alloc-util.h"
+#include "build.h"
 #include "bus-dump.h"
 #include "bus-internal.h"
 #include "bus-message.h"
@@ -37,7 +38,7 @@
 static JsonFormatFlags arg_json_format_flags = JSON_FORMAT_OFF;
 static PagerFlags arg_pager_flags = 0;
 static bool arg_legend = true;
-static bool arg_full = false;
+static int arg_full = -1;
 static const char *arg_address = NULL;
 static bool arg_unique = false;
 static bool arg_acquired = false;
@@ -74,6 +75,8 @@ static int acquire_bus(bool set_monitor, sd_bus **ret) {
         r = sd_bus_new(&bus);
         if (r < 0)
                 return log_error_errno(r, "Failed to allocate bus: %m");
+
+        (void) sd_bus_set_description(bus, "busctl");
 
         if (set_monitor) {
                 r = sd_bus_set_monitor(bus, true);
@@ -202,16 +205,14 @@ static int list_bus_names(int argc, char **argv, void *userdata) {
         if (!table)
                 return log_oom();
 
-        if (arg_full)
+        if (arg_full > 0)
                 table_set_width(table, 0);
 
         r = table_set_align_percent(table, table_get_cell(table, 0, COLUMN_PID), 100);
         if (r < 0)
                 return log_error_errno(r, "Failed to set alignment: %m");
 
-        r = table_set_empty_string(table, "-");
-        if (r < 0)
-                return log_error_errno(r, "Failed to set empty string: %m");
+        table_set_ersatz_string(table, TABLE_ERSATZ_DASH);
 
         r = table_set_sort(table, (size_t) COLUMN_NAME);
         if (r < 0)
@@ -358,9 +359,6 @@ static int list_bus_names(int argc, char **argv, void *userdata) {
 }
 
 static void print_subtree(const char *prefix, const char *path, char **l) {
-        const char *vertical, *space;
-        char **n;
-
         /* We assume the list is sorted. Let's first skip over the
          * entry we are looking at. */
         for (;;) {
@@ -373,11 +371,13 @@ static void print_subtree(const char *prefix, const char *path, char **l) {
                 l++;
         }
 
-        vertical = strjoina(prefix, special_glyph(SPECIAL_GLYPH_TREE_VERTICAL));
-        space = strjoina(prefix, special_glyph(SPECIAL_GLYPH_TREE_SPACE));
+        const char
+                *vertical = strjoina(prefix, special_glyph(SPECIAL_GLYPH_TREE_VERTICAL)),
+                *space = strjoina(prefix, special_glyph(SPECIAL_GLYPH_TREE_SPACE));
 
         for (;;) {
                 bool has_more = false;
+                char **n;
 
                 if (!*l || !path_startswith(*l, path))
                         break;
@@ -417,10 +417,8 @@ static void print_tree(char **l) {
 }
 
 static int on_path(const char *path, void *userdata) {
-        Set *paths = userdata;
+        Set *paths = ASSERT_PTR(userdata);
         int r;
-
-        assert(paths);
 
         r = set_put_strdup(&paths, path);
         if (r < 0)
@@ -742,6 +740,9 @@ static void member_hash_func(const Member *m, struct siphash *state) {
         if (m->name)
                 string_hash_func(m->name, state);
 
+        if (m->signature)
+                string_hash_func(m->signature, state);
+
         if (m->interface)
                 string_hash_func(m->interface, state);
 }
@@ -762,7 +763,11 @@ static int member_compare_func(const Member *x, const Member *y) {
         if (d != 0)
                 return d;
 
-        return strcmp_ptr(x->name, y->name);
+        d = strcmp_ptr(x->name, y->name);
+        if (d != 0)
+                return d;
+
+        return strcmp_ptr(x->signature, y->signature);
 }
 
 static int member_compare_funcp(Member * const *a, Member * const *b) {
@@ -789,11 +794,10 @@ DEFINE_TRIVIAL_CLEANUP_FUNC(Set*, member_set_free);
 
 static int on_interface(const char *interface, uint64_t flags, void *userdata) {
         _cleanup_(member_freep) Member *m = NULL;
-        Set *members = userdata;
+        Set *members = ASSERT_PTR(userdata);
         int r;
 
         assert(interface);
-        assert(members);
 
         m = new(Member, 1);
         if (!m)
@@ -809,8 +813,9 @@ static int on_interface(const char *interface, uint64_t flags, void *userdata) {
                 return log_oom();
 
         r = set_put(members, m);
-        if (r == -EEXIST)
-                return log_error_errno(r,  "Invalid introspection data: duplicate interface '%s'.", interface);
+        if (r == 0)
+                return log_error_errno(SYNTHETIC_ERRNO(EEXIST),
+                                       "Invalid introspection data: duplicate interface '%s'.", interface);
         if (r < 0)
                 return log_oom();
 
@@ -852,8 +857,9 @@ static int on_method(const char *interface, const char *name, const char *signat
                 return log_oom();
 
         r = set_put(members, m);
-        if (r == -EEXIST)
-                return log_error_errno(r, "Invalid introspection data: duplicate method '%s' on interface '%s'.", name, interface);
+        if (r == 0)
+                return log_error_errno(SYNTHETIC_ERRNO(EEXIST),
+                                       "Invalid introspection data: duplicate method '%s' on interface '%s'.", name, interface);
         if (r < 0)
                 return log_oom();
 
@@ -891,8 +897,9 @@ static int on_signal(const char *interface, const char *name, const char *signat
                 return log_oom();
 
         r = set_put(members, m);
-        if (r == -EEXIST)
-                return log_error_errno(r, "Invalid introspection data: duplicate signal '%s' on interface '%s'.", name, interface);
+        if (r == 0)
+                return log_error_errno(SYNTHETIC_ERRNO(EEXIST),
+                                       "Invalid introspection data: duplicate signal '%s' on interface '%s'.", name, interface);
         if (r < 0)
                 return log_oom();
 
@@ -931,8 +938,9 @@ static int on_property(const char *interface, const char *name, const char *sign
                 return log_oom();
 
         r = set_put(members, m);
-        if (r == -EEXIST)
-                return log_error_errno(r, "Invalid introspection data: duplicate property '%s' on interface '%s'.", name, interface);
+        if (r == 0)
+                return log_error_errno(SYNTHETIC_ERRNO(EEXIST),
+                                       "Invalid introspection data: duplicate property '%s' on interface '%s'.", name, interface);
         if (r < 0)
                 return log_oom();
 
@@ -954,8 +962,8 @@ static int introspect(int argc, char **argv, void *userdata) {
         _cleanup_(sd_bus_message_unrefp) sd_bus_message *reply_xml = NULL;
         _cleanup_(sd_bus_error_free) sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_(member_set_freep) Set *members = NULL;
-        unsigned name_width, type_width, signature_width, result_width, j, k = 0;
-        Member *m, **sorted = NULL;
+        unsigned name_width, type_width, signature_width, result_width;
+        Member *m;
         const char *xml;
         int r;
 
@@ -1015,16 +1023,16 @@ static int introspect(int argc, char **argv, void *userdata) {
                         return bus_log_parse_error(r);
 
                 for (;;) {
-                        Member *z;
-                        _cleanup_free_ char *buf = NULL;
                         _cleanup_fclose_ FILE *mf = NULL;
+                        _cleanup_free_ char *buf = NULL;
+                        const char *name, *contents;
                         size_t sz = 0;
-                        const char *name;
+                        Member *z;
+                        char type;
 
                         r = sd_bus_message_enter_container(reply, 'e', "sv");
                         if (r < 0)
                                 return bus_log_parse_error(r);
-
                         if (r == 0)
                                 break;
 
@@ -1032,7 +1040,13 @@ static int introspect(int argc, char **argv, void *userdata) {
                         if (r < 0)
                                 return bus_log_parse_error(r);
 
-                        r = sd_bus_message_enter_container(reply, 'v', NULL);
+                        r = sd_bus_message_peek_type(reply, &type, &contents);
+                        if (r < 0)
+                                return bus_log_parse_error(r);
+                        if (type != 'v')
+                                return bus_log_parse_error(EINVAL);
+
+                        r = sd_bus_message_enter_container(reply, 'v', contents);
                         if (r < 0)
                                 return bus_log_parse_error(r);
 
@@ -1049,6 +1063,7 @@ static int introspect(int argc, char **argv, void *userdata) {
                         z = set_get(members, &((Member) {
                                                 .type = "property",
                                                 .interface = m->interface,
+                                                .signature = (char*) contents,
                                                 .name = (char*) name }));
                         if (z)
                                 free_and_replace(z->value, buf);
@@ -1072,7 +1087,8 @@ static int introspect(int argc, char **argv, void *userdata) {
         signature_width = strlen("SIGNATURE");
         result_width = strlen("RESULT/VALUE");
 
-        sorted = newa(Member*, set_size(members));
+        Member **sorted = newa(Member*, set_size(members));
+        size_t k = 0;
 
         SET_FOREACH(m, members) {
                 if (argv[3] && !streq(argv[3], m->interface))
@@ -1094,7 +1110,7 @@ static int introspect(int argc, char **argv, void *userdata) {
                 sorted[k++] = m;
         }
 
-        if (result_width > 40)
+        if (result_width > 40 && arg_full <= 0)
                 result_width = 40;
 
         typesafe_qsort(sorted, k, member_compare_funcp);
@@ -1109,7 +1125,7 @@ static int introspect(int argc, char **argv, void *userdata) {
                        (int) result_width, "RESULT/VALUE",
                        "FLAGS");
 
-        for (j = 0; j < k; j++) {
+        for (size_t j = 0; j < k; j++) {
                 _cleanup_free_ char *ellipsized = NULL;
                 const char *rv;
                 bool is_interface;
@@ -2281,6 +2297,7 @@ static int help(void) {
                "     --verbose             Show result values in long format\n"
                "     --json=MODE           Output as JSON\n"
                "  -j                       Same as --json=pretty on tty, --json=short otherwise\n"
+               "     --xml-interface       Dump the XML description in introspect command\n"
                "     --expect-reply=BOOL   Expect a method call reply\n"
                "     --auto-start=BOOL     Auto-start destination service\n"
                "     --allow-interactive-authorization=BOOL\n"
@@ -2523,6 +2540,9 @@ static int parse_argv(int argc, char *argv[]) {
                 default:
                         assert_not_reached();
                 }
+
+        if (arg_full < 0)
+                arg_full = terminal_is_dumb();
 
         return 1;
 }

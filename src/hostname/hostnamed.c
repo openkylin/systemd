@@ -11,7 +11,7 @@
 #include "bus-get-properties.h"
 #include "bus-log-control-api.h"
 #include "bus-polkit.h"
-#include "def.h"
+#include "constants.h"
 #include "env-file-label.h"
 #include "env-file.h"
 #include "env-util.h"
@@ -36,7 +36,6 @@
 #include "string-table.h"
 #include "strv.h"
 #include "user-util.h"
-#include "util.h"
 #include "virt.h"
 
 #define VALID_DEPLOYMENT_CHARS (DIGITS LETTERS "-.:")
@@ -60,6 +59,7 @@ typedef enum {
         PROP_OS_PRETTY_NAME,
         PROP_OS_CPE_NAME,
         PROP_OS_HOME_URL,
+        PROP_OS_SUPPORT_END,
         _PROP_MAX,
         _PROP_INVALID = -EINVAL,
 } HostProperty;
@@ -147,6 +147,7 @@ static void context_read_machine_info(Context *c) {
 }
 
 static void context_read_os_release(Context *c) {
+        _cleanup_free_ char *os_name = NULL, *os_pretty_name = NULL;
         struct stat current_stat = {};
         int r;
 
@@ -160,14 +161,20 @@ static void context_read_os_release(Context *c) {
         context_reset(c,
                       (UINT64_C(1) << PROP_OS_PRETTY_NAME) |
                       (UINT64_C(1) << PROP_OS_CPE_NAME) |
-                      (UINT64_C(1) << PROP_OS_HOME_URL));
+                      (UINT64_C(1) << PROP_OS_HOME_URL) |
+                      (UINT64_C(1) << PROP_OS_SUPPORT_END));
 
         r = parse_os_release(NULL,
-                             "PRETTY_NAME", &c->data[PROP_OS_PRETTY_NAME],
-                             "CPE_NAME", &c->data[PROP_OS_CPE_NAME],
-                             "HOME_URL", &c->data[PROP_OS_HOME_URL]);
+                             "PRETTY_NAME", &os_pretty_name,
+                             "NAME",        &os_name,
+                             "CPE_NAME",    &c->data[PROP_OS_CPE_NAME],
+                             "HOME_URL",    &c->data[PROP_OS_HOME_URL],
+                             "SUPPORT_END", &c->data[PROP_OS_SUPPORT_END]);
         if (r < 0 && r != -ENOENT)
                 log_warning_errno(r, "Failed to read os-release file, ignoring: %m");
+
+        if (free_and_strdup(&c->data[PROP_OS_PRETTY_NAME], os_release_pretty_name(os_pretty_name, os_name)) < 0)
+                log_oom();
 
         c->etc_os_release_stat = current_stat;
 }
@@ -245,6 +252,70 @@ static int get_hardware_serial(char **ret) {
 
 static int get_firmware_version(char **ret) {
          return get_hardware_firmware_data("bios_version", ret);
+}
+
+static int get_firmware_vendor(char **ret) {
+         return get_hardware_firmware_data("bios_vendor", ret);
+}
+
+static int get_firmware_date(usec_t *ret) {
+         _cleanup_free_ char *bios_date = NULL, *month = NULL, *day = NULL, *year = NULL;
+         int r;
+
+         assert(ret);
+
+         r = get_hardware_firmware_data("bios_date", &bios_date);
+         if (r < 0)
+                return r;
+         if (r == 0) {
+                *ret = USEC_INFINITY;
+                return 0;
+         }
+
+         const char *p = bios_date;
+         r = extract_many_words(&p, "/", EXTRACT_DONT_COALESCE_SEPARATORS, &month, &day, &year, NULL);
+         if (r < 0)
+                return r;
+         if (r != 3) /* less than three args read? */
+                return -EINVAL;
+         if (!isempty(p)) /* more left in the string? */
+                return -EINVAL;
+
+         unsigned m, d, y;
+         r = safe_atou(month, &m);
+         if (r < 0)
+                return r;
+         if (m < 1 || m > 12)
+                return -EINVAL;
+         m -= 1;
+
+         r = safe_atou(day, &d);
+         if (r < 0)
+                return r;
+         if (d < 1 || d > 31)
+                return -EINVAL;
+
+         r = safe_atou(year, &y);
+         if (r < 0)
+                return r;
+         if (y < 1970 || y > (unsigned) INT_MAX)
+                return -EINVAL;
+         y -= 1900;
+
+         struct tm tm = {
+                .tm_mday = d,
+                .tm_mon = m,
+                .tm_year = y,
+         };
+         time_t v = timegm(&tm);
+         if (v == (time_t) -1)
+                return -errno;
+         if (tm.tm_mday != (int) d || tm.tm_mon != (int) m || tm.tm_year != (int) y)
+                return -EINVAL; /* date was not normalized? (e.g. "30th of feb") */
+
+         *ret = (usec_t) v * USEC_PER_SEC;
+
+         return 0;
 }
 
 static const char* valid_chassis(const char *chassis) {
@@ -415,7 +486,7 @@ static char* context_get_chassis(Context *c) {
         if (!isempty(c->data[PROP_CHASSIS]))
                 return strdup(c->data[PROP_CHASSIS]);
 
-        if (get_dmi_data("ID_CHASSIS", NULL, &dmi) >= 0)
+        if (get_dmi_data("ID_CHASSIS", NULL, &dmi) > 0)
                 return dmi;
 
         fallback = fallback_chassis();
@@ -629,6 +700,37 @@ static int property_get_firmware_version(
         return sd_bus_message_append(reply, "s", firmware_version);
 }
 
+static int property_get_firmware_vendor(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *error) {
+
+        _cleanup_free_ char *firmware_vendor = NULL;
+
+        (void) get_firmware_vendor(&firmware_vendor);
+
+        return sd_bus_message_append(reply, "s", firmware_vendor);
+}
+
+static int property_get_firmware_date(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *error) {
+
+        usec_t firmware_date = USEC_INFINITY;
+
+        (void) get_firmware_date(&firmware_date);
+
+        return sd_bus_message_append(reply, "t", firmware_date);
+}
 static int property_get_hostname(
                 sd_bus *bus,
                 const char *path,
@@ -663,8 +765,7 @@ static int property_get_static_hostname(
                 void *userdata,
                 sd_bus_error *error) {
 
-        Context *c = userdata;
-        assert(c);
+        Context *c = ASSERT_PTR(userdata);
 
         context_read_etc_hostname(c);
 
@@ -707,8 +808,8 @@ static void context_determine_hostname_source(Context *c) {
 
                 /* If the hostname was not set by us, try to figure out where it came from. If we set it to
                  * the default hostname, the file will tell us. We compare the string because it is possible
-                 * that the hostname was set by an older version that had a different fallback, in the
-                 * initramfs or before we reexecuted. */
+                 * that the hostname was set by an older version that had a different fallback, in the initrd
+                 * or before we reexecuted. */
 
                 r = read_one_line_file("/run/systemd/default-hostname", &fallback);
                 if (r < 0 && r != -ENOENT)
@@ -730,8 +831,7 @@ static int property_get_hostname_source(
                 void *userdata,
                 sd_bus_error *error) {
 
-        Context *c = userdata;
-        assert(c);
+        Context *c = ASSERT_PTR(userdata);
 
         context_read_etc_hostname(c);
         context_determine_hostname_source(c);
@@ -787,6 +887,26 @@ static int property_get_os_release_field(
         context_read_os_release(c);
 
         return sd_bus_message_append(reply, "s", *(char**) userdata);
+}
+
+static int property_get_os_support_end(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *error) {
+
+        Context *c = userdata;
+        usec_t eol = USEC_INFINITY;
+
+        context_read_os_release(c);
+
+        if (c->data[PROP_OS_SUPPORT_END])
+                (void) os_release_support_ended(c->data[PROP_OS_SUPPORT_END], /* quiet= */ false, &eol);
+
+        return sd_bus_message_append(reply, "t", eol);
 }
 
 static int property_get_icon_name(
@@ -851,12 +971,11 @@ static int property_get_uname_field(
 }
 
 static int method_set_hostname(sd_bus_message *m, void *userdata, sd_bus_error *error) {
-        Context *c = userdata;
+        Context *c = ASSERT_PTR(userdata);
         const char *name;
         int interactive, r;
 
         assert(m);
-        assert(c);
 
         r = sd_bus_message_read(m, "sb", &name, &interactive);
         if (r < 0)
@@ -898,13 +1017,12 @@ static int method_set_hostname(sd_bus_message *m, void *userdata, sd_bus_error *
 }
 
 static int method_set_static_hostname(sd_bus_message *m, void *userdata, sd_bus_error *error) {
-        Context *c = userdata;
+        Context *c = ASSERT_PTR(userdata);
         const char *name;
         int interactive;
         int r;
 
         assert(m);
-        assert(c);
 
         r = sd_bus_message_read(m, "sb", &name, &interactive);
         if (r < 0)
@@ -1068,12 +1186,11 @@ static int method_set_location(sd_bus_message *m, void *userdata, sd_bus_error *
 
 static int method_get_product_uuid(sd_bus_message *m, void *userdata, sd_bus_error *error) {
         _cleanup_(sd_bus_message_unrefp) sd_bus_message *reply = NULL;
-        Context *c = userdata;
+        Context *c = ASSERT_PTR(userdata);
         int interactive, r;
         sd_id128_t uuid;
 
         assert(m);
-        assert(c);
 
         r = sd_bus_message_read(m, "b", &interactive);
         if (r < 0)
@@ -1119,11 +1236,10 @@ static int method_get_product_uuid(sd_bus_message *m, void *userdata, sd_bus_err
 static int method_get_hardware_serial(sd_bus_message *m, void *userdata, sd_bus_error *error) {
         _cleanup_(sd_bus_message_unrefp) sd_bus_message *reply = NULL;
         _cleanup_free_ char *serial = NULL;
-        Context *c = userdata;
+        Context *c = ASSERT_PTR(userdata);
         int r;
 
         assert(m);
-        assert(c);
 
         r = bus_verify_polkit_async(
                         m,
@@ -1156,17 +1272,18 @@ static int method_get_hardware_serial(sd_bus_message *m, void *userdata, sd_bus_
 
 static int method_describe(sd_bus_message *m, void *userdata, sd_bus_error *error) {
         _cleanup_free_ char *hn = NULL, *dhn = NULL, *in = NULL, *text = NULL,
-                *chassis = NULL, *vendor = NULL, *model = NULL, *serial = NULL, *firmware_version = NULL;
+                *chassis = NULL, *vendor = NULL, *model = NULL, *serial = NULL, *firmware_version = NULL,
+                *firmware_vendor = NULL;
+        usec_t firmware_date = USEC_INFINITY, eol = USEC_INFINITY;
         _cleanup_(sd_bus_message_unrefp) sd_bus_message *reply = NULL;
         _cleanup_(json_variant_unrefp) JsonVariant *v = NULL;
         sd_id128_t product_uuid = SD_ID128_NULL;
-        Context *c = userdata;
+        Context *c = ASSERT_PTR(userdata);
         bool privileged;
         struct utsname u;
         int r;
 
         assert(m);
-        assert(c);
 
         r = bus_verify_polkit_async(
                         m,
@@ -1221,6 +1338,11 @@ static int method_describe(sd_bus_message *m, void *userdata, sd_bus_error *erro
                 (void) get_hardware_serial(&serial);
         }
         (void) get_firmware_version(&firmware_version);
+        (void) get_firmware_vendor(&firmware_vendor);
+        (void) get_firmware_date(&firmware_date);
+
+        if (c->data[PROP_OS_SUPPORT_END])
+                (void) os_release_support_ended(c->data[PROP_OS_SUPPORT_END], /* quiet= */ false, &eol);
 
         r = json_build(&v, JSON_BUILD_OBJECT(
                                        JSON_BUILD_PAIR("Hostname", JSON_BUILD_STRING(hn)),
@@ -1238,10 +1360,13 @@ static int method_describe(sd_bus_message *m, void *userdata, sd_bus_error *erro
                                        JSON_BUILD_PAIR("OperatingSystemPrettyName", JSON_BUILD_STRING(c->data[PROP_OS_PRETTY_NAME])),
                                        JSON_BUILD_PAIR("OperatingSystemCPEName", JSON_BUILD_STRING(c->data[PROP_OS_CPE_NAME])),
                                        JSON_BUILD_PAIR("OperatingSystemHomeURL", JSON_BUILD_STRING(c->data[PROP_OS_HOME_URL])),
+                                       JSON_BUILD_PAIR_FINITE_USEC("OperatingSystemSupportEnd", eol),
                                        JSON_BUILD_PAIR("HardwareVendor", JSON_BUILD_STRING(vendor ?: c->data[PROP_HARDWARE_VENDOR])),
                                        JSON_BUILD_PAIR("HardwareModel", JSON_BUILD_STRING(model ?: c->data[PROP_HARDWARE_MODEL])),
                                        JSON_BUILD_PAIR("HardwareSerial", JSON_BUILD_STRING(serial)),
                                        JSON_BUILD_PAIR("FirmwareVersion", JSON_BUILD_STRING(firmware_version)),
+                                       JSON_BUILD_PAIR("FirmwareVendor", JSON_BUILD_STRING(firmware_vendor)),
+                                       JSON_BUILD_PAIR_FINITE_USEC("FirmwareDate", firmware_date),
                                        JSON_BUILD_PAIR_CONDITION(!sd_id128_is_null(product_uuid), "ProductUUID", JSON_BUILD_ID128(product_uuid)),
                                        JSON_BUILD_PAIR_CONDITION(sd_id128_is_null(product_uuid), "ProductUUID", JSON_BUILD_NULL)));
 
@@ -1279,10 +1404,13 @@ static const sd_bus_vtable hostname_vtable[] = {
         SD_BUS_PROPERTY("KernelVersion", "s", property_get_uname_field, offsetof(struct utsname, version), SD_BUS_VTABLE_ABSOLUTE_OFFSET|SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("OperatingSystemPrettyName", "s", property_get_os_release_field, offsetof(Context, data) + sizeof(char*) * PROP_OS_PRETTY_NAME, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("OperatingSystemCPEName", "s", property_get_os_release_field, offsetof(Context, data) + sizeof(char*) * PROP_OS_CPE_NAME, SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("OperatingSystemSupportEnd", "t", property_get_os_support_end, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("HomeURL", "s", property_get_os_release_field, offsetof(Context, data) + sizeof(char*) * PROP_OS_HOME_URL, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("HardwareVendor", "s", property_get_hardware_vendor, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("HardwareModel", "s", property_get_hardware_model, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("FirmwareVersion", "s", property_get_firmware_version, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("FirmwareVendor", "s", property_get_firmware_vendor, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("FirmwareDate", "t", property_get_firmware_date, 0, SD_BUS_VTABLE_PROPERTY_CONST),
 
         SD_BUS_METHOD_WITH_ARGS("SetHostname",
                                 SD_BUS_ARGS("s", hostname, "b", interactive),

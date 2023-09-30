@@ -16,7 +16,6 @@
 #include "string-util.h"
 #include "strv.h"
 #include "user-util.h"
-#include "util.h"
 
 Settings *settings_new(void) {
         Settings *s;
@@ -114,6 +113,8 @@ static void free_oci_hooks(OciHook *h, size_t n) {
 
 void device_node_array_free(DeviceNode *node, size_t n) {
         size_t i;
+
+        assert(node || n == 0);
 
         for (i = 0; i < n; i++)
                 free(node[i].path);
@@ -727,11 +728,10 @@ int config_parse_oom_score_adjust(
                 void *data,
                 void *userdata) {
 
-        Settings *settings = data;
+        Settings *settings = ASSERT_PTR(data);
         int oa, r;
 
         assert(rvalue);
-        assert(settings);
 
         if (isempty(rvalue)) {
                 settings->oom_score_adjust_set = false;
@@ -766,10 +766,9 @@ int config_parse_cpu_affinity(
                 void *data,
                 void *userdata) {
 
-        Settings *settings = data;
+        Settings *settings = ASSERT_PTR(data);
 
         assert(rvalue);
-        assert(settings);
 
         return parse_cpu_set_extend(rvalue, &settings->cpu_set, true, unit, filename, line, lvalue);
 }
@@ -844,11 +843,10 @@ int config_parse_link_journal(
                 void *data,
                 void *userdata) {
 
-        Settings *settings = data;
+        Settings *settings = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(settings);
 
         r = parse_link_journal(rvalue, &settings->link_journal, &settings->link_journal_try);
         if (r < 0)
@@ -893,11 +891,10 @@ int config_parse_userns_chown(
                 void *data,
                 void *userdata) {
 
-        UserNamespaceOwnership *ownership = data;
+        UserNamespaceOwnership *ownership = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(ownership);
 
         /* Compatibility support for UserNamespaceChown=, whose job has been taken over by UserNamespaceOwnership= */
 
@@ -923,11 +920,10 @@ int config_parse_bind_user(
                 void *data,
                 void *userdata) {
 
-        char ***bind_user = data;
+        char ***bind_user = ASSERT_PTR(data);
         int r;
 
         assert(rvalue);
-        assert(bind_user);
 
         if (isempty(rvalue)) {
                 *bind_user = strv_free(*bind_user);

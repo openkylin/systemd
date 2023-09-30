@@ -200,9 +200,9 @@ int sd_dhcp_server_new(sd_dhcp_server **ret, int ifindex) {
 
         *server = (sd_dhcp_server) {
                 .n_ref = 1,
-                .fd_raw = -1,
-                .fd = -1,
-                .fd_broadcast = -1,
+                .fd_raw = -EBADF,
+                .fd = -EBADF,
+                .fd_broadcast = -EBADF,
                 .address = htobe32(INADDR_ANY),
                 .netmask = htobe32(INADDR_ANY),
                 .ifindex = ifindex,
@@ -390,7 +390,7 @@ static int dhcp_server_send_udp(sd_dhcp_server *server, be32_t destination,
         assert(server);
         assert(server->fd >= 0);
         assert(message);
-        assert(len > sizeof(DHCPMessage));
+        assert(len >= sizeof(DHCPMessage));
 
         if (server->bind_to_interface) {
                 msg.msg_control = &control;
@@ -733,9 +733,7 @@ static int server_send_forcerenew(
 }
 
 static int parse_request(uint8_t code, uint8_t len, const void *option, void *userdata) {
-        DHCPRequest *req = userdata;
-
-        assert(req);
+        DHCPRequest *req = ASSERT_PTR(userdata);
 
         switch (code) {
         case SD_DHCP_OPTION_IP_ADDRESS_LEASE_TIME:
@@ -1264,7 +1262,7 @@ static int server_receive_message(sd_event_source *s, int fd,
                                   uint32_t revents, void *userdata) {
         _cleanup_free_ DHCPMessage *message = NULL;
         CMSG_BUFFER_TYPE(CMSG_SPACE(sizeof(struct in_pktinfo))) control;
-        sd_dhcp_server *server = userdata;
+        sd_dhcp_server *server = ASSERT_PTR(userdata);
         struct iovec iov = {};
         struct msghdr msg = {
                 .msg_iov = &iov,
@@ -1275,8 +1273,6 @@ static int server_receive_message(sd_event_source *s, int fd,
         struct cmsghdr *cmsg;
         ssize_t datagram_size, len;
         int r;
-
-        assert(server);
 
         datagram_size = next_datagram_size_fd(fd);
         if (datagram_size < 0) {
@@ -1537,7 +1533,7 @@ int sd_dhcp_server_set_router(sd_dhcp_server *server, const struct in_addr *rout
 
         /* router is NULL: router option will not be appended.
          * router is null address (0.0.0.0): the server address will be used as the router address.
-         * otherwise: the specified address will be used as the router address.*/
+         * otherwise: the specified address will be used as the router address. */
 
         server->emit_router = router;
         if (router)

@@ -349,7 +349,7 @@ int ethtool_get_link_info(
 }
 
 int ethtool_get_permanent_hw_addr(int *ethtool_fd, const char *ifname, struct hw_addr_data *ret) {
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         struct {
                 struct ethtool_perm_addr addr;
                 uint8_t space[HW_ADDR_MAX_SIZE];
@@ -434,6 +434,8 @@ int ethtool_set_wol(
 
         strscpy(ifr.ifr_name, sizeof(ifr.ifr_name), ifname);
 
+        CLEANUP_ERASE(ecmd);
+
         if (ioctl(*ethtool_fd, SIOCETHTOOL, &ifr) < 0)
                 return -errno;
 
@@ -449,7 +451,7 @@ int ethtool_set_wol(
                 _cleanup_free_ char *str = NULL;
 
                 (void) wol_options_to_string_alloc(wolopts & ~ecmd.supported, &str);
-                log_debug("Network interface %s does not support requested Wake on LAN option(s) \"%s\", ignoring.",
+                log_debug("Network interface %s does not support requested Wake on LAN options \"%s\", ignoring.",
                           ifname, strna(str));
 
                 wolopts &= ecmd.supported;
@@ -466,16 +468,11 @@ int ethtool_set_wol(
                 need_update = true;
         }
 
-        if (!need_update) {
-                explicit_bzero_safe(&ecmd, sizeof(ecmd));
+        if (!need_update)
                 return 0;
-        }
 
         ecmd.cmd = ETHTOOL_SWOL;
-        r = RET_NERRNO(ioctl(*ethtool_fd, SIOCETHTOOL, &ifr));
-
-        explicit_bzero_safe(&ecmd, sizeof(ecmd));
-        return r;
+        return RET_NERRNO(ioctl(*ethtool_fd, SIOCETHTOOL, &ifr));
 }
 
 int ethtool_set_nic_buffer_size(int *ethtool_fd, const char *ifname, const netdev_ring_param *ring) {
@@ -1237,14 +1234,13 @@ int config_parse_advertise(
                 void *data,
                 void *userdata) {
 
-        uint32_t *advertise = data;
+        uint32_t *advertise = ASSERT_PTR(data);
         int r;
 
         assert(filename);
         assert(section);
         assert(lvalue);
         assert(rvalue);
-        assert(data);
 
         if (isempty(rvalue)) {
                 /* Empty string resets the value. */
@@ -1334,7 +1330,7 @@ int config_parse_ring_buffer_or_channel(
                 void *data,
                 void *userdata) {
 
-        u32_opt *dst = data;
+        u32_opt *dst = ASSERT_PTR(data);
         uint32_t k;
         int r;
 
@@ -1342,7 +1338,6 @@ int config_parse_ring_buffer_or_channel(
         assert(section);
         assert(lvalue);
         assert(rvalue);
-        assert(data);
 
         if (isempty(rvalue)) {
                 dst->value = 0;

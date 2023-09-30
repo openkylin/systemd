@@ -20,10 +20,9 @@
 static int start_workers(Manager *m, bool explicit_request);
 
 static int on_sigchld(sd_event_source *s, const struct signalfd_siginfo *si, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(s);
-        assert(m);
 
         for (;;) {
                 siginfo_t siginfo = {};
@@ -67,10 +66,9 @@ static int on_sigchld(sd_event_source *s, const struct signalfd_siginfo *si, voi
 }
 
 static int on_sigusr2(sd_event_source *s, const struct signalfd_siginfo *si, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(s);
-        assert(m);
 
         (void) start_workers(m, true); /* Workers told us there's more work, let's add one more worker as long as we are below the high watermark */
         return 0;
@@ -85,7 +83,7 @@ int manager_new(Manager **ret) {
                 return -ENOMEM;
 
         *m = (Manager) {
-                .listen_fd = -1,
+                .listen_fd = -EBADF,
                 .worker_ratelimit = {
                         .interval = 5 * USEC_PER_SEC,
                         .burst = 50,
@@ -279,7 +277,7 @@ int manager_startup(Manager *m) {
 
                 (void) sockaddr_un_unlink(&sockaddr.un);
 
-                RUN_WITH_UMASK(0000)
+                WITH_UMASK(0000)
                         if (bind(m->listen_fd, &sockaddr.sa, SOCKADDR_UN_LEN(sockaddr.un)) < 0)
                                 return log_error_errno(errno, "Failed to bind socket: %m");
 

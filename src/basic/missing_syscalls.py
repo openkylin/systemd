@@ -9,7 +9,6 @@ SYSCALLS = [
     'bpf',
     'close_range',
     'copy_file_range',
-    'epoll_pwait2',
     'getrandom',
     'memfd_create',
     'mount_setattr',
@@ -74,6 +73,8 @@ DEF_TEMPLATE_B = '''\
 #    else
 #      error "Unknown MIPS ABI"
 #    endif
+#  elif defined(__hppa__)
+#    define systemd_NR_{syscall} {nr_parisc}
 #  elif defined(__powerpc__)
 #    define systemd_NR_{syscall} {nr_powerpc}
 #  elif defined(__riscv)

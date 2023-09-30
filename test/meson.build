@@ -27,6 +27,9 @@ if install_tests
         install_subdir('test-network-generator-conversion',
                        exclude_files : '.gitattributes',
                        install_dir : testdata_dir)
+        install_subdir('testsuite-03.units',
+                       exclude_files : '.gitattributes',
+                       install_dir : testdata_dir)
         install_subdir('testsuite-04.units',
                        exclude_files : '.gitattributes',
                        install_dir : testdata_dir)
@@ -86,6 +89,7 @@ if install_tests
                      install_dir : testdata_dir)
 endif
 
+test_bootctl_json_sh = find_program('test-bootctl-json.sh')
 test_fstab_generator_sh = find_program('test-fstab-generator.sh')
 test_network_generator_conversion_sh = find_program('test-network-generator-conversion.sh')
 test_systemctl_enable_sh = find_program('test-systemctl-enable.sh')
@@ -104,6 +108,14 @@ if install_tests and conf.get('ENABLE_SYSUSERS') == 1
         install_subdir('test-sysusers',
                        exclude_files : '.gitattributes',
                        install_dir : testdata_dir)
+endif
+
+############################################################
+
+test_compare_versions_sh = files('test-compare-versions.sh')
+if install_tests
+        install_data(test_compare_versions_sh,
+                     install_dir : testsdir)
 endif
 
 ############################################################

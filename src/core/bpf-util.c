@@ -3,6 +3,7 @@
 #include "bpf-dlopen.h"
 #include "bpf-util.h"
 #include "cgroup-util.h"
+#include "initrd-util.h"
 #include "log.h"
 
 bool cgroup_bpf_supported(void) {
@@ -26,7 +27,8 @@ bool cgroup_bpf_supported(void) {
 
         r = dlopen_bpf();
         if (r < 0) {
-                log_info_errno(r, "Failed to open libbpf, cgroup BPF features disabled: %m");
+                log_full_errno(in_initrd() ? LOG_DEBUG : LOG_INFO,
+                               r, "Failed to open libbpf, cgroup BPF features disabled: %m");
                 return (supported = false);
         }
 

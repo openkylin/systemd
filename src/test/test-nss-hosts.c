@@ -114,10 +114,10 @@ static void test_gethostbyname4_r(void *handle, const char *module, const char *
 
         status = f(name, &pat, buffer, sizeof buffer, &errno1, &errno2, &ttl);
         if (status == NSS_STATUS_SUCCESS) {
-                log_info("%s(\"%s\") → status=%s%-20spat=buffer+0x%tx errno=%d/%s h_errno=%d/%s ttl=%"PRIi32,
+                log_info("%s(\"%s\") → status=%s%-20spat=buffer+0x%"PRIxPTR" errno=%d/%s h_errno=%d/%s ttl=%"PRIi32,
                          fname, name,
                          nss_status_to_string(status, pretty_status, sizeof pretty_status), "\n",
-                         pat ? (char*) pat - buffer : 0,
+                         pat ? (uintptr_t) pat - (uintptr_t) buffer : 0,
                          errno1, errno_to_name(errno1) ?: "---",
                          errno2, hstrerror(errno2),
                          ttl);
@@ -367,7 +367,9 @@ static int make_addresses(struct local_address **addresses) {
                                               .address.in = { htobe32(0x7F000002) } };
         addrs[n++] = (struct local_address) { .family = AF_INET6,
                                               .address.in6 = in6addr_loopback };
-        return 0;
+
+        *addresses = TAKE_PTR(addrs);
+        return n;
 }
 
 static int test_one_module(const char *dir,
@@ -447,7 +449,7 @@ static int parse_argv(int argc, char **argv,
                         }
                 }
         } else {
-                _cleanup_free_ char *hostname;
+                _cleanup_free_ char *hostname = NULL;
                 assert_se(hostname = gethostname_malloc());
                 assert_se(names = strv_new("localhost", "_gateway", "_outbound", "foo_no_such_host", hostname));
 

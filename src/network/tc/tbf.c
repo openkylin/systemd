@@ -123,7 +123,7 @@ int config_parse_token_bucket_filter_size(
                 void *userdata) {
 
         _cleanup_(qdisc_free_or_set_invalidp) QDisc *qdisc = NULL;
-        Network *network = data;
+        Network *network = ASSERT_PTR(data);
         TokenBucketFilter *tbf;
         uint64_t k;
         int r;
@@ -131,7 +131,6 @@ int config_parse_token_bucket_filter_size(
         assert(filename);
         assert(lvalue);
         assert(rvalue);
-        assert(data);
 
         r = qdisc_new_static(QDISC_KIND_TBF, network, filename, section_line, &qdisc);
         if (r == -ENOMEM)
@@ -197,7 +196,7 @@ int config_parse_token_bucket_filter_rate(
                 void *userdata) {
 
         _cleanup_(qdisc_free_or_set_invalidp) QDisc *qdisc = NULL;
-        Network *network = data;
+        Network *network = ASSERT_PTR(data);
         TokenBucketFilter *tbf;
         uint64_t k, *p;
         int r;
@@ -205,7 +204,6 @@ int config_parse_token_bucket_filter_rate(
         assert(filename);
         assert(lvalue);
         assert(rvalue);
-        assert(data);
 
         r = qdisc_new_static(QDISC_KIND_TBF, network, filename, section_line, &qdisc);
         if (r == -ENOMEM)
@@ -259,7 +257,7 @@ int config_parse_token_bucket_filter_latency(
                 void *userdata) {
 
         _cleanup_(qdisc_free_or_set_invalidp) QDisc *qdisc = NULL;
-        Network *network = data;
+        Network *network = ASSERT_PTR(data);
         TokenBucketFilter *tbf;
         usec_t u;
         int r;
@@ -267,7 +265,6 @@ int config_parse_token_bucket_filter_latency(
         assert(filename);
         assert(lvalue);
         assert(rvalue);
-        assert(data);
 
         r = qdisc_new_static(QDISC_KIND_TBF, network, filename, section_line, &qdisc);
         if (r == -ENOMEM)
@@ -307,13 +304,13 @@ static int token_bucket_filter_verify(QDisc *qdisc) {
 
         if (tbf->limit > 0 && tbf->latency > 0)
                 return log_warning_errno(SYNTHETIC_ERRNO(EINVAL),
-                                         "%s: Specifying both LimitSize= and LatencySec= is not allowed. "
+                                         "%s: Specifying both LimitBytes= and LatencySec= is not allowed. "
                                          "Ignoring [TokenBucketFilter] section from line %u.",
                                          qdisc->section->filename, qdisc->section->line);
 
         if (tbf->limit == 0 && tbf->latency == 0)
                 return log_warning_errno(SYNTHETIC_ERRNO(EINVAL),
-                                         "%s: Either LimitSize= or LatencySec= is required. "
+                                         "%s: Either LimitBytes= or LatencySec= is required. "
                                          "Ignoring [TokenBucketFilter] section from line %u.",
                                          qdisc->section->filename, qdisc->section->line);
 
@@ -325,7 +322,7 @@ static int token_bucket_filter_verify(QDisc *qdisc) {
 
         if (tbf->burst == 0)
                 return log_warning_errno(SYNTHETIC_ERRNO(EINVAL),
-                                         "%s: Burst= is mandatory. "
+                                         "%s: BurstBytes= is mandatory. "
                                          "Ignoring [TokenBucketFilter] section from line %u.",
                                          qdisc->section->filename, qdisc->section->line);
 

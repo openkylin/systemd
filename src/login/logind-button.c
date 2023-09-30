@@ -13,7 +13,6 @@
 #include "logind-button.h"
 #include "missing_input.h"
 #include "string-util.h"
-#include "util.h"
 
 #define CONST_MAX5(a, b, c, d, e) CONST_MAX(CONST_MAX(a, b), CONST_MAX(CONST_MAX(c, d), e))
 
@@ -49,7 +48,7 @@ Button* button_new(Manager *m, const char *name) {
         }
 
         b->manager = m;
-        b->fd = -1;
+        b->fd = -EBADF;
 
         return b;
 }
@@ -93,9 +92,8 @@ static void button_lid_switch_handle_action(Manager *manager, bool is_edge) {
 }
 
 static int button_recheck(sd_event_source *e, void *userdata) {
-        Button *b = userdata;
+        Button *b = ASSERT_PTR(userdata);
 
-        assert(b);
         assert(b->lid_closed);
 
         button_lid_switch_handle_action(b->manager, false);
@@ -119,10 +117,9 @@ static int button_install_check_event_source(Button *b) {
 }
 
 static int long_press_of_power_key_handler(sd_event_source *e, uint64_t usec, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(e);
-        assert(m);
 
         m->power_key_long_press_event_source = sd_event_source_unref(m->power_key_long_press_event_source);
 
@@ -135,10 +132,9 @@ static int long_press_of_power_key_handler(sd_event_source *e, uint64_t usec, vo
 }
 
 static int long_press_of_reboot_key_handler(sd_event_source *e, uint64_t usec, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(e);
-        assert(m);
 
         m->reboot_key_long_press_event_source = sd_event_source_unref(m->reboot_key_long_press_event_source);
 
@@ -151,10 +147,9 @@ static int long_press_of_reboot_key_handler(sd_event_source *e, uint64_t usec, v
 }
 
 static int long_press_of_suspend_key_handler(sd_event_source *e, uint64_t usec, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(e);
-        assert(m);
 
         m->suspend_key_long_press_event_source = sd_event_source_unref(m->suspend_key_long_press_event_source);
 
@@ -167,10 +162,9 @@ static int long_press_of_suspend_key_handler(sd_event_source *e, uint64_t usec, 
 }
 
 static int long_press_of_hibernate_key_handler(sd_event_source *e, uint64_t usec, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(e);
-        assert(m);
 
         m->hibernate_key_long_press_event_source = sd_event_source_unref(m->hibernate_key_long_press_event_source);
 
@@ -202,13 +196,12 @@ static void start_long_press(Manager *m, sd_event_source **e, sd_event_time_hand
 }
 
 static int button_dispatch(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
-        Button *b = userdata;
+        Button *b = ASSERT_PTR(userdata);
         struct input_event ev;
         ssize_t l;
 
         assert(s);
         assert(fd == b->fd);
-        assert(b);
 
         l = read(b->fd, &ev, sizeof(ev));
         if (l < 0)
@@ -470,7 +463,7 @@ static int button_set_mask(const char *name, int fd) {
 }
 
 int button_open(Button *b) {
-        _cleanup_(asynchronous_closep) int fd = -1;
+        _cleanup_(asynchronous_closep) int fd = -EBADF;
         const char *p;
         char name[256];
         int r;

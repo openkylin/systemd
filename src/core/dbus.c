@@ -97,13 +97,12 @@ int bus_forward_agent_released(Manager *m, const char *path) {
 
 static int signal_agent_released(sd_bus_message *message, void *userdata, sd_bus_error *error) {
         _cleanup_(sd_bus_creds_unrefp) sd_bus_creds *creds = NULL;
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         const char *cgroup;
         uid_t sender_uid;
         int r;
 
         assert(message);
-        assert(m);
 
         /* only accept org.freedesktop.systemd1.Agent from UID=0 */
         r = sd_bus_query_sender_creds(message, SD_BUS_CREDS_EUID, &creds);
@@ -126,11 +125,10 @@ static int signal_agent_released(sd_bus_message *message, void *userdata, sd_bus
 }
 
 static int signal_disconnected(sd_bus_message *message, void *userdata, sd_bus_error *error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         sd_bus *bus;
 
         assert(message);
-        assert(m);
         assert_se(bus = sd_bus_message_get_bus(message));
 
         if (bus == m->api_bus)
@@ -149,13 +147,12 @@ static int signal_disconnected(sd_bus_message *message, void *userdata, sd_bus_e
 static int signal_activation_request(sd_bus_message *message, void *userdata, sd_bus_error *ret_error) {
         _cleanup_(sd_bus_error_free) sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_(sd_bus_message_unrefp) sd_bus_message *reply = NULL;
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         const char *name;
         Unit *u;
         int r;
 
         assert(message);
-        assert(m);
 
         r = sd_bus_message_read(message, "s", &name);
         if (r < 0) {
@@ -315,19 +312,18 @@ static int find_unit(Manager *m, sd_bus *bus, const char *path, Unit **unit, sd_
 }
 
 static int bus_unit_find(sd_bus *bus, const char *path, const char *interface, void *userdata, void **found, sd_bus_error *error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(bus);
         assert(path);
         assert(interface);
         assert(found);
-        assert(m);
 
         return find_unit(m, bus, path, (Unit**) found, error);
 }
 
 static int bus_unit_interface_find(sd_bus *bus, const char *path, const char *interface, void *userdata, void **found, sd_bus_error *error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         Unit *u;
         int r;
 
@@ -335,7 +331,6 @@ static int bus_unit_interface_find(sd_bus *bus, const char *path, const char *in
         assert(path);
         assert(interface);
         assert(found);
-        assert(m);
 
         r = find_unit(m, bus, path, &u, error);
         if (r <= 0)
@@ -349,7 +344,7 @@ static int bus_unit_interface_find(sd_bus *bus, const char *path, const char *in
 }
 
 static int bus_unit_cgroup_find(sd_bus *bus, const char *path, const char *interface, void *userdata, void **found, sd_bus_error *error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         Unit *u;
         int r;
 
@@ -357,7 +352,6 @@ static int bus_unit_cgroup_find(sd_bus *bus, const char *path, const char *inter
         assert(path);
         assert(interface);
         assert(found);
-        assert(m);
 
         r = find_unit(m, bus, path, &u, error);
         if (r <= 0)
@@ -374,7 +368,7 @@ static int bus_unit_cgroup_find(sd_bus *bus, const char *path, const char *inter
 }
 
 static int bus_cgroup_context_find(sd_bus *bus, const char *path, const char *interface, void *userdata, void **found, sd_bus_error *error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         CGroupContext *c;
         Unit *u;
         int r;
@@ -383,7 +377,6 @@ static int bus_cgroup_context_find(sd_bus *bus, const char *path, const char *in
         assert(path);
         assert(interface);
         assert(found);
-        assert(m);
 
         r = find_unit(m, bus, path, &u, error);
         if (r <= 0)
@@ -401,7 +394,7 @@ static int bus_cgroup_context_find(sd_bus *bus, const char *path, const char *in
 }
 
 static int bus_exec_context_find(sd_bus *bus, const char *path, const char *interface, void *userdata, void **found, sd_bus_error *error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         ExecContext *c;
         Unit *u;
         int r;
@@ -410,7 +403,6 @@ static int bus_exec_context_find(sd_bus *bus, const char *path, const char *inte
         assert(path);
         assert(interface);
         assert(found);
-        assert(m);
 
         r = find_unit(m, bus, path, &u, error);
         if (r <= 0)
@@ -428,7 +420,7 @@ static int bus_exec_context_find(sd_bus *bus, const char *path, const char *inte
 }
 
 static int bus_kill_context_find(sd_bus *bus, const char *path, const char *interface, void *userdata, void **found, sd_bus_error *error) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         KillContext *c;
         Unit *u;
         int r;
@@ -437,7 +429,6 @@ static int bus_kill_context_find(sd_bus *bus, const char *path, const char *inte
         assert(path);
         assert(interface);
         assert(found);
-        assert(m);
 
         r = find_unit(m, bus, path, &u, error);
         if (r <= 0)
@@ -658,13 +649,12 @@ static int bus_setup_disconnected_match(Manager *m, sd_bus *bus) {
 
 static int bus_on_connection(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
         _cleanup_(sd_bus_close_unrefp) sd_bus *bus = NULL;
-        _cleanup_close_ int nfd = -1;
-        Manager *m = userdata;
+        _cleanup_close_ int nfd = -EBADF;
+        Manager *m = ASSERT_PTR(userdata);
         sd_id128_t id;
         int r;
 
         assert(s);
-        assert(m);
 
         nfd = accept4(fd, NULL, NULL, SOCK_NONBLOCK|SOCK_CLOEXEC);
         if (nfd < 0) {
@@ -694,7 +684,7 @@ static int bus_on_connection(sd_event_source *s, int fd, uint32_t revents, void 
                 return 0;
         }
 
-        nfd = -1;
+        nfd = -EBADF;
 
         r = bus_check_peercred(bus);
         if (r < 0) {
@@ -907,7 +897,7 @@ int bus_init_system(Manager *m) {
 }
 
 int bus_init_private(Manager *m) {
-        _cleanup_close_ int fd = -1;
+        _cleanup_close_ int fd = -EBADF;
         union sockaddr_union sa;
         socklen_t sa_len;
         sd_event_source *s;
@@ -951,7 +941,7 @@ int bus_init_private(Manager *m) {
         if (fd < 0)
                 return log_error_errno(errno, "Failed to allocate private socket: %m");
 
-        RUN_WITH_UMASK(0077)
+        WITH_UMASK(0077)
                 r = bind(fd, &sa.sa, sa_len);
         if (r < 0)
                 return log_error_errno(errno, "Failed to bind private socket: %m");
@@ -1008,8 +998,8 @@ static void destroy_bus(Manager *m, sd_bus **bus) {
                         u->bus_track = sd_bus_track_unref(u->bus_track);
 
                 /* Get rid of pending freezer messages on this bus */
-                if (u->pending_freezer_message && sd_bus_message_get_bus(u->pending_freezer_message) == *bus)
-                        u->pending_freezer_message = sd_bus_message_unref(u->pending_freezer_message);
+                if (u->pending_freezer_invocation && sd_bus_message_get_bus(u->pending_freezer_invocation) == *bus)
+                        u->pending_freezer_invocation = sd_bus_message_unref(u->pending_freezer_invocation);
         }
 
         /* Get rid of queued message on this bus */
@@ -1186,6 +1176,9 @@ int bus_verify_reload_daemon_async(Manager *m, sd_bus_message *call, sd_bus_erro
 
 int bus_verify_set_environment_async(Manager *m, sd_bus_message *call, sd_bus_error *error) {
         return bus_verify_polkit_async(call, CAP_SYS_ADMIN, "org.freedesktop.systemd1.set-environment", NULL, false, UID_INVALID, &m->polkit_registry, error);
+}
+int bus_verify_bypass_dump_ratelimit_async(Manager *m, sd_bus_message *call, sd_bus_error *error) {
+        return bus_verify_polkit_async(call, CAP_SYS_ADMIN, "org.freedesktop.systemd1.bypass-dump-ratelimit", NULL, false, UID_INVALID, &m->polkit_registry, error);
 }
 
 uint64_t manager_bus_n_queued_write(Manager *m) {

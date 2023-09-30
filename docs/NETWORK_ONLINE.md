@@ -1,11 +1,11 @@
 ---
 title: Running Services After the Network Is Up
-category: Concepts
+category: Networking
 layout: default
 SPDX-License-Identifier: LGPL-2.1-or-later
 ---
 
-# Network configuration synchronization points
+# Network Configuration Synchronization Points
 
 systemd provides three target units related to network configuration:
 
@@ -16,7 +16,7 @@ start to be configured. Its primary purpose is for usage with firewall services
 that want to establish a firewall *before* any network interface is up.
 
 `network-pre.target` is a passive unit: it cannot be started directly and it is
-not pulled in by the the network management service, but instead a service that
+not pulled in by the network management service, but instead a service that
 wants to run before it must pull it in. Network management services hence
 should set `After=network-pre.target`, but not `Wants=network-pre.target` or
 `Requires=network-pre.target`. Services that want to be run before the network
@@ -28,7 +28,7 @@ avoiding an unnecessary synchronization point.
 ## Network management services: `network.target`
 
 `network.target` indicates that the network management stack has been started.
-Ordering after it it has little meaning during start-up: whether any network
+Ordering after it has little meaning during start-up: whether any network
 interfaces are already configured when it is reached is not defined.
 
 Its primary purpose is for ordering things properly at shutdown: since the
@@ -67,7 +67,7 @@ before any routable network interface is up). Its primary purpose is network
 client software that cannot operate without network.
 
 For more details about those targets, see the
-[systemd.special(7)](http://www.freedesktop.org/software/systemd/man/systemd.special.html)
+[systemd.special(7)](https://www.freedesktop.org/software/systemd/man/systemd.special.html)
 man page.
 
 ## Compatibility with SysV init
@@ -152,7 +152,7 @@ For details, see the next question.
 
 ## What does "up" actually mean?
 
-The services that are ordered before `network-online.target` define it's
+The services that are ordered before `network-online.target` define its
 meaning. *Usually* means that all configured network devices are up and have an
 IP address assigned, but details may vary. In particular, configuration may
 affect which interfaces are taken into account.
@@ -211,7 +211,7 @@ Here are a couple of possible approaches:
    actually (yet or ever) configured locally. This also makes your code robust
    towards network configuration changes. This is provided as `FreeBind=`
    for systemd services, see
-   [systemd.socket(5)](http://www.freedesktop.org/software/systemd/man/systemd.socket.html).
+   [systemd.socket(5)](https://www.freedesktop.org/software/systemd/man/systemd.socket.html).
 
 An exception to the above recommendations is services which require network
 connectivity, but do not delay system startup. An example may be a service
@@ -234,13 +234,13 @@ specific to those services.
 
 For example, `systemd-networkd-wait-online.service` will wait until all
 interfaces that are present and managed by
-[systemd-networkd.service(8)](http://www.freedesktop.org/software/systemd/man/systemd-networkd.service.html).
+[systemd-networkd.service(8)](https://www.freedesktop.org/software/systemd/man/systemd-networkd.service.html).
 are fully configured or failed and at least one link is online; see
-[systemd-networkd-wait-online.service(8)](http://www.freedesktop.org/software/systemd/man/systemd-networkd-wait-online.service.html)
+[systemd-networkd-wait-online.service(8)](https://www.freedesktop.org/software/systemd/man/systemd-networkd-wait-online.service.html)
 for details. Those conditions are affected by the presence of configuration
 that matches various links, but also by settings like
 `Unmanaged=`, `RequiredForOnline=`, `RequiredFamilyForOnline=`; see
-[systemd.network(5)](http://www.freedesktop.org/software/systemd/man/systemd.socket.html).
+[systemd.network(5)](https://www.freedesktop.org/software/systemd/man/systemd.network.html).
 
 It is also possible to plug in additional checks for network state. For
 example, to delay `network-online.target` until some a specific host is
@@ -252,6 +252,8 @@ established), the following simple service could be used:
 DefaultDependencies=no
 After=nss-lookup.target
 Before=network-online.target
+Type=oneshot
+RemainAfterExit=yes
 
 [Service]
 ExecStart=sh -c 'while ! ping -c 1 example.com; do sleep 1; done'

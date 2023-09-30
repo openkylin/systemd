@@ -4,7 +4,6 @@ set -eux
 set -o pipefail
 
 systemd-analyze log-level debug
-systemd-analyze log-target console
 
 export SYSTEMD_PAGER=
 SERVICE_PATH="$(mktemp /etc/systemd/system/execreloadXXX.service)"
@@ -21,7 +20,7 @@ systemctl daemon-reload
 systemctl start "$SERVICE_NAME"
 systemctl status "$SERVICE_NAME"
 # The reload SHOULD fail but SHOULD NOT affect the service state
-systemctl reload "$SERVICE_NAME" && { echo 'unexpected success'; exit 1; }
+(! systemctl reload "$SERVICE_NAME")
 systemctl status "$SERVICE_NAME"
 systemctl stop "$SERVICE_NAME"
 
@@ -39,7 +38,7 @@ systemctl daemon-reload
 systemctl start "$SERVICE_NAME"
 systemctl status "$SERVICE_NAME"
 # The reload SHOULD fail but SHOULD NOT affect the service state
-systemctl reload "$SERVICE_NAME" && { echo 'unexpected success'; exit 1; }
+(! systemctl reload "$SERVICE_NAME")
 systemctl status "$SERVICE_NAME"
 systemctl stop "$SERVICE_NAME"
 

@@ -13,6 +13,7 @@
 #include "bpf-socket-bind.h"
 #include "btrfs-util.h"
 #include "bus-error.h"
+#include "bus-locator.h"
 #include "cgroup-setup.h"
 #include "cgroup-util.h"
 #include "cgroup.h"
@@ -150,6 +151,7 @@ void cgroup_context_init(CGroupContext *c) {
                 .memory_high = CGROUP_LIMIT_MAX,
                 .memory_max = CGROUP_LIMIT_MAX,
                 .memory_swap_max = CGROUP_LIMIT_MAX,
+                .memory_zswap_max = CGROUP_LIMIT_MAX,
 
                 .memory_limit = CGROUP_LIMIT_MAX,
 
@@ -353,6 +355,9 @@ static int unit_compare_memory_limit(Unit *u, const char *property_name, uint64_
         } else if (streq(property_name, "MemorySwapMax")) {
                 unit_value = c->memory_swap_max;
                 file = "memory.swap.max";
+        } else if (streq(property_name, "MemoryZSwapMax")) {
+                unit_value = c->memory_zswap_max;
+                file = "memory.zswap.max";
         } else
                 return -EINVAL;
 
@@ -395,19 +400,16 @@ static char *format_cgroup_memory_limit_comparison(char *buf, size_t l, Unit *u,
 
         /* memory.swap.max is special in that it relies on CONFIG_MEMCG_SWAP (and the default swapaccount=1).
          * In the absence of reliably being able to detect whether memcg swap support is available or not,
-         * only complain if the error is not ENOENT. */
+         * only complain if the error is not ENOENT. This is similarly the case for memory.zswap.max relying
+         * on CONFIG_ZSWAP. */
         if (r > 0 || IN_SET(r, -ENODATA, -EOWNERDEAD) ||
-            (r == -ENOENT && streq(property_name, "MemorySwapMax"))) {
+            (r == -ENOENT && STR_IN_SET(property_name, "MemorySwapMax", "MemoryZSwapMax")))
                 buf[0] = 0;
-                return buf;
-        }
-
-        if (r < 0) {
-                (void) snprintf(buf, l, " (error getting kernel value: %s)", strerror_safe(r));
-                return buf;
-        }
-
-        (void) snprintf(buf, l, " (different value in kernel: %" PRIu64 ")", kval);
+        else if (r < 0) {
+                errno = -r;
+                (void) snprintf(buf, l, " (error getting kernel value: %m)");
+        } else
+                (void) snprintf(buf, l, " (different value in kernel: %" PRIu64 ")", kval);
 
         return buf;
 }
@@ -465,6 +467,7 @@ void cgroup_context_dump(Unit *u, FILE* f, const char *prefix) {
                 "%sMemoryHigh: %" PRIu64 "%s\n"
                 "%sMemoryMax: %" PRIu64 "%s\n"
                 "%sMemorySwapMax: %" PRIu64 "%s\n"
+                "%sMemoryZSwapMax: %" PRIu64 "%s\n"
                 "%sMemoryLimit: %" PRIu64 "\n"
                 "%sTasksMax: %" PRIu64 "\n"
                 "%sDevicePolicy: %s\n"
@@ -501,6 +504,7 @@ void cgroup_context_dump(Unit *u, FILE* f, const char *prefix) {
                 prefix, c->memory_high, format_cgroup_memory_limit_comparison(cdc, sizeof(cdc), u, "MemoryHigh"),
                 prefix, c->memory_max, format_cgroup_memory_limit_comparison(cdd, sizeof(cdd), u, "MemoryMax"),
                 prefix, c->memory_swap_max, format_cgroup_memory_limit_comparison(cde, sizeof(cde), u, "MemorySwapMax"),
+                prefix, c->memory_zswap_max, format_cgroup_memory_limit_comparison(cde, sizeof(cde), u, "MemoryZSwapMax"),
                 prefix, c->memory_limit,
                 prefix, tasks_max_resolve(&c->tasks_max),
                 prefix, cgroup_device_policy_to_string(c->device_policy),
@@ -574,23 +578,15 @@ void cgroup_context_dump(Unit *u, FILE* f, const char *prefix) {
                                 FORMAT_BYTES(b->wbps));
         }
 
-        SET_FOREACH(iaai, c->ip_address_allow) {
-                _cleanup_free_ char *k = NULL;
-
-                (void) in_addr_prefix_to_string(iaai->family, &iaai->address, iaai->prefixlen, &k);
-                fprintf(f, "%sIPAddressAllow: %s\n", prefix, strnull(k));
-        }
-
-        SET_FOREACH(iaai, c->ip_address_deny) {
-                _cleanup_free_ char *k = NULL;
-
-                (void) in_addr_prefix_to_string(iaai->family, &iaai->address, iaai->prefixlen, &k);
-                fprintf(f, "%sIPAddressDeny: %s\n", prefix, strnull(k));
-        }
+        SET_FOREACH(iaai, c->ip_address_allow)
+                fprintf(f, "%sIPAddressAllow: %s\n", prefix,
+                        IN_ADDR_PREFIX_TO_STRING(iaai->family, &iaai->address, iaai->prefixlen));
+        SET_FOREACH(iaai, c->ip_address_deny)
+                fprintf(f, "%sIPAddressDeny: %s\n", prefix,
+                        IN_ADDR_PREFIX_TO_STRING(iaai->family, &iaai->address, iaai->prefixlen));
 
         STRV_FOREACH(path, c->ip_filters_ingress)
                 fprintf(f, "%sIPIngressFilterPath: %s\n", prefix, *path);
-
         STRV_FOREACH(path, c->ip_filters_egress)
                 fprintf(f, "%sIPEgressFilterPath: %s\n", prefix, *path);
 
@@ -759,7 +755,7 @@ static void unit_remove_xattr_graceful(Unit *u, const char *cgroup_path, const c
         }
 
         r = cg_remove_xattr(SYSTEMD_CGROUP_CONTROLLER, cgroup_path, name);
-        if (r < 0 && r != -ENODATA)
+        if (r < 0 && !ERRNO_IS_XATTR_ABSENT(r))
                 log_unit_debug_errno(u, r, "Failed to remove '%s' xattr flag on control group %s, ignoring: %m", name, empty_to_root(cgroup_path));
 }
 
@@ -785,10 +781,60 @@ void cgroup_oomd_xattr_apply(Unit *u, const char *cgroup_path) {
                 unit_remove_xattr_graceful(u, cgroup_path, "user.oomd_omit");
 }
 
+int cgroup_log_xattr_apply(Unit *u, const char *cgroup_path) {
+        ExecContext *c;
+        size_t len, allowed_patterns_len, denied_patterns_len;
+        _cleanup_free_ char *patterns = NULL, *allowed_patterns = NULL, *denied_patterns = NULL;
+        char *last;
+        int r;
+
+        assert(u);
+
+        c = unit_get_exec_context(u);
+        if (!c)
+                /* Some unit types have a cgroup context but no exec context, so we do not log
+                 * any error here to avoid confusion. */
+                return 0;
+
+        if (set_isempty(c->log_filter_allowed_patterns) && set_isempty(c->log_filter_denied_patterns)) {
+                unit_remove_xattr_graceful(u, cgroup_path, "user.journald_log_filter_patterns");
+                return 0;
+        }
+
+        r = set_make_nulstr(c->log_filter_allowed_patterns, &allowed_patterns, &allowed_patterns_len);
+        if (r < 0)
+                return log_debug_errno(r, "Failed to make nulstr from set: %m");
+
+        r = set_make_nulstr(c->log_filter_denied_patterns, &denied_patterns, &denied_patterns_len);
+        if (r < 0)
+                return log_debug_errno(r, "Failed to make nulstr from set: %m");
+
+        /* Use nul character separated strings without trailing nul */
+        allowed_patterns_len = LESS_BY(allowed_patterns_len, 1u);
+        denied_patterns_len = LESS_BY(denied_patterns_len, 1u);
+
+        len = allowed_patterns_len + 1 + denied_patterns_len;
+        patterns = new(char, len);
+        if (!patterns)
+                return log_oom_debug();
+
+        last = mempcpy_safe(patterns, allowed_patterns, allowed_patterns_len);
+        *(last++) = '\xff';
+        memcpy_safe(last, denied_patterns, denied_patterns_len);
+
+        unit_set_xattr_graceful(u, cgroup_path, "user.journald_log_filter_patterns", patterns, len);
+
+        return 0;
+}
+
 static void cgroup_xattr_apply(Unit *u) {
         bool b;
 
         assert(u);
+
+        /* The 'user.*' xattrs can be set from a user manager. */
+        cgroup_oomd_xattr_apply(u, u->cgroup_path);
+        cgroup_log_xattr_apply(u, u->cgroup_path);
 
         if (!MANAGER_IS_SYSTEM(u->manager))
                 return;
@@ -816,8 +862,6 @@ static void cgroup_xattr_apply(Unit *u) {
                 else
                         unit_remove_xattr_graceful(u, NULL, xn);
         }
-
-        cgroup_oomd_xattr_apply(u, u->cgroup_path);
 }
 
 static int lookup_block_device(const char *p, dev_t *ret) {
@@ -956,8 +1000,23 @@ static usec_t cgroup_cpu_adjust_period_and_log(Unit *u, usec_t period, usec_t qu
 static void cgroup_apply_unified_cpu_weight(Unit *u, uint64_t weight) {
         char buf[DECIMAL_STR_MAX(uint64_t) + 2];
 
+        if (weight == CGROUP_WEIGHT_IDLE)
+                return;
         xsprintf(buf, "%" PRIu64 "\n", weight);
         (void) set_attribute_and_warn(u, "cpu", "cpu.weight", buf);
+}
+
+static void cgroup_apply_unified_cpu_idle(Unit *u, uint64_t weight) {
+        int r;
+        bool is_idle;
+        const char *idle_val;
+
+        is_idle = weight == CGROUP_WEIGHT_IDLE;
+        idle_val = one_zero(is_idle);
+        r = cg_set_attribute("cpu", u->cgroup_path, "cpu.idle", idle_val);
+        if (r < 0 && (r != -ENOENT || is_idle))
+                log_unit_full_errno(u, LOG_LEVEL_CGROUP_WRITE(r), r, "Failed to set '%s' attribute on '%s' to '%s': %m",
+                                    "cpu.idle", empty_to_root(u->cgroup_path), idle_val);
 }
 
 static void cgroup_apply_unified_cpu_quota(Unit *u, usec_t quota, usec_t period) {
@@ -1000,6 +1059,10 @@ static uint64_t cgroup_cpu_shares_to_weight(uint64_t shares) {
 }
 
 static uint64_t cgroup_cpu_weight_to_shares(uint64_t weight) {
+        /* we don't support idle in cgroupv1 */
+        if (weight == CGROUP_WEIGHT_IDLE)
+                return CGROUP_CPU_SHARES_MIN;
+
         return CLAMP(weight * CGROUP_CPU_SHARES_DEFAULT / CGROUP_WEIGHT_DEFAULT,
                      CGROUP_CPU_SHARES_MIN, CGROUP_CPU_SHARES_MAX);
 }
@@ -1037,20 +1100,18 @@ static uint64_t cgroup_context_io_weight(CGroupContext *c, ManagerState state) {
         if (IN_SET(state, MANAGER_STARTING, MANAGER_INITIALIZING, MANAGER_STOPPING) &&
             c->startup_io_weight != CGROUP_WEIGHT_INVALID)
                 return c->startup_io_weight;
-        else if (c->io_weight != CGROUP_WEIGHT_INVALID)
+        if (c->io_weight != CGROUP_WEIGHT_INVALID)
                 return c->io_weight;
-        else
-                return CGROUP_WEIGHT_DEFAULT;
+        return CGROUP_WEIGHT_DEFAULT;
 }
 
 static uint64_t cgroup_context_blkio_weight(CGroupContext *c, ManagerState state) {
         if (IN_SET(state, MANAGER_STARTING, MANAGER_INITIALIZING, MANAGER_STOPPING) &&
             c->startup_blockio_weight != CGROUP_BLKIO_WEIGHT_INVALID)
                 return c->startup_blockio_weight;
-        else if (c->blockio_weight != CGROUP_BLKIO_WEIGHT_INVALID)
+        if (c->blockio_weight != CGROUP_BLKIO_WEIGHT_INVALID)
                 return c->blockio_weight;
-        else
-                return CGROUP_BLKIO_WEIGHT_DEFAULT;
+        return CGROUP_BLKIO_WEIGHT_DEFAULT;
 }
 
 static uint64_t cgroup_weight_blkio_to_io(uint64_t blkio_weight) {
@@ -1202,7 +1263,7 @@ static bool unit_has_unified_memory_config(Unit *u) {
 
         return unit_get_ancestor_memory_min(u) > 0 || unit_get_ancestor_memory_low(u) > 0 ||
                c->memory_high != CGROUP_LIMIT_MAX || c->memory_max != CGROUP_LIMIT_MAX ||
-               c->memory_swap_max != CGROUP_LIMIT_MAX;
+               c->memory_swap_max != CGROUP_LIMIT_MAX || c->memory_zswap_max != CGROUP_LIMIT_MAX;
 }
 
 static void cgroup_apply_unified_memory_limit(Unit *u, const char *file, uint64_t v) {
@@ -1407,6 +1468,7 @@ static void cgroup_context_apply(
                         } else
                                 weight = CGROUP_WEIGHT_DEFAULT;
 
+                        cgroup_apply_unified_cpu_idle(u, weight);
                         cgroup_apply_unified_cpu_weight(u, weight);
                         cgroup_apply_unified_cpu_quota(u, c->cpu_quota_per_sec_usec, c->cpu_quota_period_usec);
 
@@ -1561,11 +1623,12 @@ static void cgroup_context_apply(
         if ((apply_mask & CGROUP_MASK_MEMORY) && !is_local_root) {
 
                 if (cg_all_unified() > 0) {
-                        uint64_t max, swap_max = CGROUP_LIMIT_MAX;
+                        uint64_t max, swap_max = CGROUP_LIMIT_MAX, zswap_max = CGROUP_LIMIT_MAX;
 
                         if (unit_has_unified_memory_config(u)) {
                                 max = c->memory_max;
                                 swap_max = c->memory_swap_max;
+                                zswap_max = c->memory_zswap_max;
                         } else {
                                 max = c->memory_limit;
 
@@ -1578,6 +1641,7 @@ static void cgroup_context_apply(
                         cgroup_apply_unified_memory_limit(u, "memory.high", c->memory_high);
                         cgroup_apply_unified_memory_limit(u, "memory.max", max);
                         cgroup_apply_unified_memory_limit(u, "memory.swap.max", swap_max);
+                        cgroup_apply_unified_memory_limit(u, "memory.zswap.max", zswap_max);
 
                         (void) set_attribute_and_warn(u, "memory", "memory.oom.group", one_zero(c->memory_oom_group));
 
@@ -1587,7 +1651,8 @@ static void cgroup_context_apply(
 
                         if (unit_has_unified_memory_config(u)) {
                                 val = c->memory_max;
-                                log_cgroup_compat(u, "Applying MemoryMax=%" PRIi64 " as MemoryLimit=", val);
+                                if (val != CGROUP_LIMIT_MAX)
+                                        log_cgroup_compat(u, "Applying MemoryMax=%" PRIu64 " as MemoryLimit=", val);
                         } else
                                 val = c->memory_limit;
 
@@ -1697,7 +1762,7 @@ static bool unit_get_needs_bpf_foreign_program(Unit *u) {
         if (!c)
                 return false;
 
-        return !LIST_IS_EMPTY(c->bpf_foreign_programs);
+        return !!c->bpf_foreign_programs;
 }
 
 static bool unit_get_needs_socket_bind(Unit *u) {
@@ -2271,14 +2336,12 @@ static int unit_attach_pid_to_cgroup_via_bus(Unit *u, pid_t pid, const char *suf
         pp = strjoina("/", pp, suffix_path);
         path_simplify(pp);
 
-        r = sd_bus_call_method(u->manager->system_bus,
-                               "org.freedesktop.systemd1",
-                               "/org/freedesktop/systemd1",
-                               "org.freedesktop.systemd1.Manager",
-                               "AttachProcessesToUnit",
-                               &error, NULL,
-                               "ssau",
-                               NULL /* empty unit name means client's unit, i.e. us */, pp, 1, (uint32_t) pid);
+        r = bus_call_method(u->manager->system_bus,
+                            bus_systemd_mgr,
+                            "AttachProcessesToUnit",
+                            &error, NULL,
+                            "ssau",
+                            NULL /* empty unit name means client's unit, i.e. us */, pp, 1, (uint32_t) pid);
         if (r < 0)
                 return log_unit_debug_errno(u, r, "Failed to attach unit process " PID_FMT " via the bus: %s", pid, bus_error_message(&error, r));
 
@@ -2286,6 +2349,7 @@ static int unit_attach_pid_to_cgroup_via_bus(Unit *u, pid_t pid, const char *suf
 }
 
 int unit_attach_pids_to_cgroup(Unit *u, Set *pids, const char *suffix_path) {
+        _cleanup_free_ char *joined = NULL;
         CGroupMask delegated_mask;
         const char *p;
         void *pidp;
@@ -2311,8 +2375,13 @@ int unit_attach_pids_to_cgroup(Unit *u, Set *pids, const char *suffix_path) {
 
         if (isempty(suffix_path))
                 p = u->cgroup_path;
-        else
-                p = prefix_roota(u->cgroup_path, suffix_path);
+        else {
+                joined = path_join(u->cgroup_path, suffix_path);
+                if (!joined)
+                        return -ENOMEM;
+
+                p = joined;
+        }
 
         delegated_mask = unit_get_delegate_mask(u);
 
@@ -2459,7 +2528,7 @@ static bool unit_has_mask_enables_realized(
                 ((u->cgroup_enabled_mask | enable_mask) & CGROUP_MASK_V2) == (u->cgroup_enabled_mask & CGROUP_MASK_V2);
 }
 
-static void unit_add_to_cgroup_realize_queue(Unit *u) {
+void unit_add_to_cgroup_realize_queue(Unit *u) {
         assert(u);
 
         if (u->in_cgroup_realize_queue)
@@ -2968,12 +3037,11 @@ int unit_watch_all_pids(Unit *u) {
 }
 
 static int on_cgroup_empty_event(sd_event_source *s, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         Unit *u;
         int r;
 
         assert(s);
-        assert(m);
 
         u = m->cgroup_empty_queue;
         if (!u)
@@ -3074,7 +3142,7 @@ int unit_check_oomd_kill(Unit *u) {
                 return 0;
 
         r = cg_get_xattr_malloc(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, "user.oomd_ooms", &value);
-        if (r < 0 && r != -ENODATA)
+        if (r < 0 && !ERRNO_IS_XATTR_ABSENT(r))
                 return r;
 
         if (!isempty(value)) {
@@ -3149,12 +3217,11 @@ int unit_check_oom(Unit *u) {
 }
 
 static int on_cgroup_oom_event(sd_event_source *s, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
         Unit *u;
         int r;
 
         assert(s);
-        assert(m);
 
         u = m->cgroup_oom_queue;
         if (!u)
@@ -3252,11 +3319,10 @@ static int unit_check_cgroup_events(Unit *u) {
 }
 
 static int on_cgroup_inotify_event(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
-        Manager *m = userdata;
+        Manager *m = ASSERT_PTR(userdata);
 
         assert(s);
         assert(fd >= 0);
-        assert(m);
 
         for (;;) {
                 union inotify_event_buffer buffer;
@@ -4149,7 +4215,7 @@ int compare_job_priority(const void *a, const void *b) {
 int unit_cgroup_freezer_action(Unit *u, FreezerAction action) {
         _cleanup_free_ char *path = NULL;
         FreezerState target, kernel = _FREEZER_STATE_INVALID;
-        int r;
+        int r, ret;
 
         assert(u);
         assert(IN_SET(action, FREEZER_FREEZE, FREEZER_THAW));
@@ -4157,8 +4223,22 @@ int unit_cgroup_freezer_action(Unit *u, FreezerAction action) {
         if (!cg_freezer_supported())
                 return 0;
 
+        /* Ignore all requests to thaw init.scope or -.slice and reject all requests to freeze them */
+        if (unit_has_name(u, SPECIAL_ROOT_SLICE) || unit_has_name(u, SPECIAL_INIT_SCOPE))
+                return action == FREEZER_FREEZE ? -EPERM : 0;
+
         if (!u->cgroup_realized)
                 return -EBUSY;
+
+        if (action == FREEZER_THAW) {
+                Unit *slice = UNIT_GET_SLICE(u);
+
+                if (slice) {
+                        r = unit_cgroup_freezer_action(slice, FREEZER_THAW);
+                        if (r < 0)
+                                return log_unit_error_errno(u, r, "Failed to thaw slice %s of unit: %m", slice->id);
+                }
+        }
 
         target = action == FREEZER_FREEZE ? FREEZER_FROZEN : FREEZER_RUNNING;
 
@@ -4168,8 +4248,11 @@ int unit_cgroup_freezer_action(Unit *u, FreezerAction action) {
 
         if (target == kernel) {
                 u->freezer_state = target;
-                return 0;
-        }
+                if (action == FREEZER_FREEZE)
+                        return 0;
+                ret = 0;
+        } else
+                ret = 1;
 
         r = cg_get_path(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, "cgroup.freeze", &path);
         if (r < 0)
@@ -4177,16 +4260,18 @@ int unit_cgroup_freezer_action(Unit *u, FreezerAction action) {
 
         log_unit_debug(u, "%s unit.", action == FREEZER_FREEZE ? "Freezing" : "Thawing");
 
-        if (action == FREEZER_FREEZE)
-                u->freezer_state = FREEZER_FREEZING;
-        else
-                u->freezer_state = FREEZER_THAWING;
+        if (target != kernel) {
+                if (action == FREEZER_FREEZE)
+                        u->freezer_state = FREEZER_FREEZING;
+                else
+                        u->freezer_state = FREEZER_THAWING;
+        }
 
         r = write_string_file(path, one_zero(action == FREEZER_FREEZE), WRITE_STRING_FILE_DISABLE_BUFFER);
         if (r < 0)
                 return r;
 
-        return 1;
+        return ret;
 }
 
 int unit_get_cpuset(Unit *u, CPUSet *cpus, const char *name) {
