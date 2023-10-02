@@ -225,6 +225,9 @@ wait_vconsole_setup() {
 test_vc_keymap() {
     local i output vc
 
+    echo "Setting X11 and console keymaps is not supported in Debian, skipping test."
+    return
+
     if [[ -z "$(localectl list-keymaps)" ]]; then
         echo "No vconsole keymap installed, skipping test."
         return
@@ -294,6 +297,9 @@ test_vc_keymap() {
 
 test_x11_keymap() {
     local output
+
+    echo "Setting X11 and console keymaps is not supported in Debian, skipping test."
+    return
 
     if [[ -z "$(localectl list-x11-keymap-layouts)" ]]; then
         echo "No x11 keymap installed, skipping test."

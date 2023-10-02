@@ -229,6 +229,10 @@ static void _test_service(const char *file, unsigned line, const char *func,
         _test_service(PROJECT_FILE, __LINE__, __func__, m, unit_name, result_expected)
 
 static void test_exec_bindpaths(Manager *m) {
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
+                return;
+        }
         assert_se(mkdir_p("/tmp/test-exec-bindpaths", 0755) >= 0);
         assert_se(mkdir_p("/tmp/test-exec-bindreadonlypaths", 0755) >= 0);
 
@@ -389,6 +393,11 @@ static void test_exec_ignoresigpipe(Manager *m) {
 }
 
 static void test_exec_privatetmp(Manager *m) {
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
+                return;
+        }
+
         assert_se(touch("/tmp/test-exec_privatetmp") >= 0);
 
         test(m, "exec-privatetmp-yes.service", can_unshare ? 0 : EXIT_FAILURE, CLD_EXITED);
@@ -435,6 +444,11 @@ static void test_exec_protecthome(Manager *m) {
                 return;
         }
 
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
+                return;
+        }
+
         test(m, "exec-protecthome-tmpfs-vs-protectsystem-strict.service", 0, CLD_EXITED);
 }
 
@@ -463,6 +477,11 @@ static void test_exec_protectkernelmodules(Manager *m) {
 
 static void test_exec_readonlypaths(Manager *m) {
 
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
+                return;
+        }
+
         test(m, "exec-readonlypaths-simple.service", can_unshare ? 0 : EXIT_FAILURE, CLD_EXITED);
 
         if (path_is_read_only_fs("/var") > 0) {
@@ -489,6 +508,11 @@ static void test_exec_inaccessiblepaths(Manager *m) {
 
         if (!is_inaccessible_available()) {
                 log_notice("Testing without inaccessible, skipping %s", __func__);
+                return;
+        }
+
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
                 return;
         }
 
@@ -686,11 +710,19 @@ static void test_exec_mount_apivfs(Manager *m) {
 
 static void test_exec_noexecpaths(Manager *m) {
 
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
+                return;
+        }
         test(m, "exec-noexecpaths-simple.service", can_unshare ? 0 : EXIT_FAILURE, CLD_EXITED);
 }
 
 static void test_exec_temporaryfilesystem(Manager *m) {
 
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
+                return;
+        }
         test(m, "exec-temporaryfilesystem-options.service", can_unshare ? 0 : EXIT_NAMESPACE, CLD_EXITED);
         test(m, "exec-temporaryfilesystem-ro.service", can_unshare ? 0 : EXIT_NAMESPACE, CLD_EXITED);
         test(m, "exec-temporaryfilesystem-rw.service", can_unshare ? 0 : EXIT_NAMESPACE, CLD_EXITED);
@@ -863,6 +895,10 @@ static void test_exec_dynamicuser(Manager *m) {
                 return;
         }
 
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping %s due to LP: #1878051", __func__);
+                return;
+        }
         test(m, "exec-dynamicuser-fixeduser.service", can_unshare ? 0 : EXIT_NAMESPACE, CLD_EXITED);
         if (check_user_has_group_with_same_name("adm"))
                 test(m, "exec-dynamicuser-fixeduser-adm.service", can_unshare ? 0 : EXIT_NAMESPACE, CLD_EXITED);
@@ -1079,6 +1115,11 @@ static void test_exec_specifier(Manager *m) {
         test(m, "exec-specifier.service", 0, CLD_EXITED);
         test(m, "exec-specifier@foo-bar.service", 0, CLD_EXITED);
         test(m, "exec-specifier-interpolation.service", 0, CLD_EXITED);
+
+        if (detect_container() == VIRTUALIZATION_LXC) {
+                log_notice("Testing in LXC, skipping remaining tests in %s due to LP: #1878051", __func__);
+                return;
+        }
         test(m, "exec-specifier-credentials-dir.service", 0, CLD_EXITED);
 }
 

@@ -35,6 +35,7 @@
 #include "proc-cmdline.h"
 #include "pwquality-util.h"
 #include "random-util.h"
+#include "ro-etc-hack.h"
 #include "smack-util.h"
 #include "string-util.h"
 #include "strv.h"
@@ -480,7 +481,7 @@ static int process_timezone(void) {
         const char *etc_localtime, *e;
         int r;
 
-        etc_localtime = prefix_roota(arg_root, "/etc/localtime");
+        etc_localtime = prefix_roota(arg_root, writable_filename("/etc/localtime"));
         if (laccess(etc_localtime, F_OK) >= 0 && !arg_force) {
                 log_debug("Found %s, assuming timezone has been configured.",
                           etc_localtime);
@@ -490,7 +491,7 @@ static int process_timezone(void) {
         if (arg_copy_timezone && arg_root) {
                 _cleanup_free_ char *p = NULL;
 
-                r = readlink_malloc("/etc/localtime", &p);
+                r = readlink_malloc(writable_filename("/etc/localtime"), &p);
                 if (r != -ENOENT) {
                         if (r < 0)
                                 return log_error_errno(r, "Failed to read host timezone: %m");
@@ -512,7 +513,7 @@ static int process_timezone(void) {
         if (isempty(arg_timezone))
                 return 0;
 
-        e = strjoina("../usr/share/zoneinfo/", arg_timezone);
+        e = strjoina("/usr/share/zoneinfo/", arg_timezone);
 
         (void) mkdir_parents(etc_localtime, 0755);
         r = symlink_atomic(e, etc_localtime);
