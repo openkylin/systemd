@@ -10,14 +10,14 @@ really have no need for vga or seabios in this case.
  1 file changed, 1 insertion(+)
 
 diff --git a/test/test-functions b/test/test-functions
-index daed481..0ad76cf 100644
+index f820e5f..56b2efb 100644
 --- a/test/test-functions
 +++ b/test/test-functions
-@@ -450,6 +450,7 @@ run_qemu() {
+@@ -495,6 +495,7 @@ run_qemu() {
          -net none
-         -m "$QEMU_MEM"
+         -m "${QEMU_MEM:-768M}"
          -nographic
 +        -vga none
          -kernel "$KERNEL_BIN"
          -drive "format=raw,cache=unsafe,file=$image"
-     )
+         -device "virtio-rng-pci,max-bytes=1024,period=1000"

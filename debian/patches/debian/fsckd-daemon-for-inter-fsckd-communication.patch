@@ -59,12 +59,12 @@ http://lists.freedesktop.org/archives/systemd-devel/2015-April/030175.html
  create mode 100644 units/systemd-fsckd.socket
 
 diff --git a/man/rules/meson.build b/man/rules/meson.build
-index 55376c0..4e91263 100644
+index 479d123..154f1ec 100644
 --- a/man/rules/meson.build
 +++ b/man/rules/meson.build
-@@ -884,6 +884,7 @@ manpages = [
+@@ -903,6 +903,7 @@ manpages = [
    '8',
-   ['systemd-fsck', 'systemd-fsck-root.service'],
+   ['systemd-fsck', 'systemd-fsck-root.service', 'systemd-fsck-usr.service'],
    ''],
 + ['systemd-fsckd.service', '8', ['systemd-fsckd.socket', 'systemd-fsckd'], ''],
   ['systemd-fstab-generator', '8', [], ''],
@@ -239,10 +239,10 @@ index 0000000..b7ad58d
 +
 +</refentry>
 diff --git a/meson.build b/meson.build
-index f73c7ff..d94e75d 100644
+index 0da7c3b..fce42e1 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -3219,6 +3219,15 @@ executable(
+@@ -3469,6 +3469,15 @@ executable(
          install : true,
          install_dir : rootlibexecdir)
  
@@ -269,7 +269,7 @@ index e045852..131e4bc 100644
 +src/fsckd/fsckd.c
 diff --git a/src/fsckd/fsckd.c b/src/fsckd/fsckd.c
 new file mode 100644
-index 0000000..8a85b69
+index 0000000..d758e0b
 --- /dev/null
 +++ b/src/fsckd/fsckd.c
 @@ -0,0 +1,697 @@
@@ -311,7 +311,7 @@ index 0000000..8a85b69
 +
 +#include "sd-daemon.h"
 +#include "build.h"
-+#include "def.h"
++#include "constants.h"
 +#include "sd-event.h"
 +#include "log.h"
 +#include "list.h"
@@ -321,9 +321,9 @@ index 0000000..8a85b69
 +#include "fd-util.h"
 +#include "string-util.h"
 +#include "io-util.h"
-+#include "util.h"
 +#include "alloc-util.h"
 +#include "locale-util.h"
++#include "logarithm.h"
 +
 +#define FSCKD_SOCKET_PATH "/run/systemd/fsck.progress"
 +#define IDLE_TIME_SECONDS 30
@@ -971,10 +971,10 @@ index 0000000..8a85b69
 +        return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 +}
 diff --git a/units/meson.build b/units/meson.build
-index e8f81f2..81bb9a8 100644
+index c7939a1..6dff4fa 100644
 --- a/units/meson.build
 +++ b/units/meson.build
-@@ -114,6 +114,7 @@ units = [
+@@ -113,6 +113,7 @@ units = [
          ['systemd-exit.service',                ''],
          ['systemd-firstboot.service',           'ENABLE_FIRSTBOOT',
           'sysinit.target.wants/'],
@@ -982,7 +982,7 @@ index e8f81f2..81bb9a8 100644
          ['systemd-halt.service',                ''],
          ['systemd-homed-activate.service',      'ENABLE_HOMED'],
          ['systemd-initctl.socket',              'HAVE_SYSV_COMPAT',
-@@ -194,6 +195,7 @@ in_units = [
+@@ -193,6 +194,7 @@ in_units = [
          ['systemd-pstore.service',               'ENABLE_PSTORE'],
          ['systemd-fsck-root.service',            ''],
          ['systemd-fsck@.service',                ''],
@@ -1004,7 +1004,7 @@ index 8378df8..4b1cd43 100644
  OnFailure=emergency.target
  OnFailureJobMode=replace-irreversibly
 diff --git a/units/systemd-fsck@.service.in b/units/systemd-fsck@.service.in
-index 06b91ae..de0b767 100644
+index 06b91aea..de0b767 100644
 --- a/units/systemd-fsck@.service.in
 +++ b/units/systemd-fsck@.service.in
 @@ -13,7 +13,8 @@ Documentation=man:systemd-fsck@.service(8)
