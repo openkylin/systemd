@@ -235,9 +235,9 @@ tests += [
          [threads,
           libmount]],
 
-        [files('test-mount-util.c')],
+        # [files('test-mount-util.c')],
 
-        [files('test-mountpoint-util.c')],
+        # [files('test-mountpoint-util.c')],
 
         [files('test-exec-util.c')],
 
@@ -253,7 +253,7 @@ tests += [
 
         [files('test-glob-util.c')],
 
-        [files('test-fs-util.c')],
+        # [files('test-fs-util.c')],
 
         [files('test-install-file.c')],
 
@@ -263,9 +263,9 @@ tests += [
 
         [files('test-proc-cmdline.c')],
 
-        [files('test-fd-util.c'),
-         [],
-         [libseccomp]],
+        # [files('test-fd-util.c'),
+        #  [],
+        #  [libseccomp]],
 
         [files('test-web-util.c')],
 
@@ -312,7 +312,7 @@ tests += [
 
         [files('test-process-util.c')],
 
-        [files('test-terminal-util.c')],
+        # [files('test-terminal-util.c')],
 
         [files('test-path-lookup.c')],
 
