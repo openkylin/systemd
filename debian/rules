@@ -4,21 +4,17 @@
 #export DEB_BUILD_OPTIONS = nostrip
 
 export LC_ALL = C.UTF-8
+export DEB_CFLAGS_MAINT_APPEND = -ffat-lto-objects
 
 include /usr/share/dpkg/default.mk
-#include /usr/share/debhelper/dh_package_notes/package-notes.mk
+# include /usr/share/debhelper/dh_package_notes/package-notes.mk
 
 ifeq ($(DEB_VENDOR),Ubuntu)
-    DEFAULT_NTP_SERVERS = ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
+    DEFAULT_NTP_SERVERS = ntp.ubuntu.com
     SUPPORT_URL = http://www.ubuntu.com/support
     CONFFLAGS_DISTRO =
-ifeq ($(DEB_HOST_ARCH),amd64)
-# enable CET on ubuntu amd64, until compiler is fixed to do it correctly with
-# -flto
-export DEB_LDFLAGS_MAINT_APPEND=-fcf-protection
-endif
 else
-    DEFAULT_NTP_SERVERS = ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
+    DEFAULT_NTP_SERVERS = 0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org
     SUPPORT_URL = https://www.debian.org/support
     CONFFLAGS_DISTRO =
 endif
@@ -38,6 +34,7 @@ endif
 CONFFLAGS = \
 	-Db_lto=true \
 	-Db_pie=true \
+	-Dstatic-libsystemd=true \
 	-Dmode=release \
 	-Drootlibdir=/usr/lib/$(DEB_HOST_MULTIARCH) \
 	-Dsplit-usr=true \
@@ -65,18 +62,16 @@ CONFFLAGS = \
 	-Ddefault-hierarchy=unified \
 	-Ddefault-dnssec=no \
 	-Ddefault-llmnr=no \
-	-Ddefault-mdns=no \
+	-Ddefault-mdns=resolve \
 	-Dpamconfdir=no \
 	-Dpamlibdir=/lib/$(DEB_HOST_MULTIARCH)/security \
 	-Drpmmacrosdir=no \
-	-Dqrencode=false \
 	-Dvconsole=false \
-	-Dfirstboot=false \
+	-Dfirstboot=true \
 	-Dsysupdate=false \
 	-Dxkbcommon=false \
 	-Dwheel-group=false \
 	-Dpwquality=false \
-	-Dp11kit=false \
 	-Doomd=true \
 	-Durlify=true \
 	-Dgnutls=false \
@@ -99,7 +94,6 @@ CONFFLAGS = \
 	-Dhwdb=true \
 	-Dsysusers=true \
 	-Dinstall-tests=$(if $(filter noinsttest,$(DEB_BUILD_PROFILES)),false,true) \
-	-Dlibcryptsetup-plugins=false \
 	-Defi=true \
 	-Dman=$(if $(filter nodoc,$(DEB_BUILD_PROFILES)),false,true) \
 	-Dtranslations=true \
@@ -108,12 +102,15 @@ CONFFLAGS = \
 	-Dnss-resolve=true \
 	-Dnss-systemd=true \
 	-Dresolve=true \
+	-Dstatus-unit-format-default=combined \
+	-Dukify=false \
 	-Dstandalone-binaries=true
 
 ifeq (, $(filter stage1, $(DEB_BUILD_PROFILES)))
 CONFFLAGS += \
 	-Daudit=true \
 	-Dlibcryptsetup=true \
+	-Dlibcryptsetup-plugins=true \
 	-Dcoredump=true \
 	-Delfutils=true \
 	-Dapparmor=true \
@@ -127,6 +124,8 @@ CONFFLAGS += \
 	-Ddns-over-tls=openssl \
 	-Dlibfido2=true \
 	-Dtpm2=$(if $(filter i386,$(DEB_HOST_ARCH)),false,true) \
+	-Dp11kit=true \
+	-Dqrencode=$(if $(filter i386,$(DEB_HOST_ARCH)),false,true) \
 	-Dhomed=true \
 	-Duserdb=true \
 	-Dpcre2=true
@@ -134,6 +133,7 @@ else
 CONFFLAGS += \
 	-Daudit=false \
 	-Dlibcryptsetup=false \
+	-Dlibcryptsetup-plugins=false \
 	-Dcoredump=false \
 	-Delfutils=false \
 	-Dapparmor=false \
@@ -145,6 +145,8 @@ CONFFLAGS += \
 	-Dopenssl=false \
 	-Dlibfido2=false \
 	-Dtpm2=false \
+	-Dp11kit=false \
+	-Dqrencode=false \
 	-Dhomed=false \
 	-Duserdb=false \
 	-Dpcre2=false
@@ -188,7 +190,6 @@ execute_before_dh_install:
 	# remove unnecessary / unused files
 	rm -rf debian/tmp/usr/share/doc/systemd/LICENSES/
 	rm -f debian/tmp/usr/share/doc/systemd/LICENSE.*
-	rm -f debian/tmp/var/log/README
 	rm -f debian/tmp/etc/init.d/README
 	rm -f debian/tmp/lib/*.d/README
 	rm -f debian/tmp/lib/udev/*.d/README
@@ -209,13 +210,19 @@ execute_before_dh_install:
 	debian/extra/make-sysusers-basic > debian/tmp/usr/lib/sysusers.d/basic.conf
 	# remove obsolete compat symlink
 	rm -f debian/tmp/usr/bin/systemd-resolve
+	# Do not ship systemd-gpt-auto-genrator on Ubuntu
+	rm -f debian/tmp/lib/systemd/system-generators/systemd-gpt-auto-generator
+	rm -f debian/tmp/usr/share/man/man8/systemd-gpt-auto-generator.8
 
-execute_after_dh_install:
+execute_after_dh_install-arch:
 	# install standalone binaries
 	for pkg in sysusers tmpfiles; do \
 		mkdir -p debian/systemd-standalone-$$pkg/bin; \
 		mv debian/systemd/bin/systemd-$$pkg.standalone debian/systemd-standalone-$$pkg/bin/systemd-$$pkg; \
 	done
+	# We don't want repart and shutdown standalone binaries for now
+	rm -f debian/systemd/bin/systemd-repart.standalone
+	rm -f debian/systemd/lib/systemd/systemd-shutdown.standalone
 
 	# we don't want /tmp to be a tmpfs by default
 	mv debian/systemd/lib/systemd/system/tmp.mount debian/systemd/usr/share/systemd/
@@ -247,7 +254,7 @@ ifeq ($(DEB_HOST_ARCH),i386)
 	rm -f debian/systemd-boot-efi/usr/lib/systemd/boot/efi/linuxia32.elf.stub
 endif
 
-execute_after_dh_installman:
+execute_after_dh_installman-arch:
 	# remove duplicate files shipped by systemd-*/udev
 	# run after dh_installman, which runs after dh_install, to include manpages
 	echo "Removing duplicate files in systemd package:"
@@ -279,6 +286,7 @@ override_dh_installsystemd:
 	dh_installsystemd -psystemd-timesyncd
 	dh_installsystemd -psystemd-oomd systemd-oomd.service
 	dh_installsystemd -psystemd-oomd --no-stop-on-upgrade systemd-oomd.socket
+	dh_installsystemd -psystemd-container --no-stop-on-upgrade machines.target
 	dh_installsystemd -psystemd-userdbd --no-stop-on-upgrade systemd-userdbd.socket
 	dh_installsystemd -psystemd-homed --no-also systemd-homed.service systemd-homed-activate.service
 	dh_installsystemd -psystemd-resolved
@@ -305,9 +313,8 @@ override_dh_makeshlibs:
 
 override_dh_auto_test:
 ifeq (, $(filter nocheck, $(DEB_BUILD_OPTIONS)))
-	echo "01234567890123456789012345678901" > obj-$(DEB_HOST_GNU_TYPE)/machine-id
 	# some tests hang under fakeroot, so disable fakeroot
-	env -u LD_PRELOAD SYSTEMD_MACHINE_ID_PATH=$(CURDIR)/obj-$(DEB_HOST_GNU_TYPE)/machine-id meson test -C obj-$(DEB_HOST_GNU_TYPE) --print-errorlogs $(TEST_TIMEOUT_MULTIPLIER)
+	env -u LD_PRELOAD meson test -C obj-$(DEB_HOST_GNU_TYPE) --print-errorlogs $(TEST_TIMEOUT_MULTIPLIER)
 endif
 
 %:

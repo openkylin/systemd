@@ -6,7 +6,7 @@ Depends: systemd,
   acl,
   locales,
   evemu-tools,
-Restrictions: needs-root, isolation-container
+Restrictions: needs-root, isolation-container, skippable
 
 Tests: unit-config
 Depends: systemd,
@@ -47,7 +47,8 @@ Depends: systemd,
   pkg-config,
   cryptsetup-bin,
   systemd-sysv,
-  policykit-1,
+  polkitd | policykit-1,
+  netlabel-tools,
   dnsmasq-base
 Restrictions: needs-root, isolation-container, breaks-testbed
 
@@ -63,7 +64,7 @@ Depends: systemd,
   pkg-config,
   cryptsetup-bin,
   systemd-sysv,
-  policykit-1,
+  polkitd | policykit-1,
   dnsmasq-base,
   build-essential,
   libsystemd-dev,
@@ -120,6 +121,7 @@ Depends: systemd-tests,
   libtss2-dev [!i386],
   libfido2-dev,
   libdw-dev,
+  libqrencode-dev [!i386],
 Restrictions: needs-root, isolation-container, breaks-testbed
 
 Tests: tests-in-lxd
@@ -181,17 +183,32 @@ Depends: systemd-tests,
   squashfs-tools,
   vim-tiny,
   dosfstools,
+  mtools,
+  erofs-utils,
   libdw-dev,
   libelf-dev,
   dbus-user-session,
   libtss2-dev [!i386],
   libfido2-dev,
+  libqrencode-dev [!i386],
+  libp11-kit-dev,
   python3-pexpect,
   screen,
   swtpm,
   tpm2-tools,
   libgcc-s1,
   openssl,
+  bsdutils,
+  knot,
+  knot-dnssecutils | knot-dnsutils,
+  bind9-dnsutils,
+  bind9-host,
+  jq,
+  psmisc,
+  xkb-data,
+  locales,
+  locales-all,
+  tzdata-legacy,
 Restrictions: needs-root, allow-stderr, isolation-machine
 
 Tests: boot-smoke
@@ -203,10 +220,9 @@ Depends: systemd-sysv,
   udev,
 Restrictions: needs-root, isolation-container, allow-stderr, breaks-testbed
 
-# NOUPSTREAM: Do not run these tests for upstream builds
-
-Tests: systemd-fsckd
-Depends: systemd-sysv,
-  python3,
-  plymouth
-Restrictions: needs-root, isolation-machine, breaks-testbed, skippable, flaky
+Tests: build-with-static-libsystemd
+Depends: systemd,
+  pkg-config,
+  build-essential,
+  libsystemd-dev,
+  libcap-dev,

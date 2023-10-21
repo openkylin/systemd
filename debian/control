@@ -2,14 +2,16 @@ Source: systemd
 Section: admin
 Priority: optional
 Maintainer: OpenKylin Developers <packaging@lists.openkylin.top>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Vcs-Git: https://gitee.com/openkylin/systemd.git
 Vcs-Browser:  https://gitee.com/openkylin/systemd
 Homepage: https://www.freedesktop.org/wiki/Software/systemd
 Build-Depends: debhelper-compat (= 13),
+               dh-exec,
+               dh-package-notes,
                dh-sequence-installnss,
-               dh-sequence-package-notes,
+               dh-sequence-installsysusers,
                pkg-config,
                xsltproc <!nodoc>,
                docbook-xsl <!nodoc>,
@@ -19,13 +21,14 @@ Build-Depends: debhelper-compat (= 13),
                gperf,
                gnu-efi [amd64 i386 arm64 armhf riscv64],
                libcap-dev,
+               libcrypt-dev,
                libpam0g-dev,
                libapparmor-dev (>= 2.13) <!stage1>,
                libidn2-dev <!stage1>,
                libiptc-dev <!stage1>,
                libaudit-dev <!stage1>,
                libdbus-1-dev (>= 1.3.2) <!nocheck> <!noinsttest>,
-               libcryptsetup-dev (>= 2:1.6.0) <!stage1>,
+               libcryptsetup-dev (>= 2:2.4) <!stage1>,
                libselinux1-dev (>= 2.1.9),
                libacl1-dev,
                liblzma-dev,
@@ -47,13 +50,16 @@ Build-Depends: debhelper-compat (= 13),
                libzstd-dev (>= 1.4.0),
                libtss2-dev [!i386] <!stage1>,
                libfido2-dev <!stage1>,
+               libp11-kit-dev <!stage1>,
                libssl-dev <!stage1>,
+               libqrencode-dev [!i386] <!stage1>,
+               libxen-dev [amd64 arm64 armhf] <!stage1>,
                linux-base <!nocheck>,
                acl <!nocheck>,
                python3:native,
                python3-jinja2:native,
                python3-lxml:native,
-               python3-pyparsing:native <!nocheck>,
+               python3-pyparsing <!nocheck>,
                python3-evdev:native <!nocheck>,
                tzdata <!nocheck>,
                libcap2-bin <!nocheck>,
@@ -75,17 +81,19 @@ Suggests: systemd-container,
           systemd-userdbd,
           systemd-boot,
           libfido2-1,
+          libp11-kit0,
+          libqrencode4,
           libtss2-esys-3.0.2-0,
           libtss2-mu0,
           libtss2-rc0,
-          policykit-1
+          polkitd | policykit-1,
 Pre-Depends: ${shlibs:Pre-Depends},
              ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          libsystemd0 (= ${binary:Version}),
+         systemd-dev (>= ${source:Version}),
          mount,
-         adduser,
 Replaces: systemd-repart (<< 250.2-3~)
 Conflicts: consolekit,
            libpam-ck-connector,
@@ -105,9 +113,6 @@ Description: system and service manager
  Linux control groups, maintains mount and automount points and implements an
  elaborate transactional dependency-based service control logic.
  .
- systemd is compatible with SysV and LSB init scripts and can work as a
- drop-in replacement for sysvinit.
- .
  Installing the systemd package will not switch your init system unless you
  boot with init=/lib/systemd/systemd or install systemd-sysv in addition.
 
@@ -124,19 +129,11 @@ Depends: systemd (= ${binary:Version}),
          ${misc:Depends}
 Recommends: libpam-systemd,
             libnss-systemd
-Description: system and service manager - SysV links
- systemd is a system and service manager for Linux. It provides aggressive
- parallelization capabilities, uses socket and D-Bus activation for starting
- services, offers on-demand starting of daemons, keeps track of processes using
- Linux control groups, maintains mount and automount points and implements an
- elaborate transactional dependency-based service control logic.
+Description: system and service manager - SysV compatibility symlinks
+ This package provides manual pages and compatibility symlinks needed for
+ systemd to replace sysvinit.
  .
- systemd is compatible with SysV and LSB init scripts and can work as a
- drop-in replacement for sysvinit.
- .
- This package provides the manual pages and links needed for systemd
- to replace sysvinit. Installing systemd-sysv will overwrite /sbin/init with a
- link to systemd.
+ Installing systemd-sysv will overwrite /sbin/init with a symlink to systemd.
 
 Package: systemd-container
 Build-Profiles: <!stage1>
@@ -161,7 +158,6 @@ Multi-Arch: foreign
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          systemd,
-         adduser
 Description: tools for sending and receiving remote journal logs
  This package provides tools for sending and receiving remote journal logs:
   * systemd-journal-remote
@@ -174,7 +170,6 @@ Architecture: linux-any
 Multi-Arch: foreign
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         adduser,
          systemd
 Recommends: libdw1
 Conflicts: core-dump-handler
@@ -191,7 +186,6 @@ Multi-Arch: foreign
 Priority: standard
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         adduser,
          systemd
 Breaks: systemd (<< 245.4-2~),
 Conflicts: time-daemon
@@ -343,6 +337,7 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          adduser,
          libudev1 (= ${binary:Version}),
+         systemd-dev (>= ${source:Version}),
          s390-tools [s390],
 Recommends: systemd-hwe-hwdb,
 Breaks: systemd (<< ${binary:Version}),
@@ -433,7 +428,6 @@ Package: systemd-oomd
 Architecture: linux-any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         adduser,
 Breaks: systemd (<< 250.2-2~)
 Replaces: systemd (<< 250.2-2~)
 Description: userspace out-of-memory (OOM) killer
@@ -482,7 +476,7 @@ Description: simple UEFI boot manager - tools and services
  textual menu to select the entry to boot and an editor for the kernel command
  line. It supports systems with UEFI firmware only.
  .
- Installing systemd-boot will not automatically switch your boot loader.
+ Installing systemd-boot will configure and install it in the ESP.
  .
  This package contains various tools and services to manage systems using
  systemd-boot.
@@ -508,10 +502,9 @@ Architecture: linux-any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         adduser,
          systemd (= ${binary:Version}),
          default-dbus-system-bus | dbus-system-bus
-Suggests: policykit-1,
+Suggests: polkitd | policykit-1,
 Provides: resolvconf
 Conflicts: resolvconf
 Replaces: resolvconf,
@@ -523,3 +516,18 @@ Description: systemd DNS resolver
  .
  Installing this package automatically overwrites /etc/resolv.conf and switches
  it to be managed by systemd-resolved.
+
+Package: systemd-dev
+Architecture: all
+Multi-Arch: foreign
+Section: devel
+Depends: ${misc:Depends},
+Breaks: systemd (<< 253-2~),
+        udev (<< 253-2~),
+Replaces: systemd (<< 253-2~),
+          udev (<< 253-2~),
+Description: systemd development files
+ This package contains the systemd and udev pkg-config files. Note that these
+ are different from the libsystemd's and libudev's pkg-config files, which can
+ still be found in the respective dev packages, but instead provide data such as
+ the installation directories for units, and more.

@@ -1,53 +1,6 @@
-systemd (251.4-ok1.5) yangtze; urgency=medium
-
-  * modify control info
-
- -- liaoxianfu <liaoxianfu@kylinos.cn>  Fri, 25 Aug 2023 14:03:22 +0800
-
-systemd (251.4-ok1.4) yangtze; urgency=medium
-
-  * tianqisu [CVE-2022-4415]: This security flaw can cause a local information leak due to systemd-coredump not respecting the fs.suid_dumpable kernel setting.
-
- -- sutianqi <2019302050042@whu.edu.cn>  Thu, 27 Jul 2023 18:45:16 +0800
-
-systemd (251.4-ok1.3) yangtze; urgency=medium
-
-  * modify ntp server to modify ntp server to ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
-    fix bug (#I73IWB)
-
- -- shilongzhen <shilongzhen@kylinos.cn>  Fri, 16 Jun 2023 13:38:36 +0800
-
-systemd (251.4-ok1.2) yangtze; urgency=medium
+systemd (253.5-ok1) nile; urgency=medium
 
   * rebuild source for openKylin
 
- -- liaoxianfu <liaoxianfu@kylinos.cn>  Wed, 26 Apr 2023 15:08:17 +0800
-
-systemd (251.4-ok1) yangtze; urgency=medium
-
-  * rebuild source for openKylin
-
- -- liaoxianfu <liaoxianfu@kylinos.cn>  Wed, 12 Apr 2023 10:22:55 +0800
-
-systemd (245.4-ok5) yangtze; urgency=medium
-
-  * update version info
-
- -- luzhiping <luzhiping@kylinos.cn>  Mon, 22 Aug 2022 14:21:50 +0800
-
-systemd (245.4-ok4~0716) yangtze; urgency=medium
-
-  * Fix meson.build error.
-  * close-cd #126315 set DefaultTimeoutStopSec=10s.
-
- -- handsome_feng <jianfengli@ubuntukylin.com>  Sat, 16 Jul 2022 14:24:24 +0800
-
-systemd (245.4-ok2~0704) yangtze; urgency=medium
-
-  * Build for openKylin.
-  * bug:
-    - 125520 手势触摸失效
-    - 126196 进入win_x11桌面下后注销登入wayland模式，此时外接鼠标和键盘均无法使用，重现插拔后恢复正常
-
- -- openKylinBot <openKylinBot@openkylin.com>  Mon, 25 Apr 2022 22:03:04 +0800
+ -- liaoxianfu <liaoxianfu@kylinos.cn>  Mon, 02 Oct 2023 10:04:09 +0800
 
