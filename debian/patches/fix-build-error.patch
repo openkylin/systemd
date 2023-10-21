@@ -1,5 +1,4 @@
-From 6502a7820189875d3efb65ce556491a16b10b3c2 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E5=BB=96=E5=85=88=E7=A6=8F?= <liaoxianfu@kylinos.cn>
+From: =?utf-8?b?5buW5YWI56aP?= <liaoxianfu@kylinos.cn>
 Date: Sat, 21 Oct 2023 14:59:40 +0800
 Subject: [PATCH] fix build error
 
@@ -9,7 +8,7 @@ Subject: [PATCH] fix build error
  2 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/src/boot/efi/meson.build b/src/boot/efi/meson.build
-index 68c5dd15dc..71104caa6a 100644
+index 68c5dd1..71104ca 100644
 --- a/src/boot/efi/meson.build
 +++ b/src/boot/efi/meson.build
 @@ -145,7 +145,7 @@ elif get_option('sbat-distro') != ''
@@ -22,7 +21,7 @@ index 68c5dd15dc..71104caa6a 100644
                  if (value == '' or value == 'auto') and not meson.is_cross_build()
                          cmd = 'if [ -e /etc/os-release ]; then . /etc/os-release; else . /usr/lib/os-release; fi; echo $@0@'.format(sbatvar[1])
 diff --git a/src/test/meson.build b/src/test/meson.build
-index 34dbd6dcad..5e5f1f3d8e 100644
+index 34dbd6d..5e5f1f3 100644
 --- a/src/test/meson.build
 +++ b/src/test/meson.build
 @@ -235,9 +235,9 @@ tests += [
@@ -68,6 +67,3 @@ index 34dbd6dcad..5e5f1f3d8e 100644
  
          [files('test-path-lookup.c')],
  
--- 
-2.25.1
-

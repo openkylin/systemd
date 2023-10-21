@@ -14,7 +14,7 @@ index 0f0dda8..fa3490d 100755
 @@ -225,6 +225,9 @@ wait_vconsole_setup() {
  test_vc_keymap() {
      local i output vc
-
+ 
 +    echo "Setting X11 and console keymaps is not supported in Debian, skipping test."
 +    return
 +
@@ -24,7 +24,7 @@ index 0f0dda8..fa3490d 100755
 @@ -295,6 +298,9 @@ test_vc_keymap() {
  test_x11_keymap() {
      local output
-
+ 
 +    echo "Setting X11 and console keymaps is not supported in Debian, skipping test."
 +    return
 +
