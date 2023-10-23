@@ -1,3 +1,9 @@
+systemd (251.4-ok1.6) yangtze; urgency=medium
+
+  * close: #I7NIXG, set DefaultTimeoutStopSec to 10s.
+
+ -- handsome_feng <jianfengli@ubuntukylin.com>  Mon, 23 Oct 2023 16:54:46 +0800
+
 systemd (251.4-ok1.5) yangtze; urgency=medium
 
   * modify control info
