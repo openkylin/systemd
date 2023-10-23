@@ -1,0 +1,35 @@
+From: handsome_feng <jianfengli@ubuntukylin.com>
+Date: Mon, 23 Oct 2023 16:57:50 +0800
+Subject: Update changelog
+
+---
+ src/core/system.conf.in | 2 +-
+ src/core/user.conf.in   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/system.conf.in b/src/core/system.conf.in
+index 67e55f1..907fe3b 100644
+--- a/src/core/system.conf.in
++++ b/src/core/system.conf.in
+@@ -44,7 +44,7 @@
+ #DefaultStandardOutput=journal
+ #DefaultStandardError=inherit
+ #DefaultTimeoutStartSec=90s
+-#DefaultTimeoutStopSec=90s
++DefaultTimeoutStopSec=10s
+ #DefaultTimeoutAbortSec=
+ #DefaultRestartSec=100ms
+ #DefaultStartLimitIntervalSec=10s
+diff --git a/src/core/user.conf.in b/src/core/user.conf.in
+index e0a7703..c38b1d0 100644
+--- a/src/core/user.conf.in
++++ b/src/core/user.conf.in
+@@ -25,7 +25,7 @@
+ #DefaultStandardOutput=inherit
+ #DefaultStandardError=inherit
+ #DefaultTimeoutStartSec=90s
+-#DefaultTimeoutStopSec=90s
++DefaultTimeoutStopSec=10s
+ #DefaultTimeoutAbortSec=
+ #DefaultRestartSec=100ms
+ #DefaultStartLimitIntervalSec=10s

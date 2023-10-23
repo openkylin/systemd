@@ -55,3 +55,4 @@ lp1991829-add-CAP_LINUX_IMMUTABLE-to-systemd-machined-so-it-ca.patch
 fix-build-error.patch
 changelog-251.4-ok1.3.patch
 10-CVE-2022-4415.patch
+Update-changelog.patch
