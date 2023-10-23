@@ -25,7 +25,7 @@
 #DefaultStandardOutput=inherit
 #DefaultStandardError=inherit
 #DefaultTimeoutStartSec=90s
-#DefaultTimeoutStopSec=90s
+DefaultTimeoutStopSec=10s
 #DefaultTimeoutAbortSec=
 #DefaultRestartSec=100ms
 #DefaultStartLimitIntervalSec=10s
