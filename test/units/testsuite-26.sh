@@ -347,6 +347,7 @@ if [[ -x /usr/lib/systemd/system-generators/systemd-sysv-generator ]]; then
     # This is configurable via -Dsysvinit-path=, but we can't get the value
     # at runtime, so let's just support the two most common paths for now.
     [[ -d /etc/rc.d/init.d ]] && SYSVINIT_PATH="/etc/rc.d/init.d" || SYSVINIT_PATH="/etc/init.d"
+    mkdir -p "$SYSVINIT_PATH"
 
     # invalid dependency
     cat >"${SYSVINIT_PATH:?}/issue-24990" <<\EOF
