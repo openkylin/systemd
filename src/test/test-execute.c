@@ -1108,7 +1108,11 @@ static void test_exec_privatenetwork(Manager *m) {
         }
 
         test(m, "exec-privatenetwork-yes-privatemounts-no.service", can_unshare ? 0 : MANAGER_IS_SYSTEM(m) ? EXIT_NETWORK : EXIT_FAILURE, CLD_EXITED);
-        test(m, "exec-privatenetwork-yes-privatemounts-yes.service", can_unshare ? 0 : MANAGER_IS_SYSTEM(m) ? EXIT_NETWORK : EXIT_NAMESPACE, CLD_EXITED);
+
+        if (detect_container() == VIRTUALIZATION_LXC)
+                log_notice("Skipping exec-privatenetwork-yes-privatemounts-yes.service in %s (LP: #2046495)", __func__);
+        else
+                test(m, "exec-privatenetwork-yes-privatemounts-yes.service", can_unshare ? 0 : MANAGER_IS_SYSTEM(m) ? EXIT_NETWORK : EXIT_NAMESPACE, CLD_EXITED);
 }
 
 static void test_exec_networknamespacepath(Manager *m) {
