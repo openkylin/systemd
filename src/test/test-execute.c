@@ -7,6 +7,7 @@
 
 #include "sd-event.h"
 
+#include "architecture.h"
 #include "capability-util.h"
 #include "cpu-set-util.h"
 #include "copy.h"
@@ -1441,6 +1442,9 @@ TEST(run_tests_unprivileged) {
 }
 
 static int intro(void) {
+        if (detect_container() == VIRTUALIZATION_LXC && uname_architecture() == ARCHITECTURE_ARM)
+                return log_tests_skipped("Appear to be running on armhf container");
+
 #if HAS_FEATURE_ADDRESS_SANITIZER
         if (strstr_ptr(ci_environment(), "travis") || strstr_ptr(ci_environment(), "github-actions"))
                 return log_tests_skipped("Running on Travis CI/GH Actions under ASan, see https://github.com/systemd/systemd/issues/10696");
