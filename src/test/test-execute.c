@@ -283,6 +283,10 @@ static void test_exec_cpuaffinity(Manager *m) {
 }
 
 static void test_exec_credentials(Manager *m) {
+        /* These SHOULD work when https://github.com/canonical/lxd/pull/12698 is applied. */
+        if (detect_container() == VIRTUALIZATION_LXC)
+                return (void)log_notice("Testing in LXC, skipping %s (LP: #2046486)", __func__);
+
         test(m, "exec-set-credential.service", 0, CLD_EXITED);
         test(m, "exec-load-credential.service", MANAGER_IS_SYSTEM(m) ? 0 : EXIT_CREDENTIALS, CLD_EXITED);
         test(m, "exec-credentials-dir-specifier.service", MANAGER_IS_SYSTEM(m) ? 0 : EXIT_CREDENTIALS, CLD_EXITED);
