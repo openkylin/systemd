@@ -775,7 +775,7 @@ static void dns_stub_query_complete(DnsQuery *query) {
 
                         cname_result = dns_query_process_cname_one(q);
                         if (cname_result == -ELOOP) { /* CNAME loop, let's send what we already have */
-                                log_debug_errno(r, "Detected CNAME loop, returning what we already have.");
+                                log_debug("Detected CNAME loop, returning what we already have.");
                                 (void) dns_stub_send_reply(q, q->answer_rcode);
                                 break;
                         }
@@ -1205,7 +1205,7 @@ static int manager_dns_stub_fd(
                 return -errno;
 
         if (type == SOCK_STREAM &&
-            listen(fd, SOMAXCONN) < 0)
+            listen(fd, SOMAXCONN_DELUXE) < 0)
                 return -errno;
 
         r = sd_event_add_io(m->event, event_source, fd, EPOLLIN,
@@ -1295,7 +1295,7 @@ static int manager_dns_stub_fd_extra(Manager *m, DnsStubListenerExtra *l, int ty
                 goto fail;
 
         if (type == SOCK_STREAM &&
-            listen(fd, SOMAXCONN) < 0) {
+            listen(fd, SOMAXCONN_DELUXE) < 0) {
                 r = -errno;
                 goto fail;
         }

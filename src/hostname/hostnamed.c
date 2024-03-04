@@ -179,11 +179,33 @@ static void context_read_os_release(Context *c) {
         c->etc_os_release_stat = current_stat;
 }
 
+static bool use_dmi_data(void) {
+        int r;
+
+        r = getenv_bool("SYSTEMD_HOSTNAME_FORCE_DMI");
+        if (r >= 0) {
+                log_debug("Honouring $SYSTEMD_HOSTNAME_FORCE_DMI override: %s", yes_no(r));
+                return r;
+        }
+        if (r != -ENXIO)
+                log_debug_errno(r, "Failed to parse $SYSTEMD_HOSTNAME_FORCE_DMI, ignoring: %m");
+
+        if (detect_container() > 0) {
+                log_debug("Running in a container, not using DMI hardware data.");
+                return false;
+        }
+
+        return true;
+}
+
 static int get_dmi_data(const char *database_key, const char *regular_key, char **ret) {
         _cleanup_(sd_device_unrefp) sd_device *device = NULL;
         _cleanup_free_ char *b = NULL;
         const char *s = NULL;
         int r;
+
+        if (!use_dmi_data())
+                return -ENOENT;
 
         r = sd_device_new_from_syspath(&device, "/sys/class/dmi/id");
         if (r < 0)
@@ -222,6 +244,9 @@ static int get_hardware_firmware_data(const char *sysattr, char **ret) {
         int r;
 
         assert(sysattr);
+
+        if (!use_dmi_data())
+                return -ENOENT;
 
         r = sd_device_new_from_syspath(&device, "/sys/class/dmi/id");
         if (r < 0)
@@ -282,20 +307,20 @@ static int get_firmware_date(usec_t *ret) {
                 return -EINVAL;
 
          unsigned m, d, y;
-         r = safe_atou(month, &m);
+         r = safe_atou_full(month, 10 | SAFE_ATO_REFUSE_PLUS_MINUS | SAFE_ATO_REFUSE_LEADING_WHITESPACE, &m);
          if (r < 0)
                 return r;
          if (m < 1 || m > 12)
                 return -EINVAL;
          m -= 1;
 
-         r = safe_atou(day, &d);
+         r = safe_atou_full(day, 10 | SAFE_ATO_REFUSE_PLUS_MINUS | SAFE_ATO_REFUSE_LEADING_WHITESPACE, &d);
          if (r < 0)
                 return r;
          if (d < 1 || d > 31)
                 return -EINVAL;
 
-         r = safe_atou(year, &y);
+         r = safe_atou_full(year, 10 | SAFE_ATO_REFUSE_PLUS_MINUS | SAFE_ATO_REFUSE_LEADING_WHITESPACE, &y);
          if (r < 0)
                 return r;
          if (y < 1970 || y > (unsigned) INT_MAX)
@@ -631,7 +656,7 @@ static int context_write_data_machine_info(Context *c) {
                 return 0;
         }
 
-        r = write_env_file_label("/etc/machine-info", l);
+        r = write_env_file_label(AT_FDCWD, "/etc/machine-info", NULL, l);
         if (r < 0)
                 return r;
 
@@ -970,6 +995,44 @@ static int property_get_uname_field(
         return sd_bus_message_append(reply, "s", (char*) &u + PTR_TO_SIZE(userdata));
 }
 
+static int property_get_machine_id(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *error) {
+
+        sd_id128_t id;
+        int r;
+
+        r = sd_id128_get_machine(&id);
+        if (r < 0)
+                return r;
+
+        return bus_property_get_id128(bus, path, interface, property, reply, &id, error);
+}
+
+static int property_get_boot_id(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *error) {
+
+        sd_id128_t id;
+        int r;
+
+        r = sd_id128_get_boot(&id);
+        if (r < 0)
+                return r;
+
+        return bus_property_get_id128(bus, path, interface, property, reply, &id, error);
+}
+
 static int method_set_hostname(sd_bus_message *m, void *userdata, sd_bus_error *error) {
         Context *c = ASSERT_PTR(userdata);
         const char *name;
@@ -1277,7 +1340,7 @@ static int method_describe(sd_bus_message *m, void *userdata, sd_bus_error *erro
         usec_t firmware_date = USEC_INFINITY, eol = USEC_INFINITY;
         _cleanup_(sd_bus_message_unrefp) sd_bus_message *reply = NULL;
         _cleanup_(json_variant_unrefp) JsonVariant *v = NULL;
-        sd_id128_t product_uuid = SD_ID128_NULL;
+        sd_id128_t machine_id, boot_id, product_uuid = SD_ID128_NULL;
         Context *c = ASSERT_PTR(userdata);
         bool privileged;
         struct utsname u;
@@ -1293,7 +1356,7 @@ static int method_describe(sd_bus_message *m, void *userdata, sd_bus_error *erro
                         false,
                         UID_INVALID,
                         &c->polkit_registry,
-                        NULL);
+                        error);
         if (r == 0)
                 return 1; /* No authorization for now, but the async polkit stuff will call us again when it has it */
 
@@ -1344,6 +1407,14 @@ static int method_describe(sd_bus_message *m, void *userdata, sd_bus_error *erro
         if (c->data[PROP_OS_SUPPORT_END])
                 (void) os_release_support_ended(c->data[PROP_OS_SUPPORT_END], /* quiet= */ false, &eol);
 
+        r = sd_id128_get_machine(&machine_id);
+        if (r < 0)
+                return log_error_errno(r, "Failed to get machine ID: %m");
+
+        r = sd_id128_get_boot(&boot_id);
+        if (r < 0)
+                return log_error_errno(r, "Failed to get boot ID: %m");
+
         r = json_build(&v, JSON_BUILD_OBJECT(
                                        JSON_BUILD_PAIR("Hostname", JSON_BUILD_STRING(hn)),
                                        JSON_BUILD_PAIR("StaticHostname", JSON_BUILD_STRING(c->data[PROP_STATIC_HOSTNAME])),
@@ -1367,6 +1438,8 @@ static int method_describe(sd_bus_message *m, void *userdata, sd_bus_error *erro
                                        JSON_BUILD_PAIR("FirmwareVersion", JSON_BUILD_STRING(firmware_version)),
                                        JSON_BUILD_PAIR("FirmwareVendor", JSON_BUILD_STRING(firmware_vendor)),
                                        JSON_BUILD_PAIR_FINITE_USEC("FirmwareDate", firmware_date),
+                                       JSON_BUILD_PAIR_ID128("MachineID", machine_id),
+                                       JSON_BUILD_PAIR_ID128("BootID", boot_id),
                                        JSON_BUILD_PAIR_CONDITION(!sd_id128_is_null(product_uuid), "ProductUUID", JSON_BUILD_ID128(product_uuid)),
                                        JSON_BUILD_PAIR_CONDITION(sd_id128_is_null(product_uuid), "ProductUUID", JSON_BUILD_NULL)));
 
@@ -1411,6 +1484,8 @@ static const sd_bus_vtable hostname_vtable[] = {
         SD_BUS_PROPERTY("FirmwareVersion", "s", property_get_firmware_version, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("FirmwareVendor", "s", property_get_firmware_vendor, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("FirmwareDate", "t", property_get_firmware_date, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("MachineID", "ay", property_get_machine_id, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("BootID", "ay", property_get_boot_id, 0, SD_BUS_VTABLE_PROPERTY_CONST),
 
         SD_BUS_METHOD_WITH_ARGS("SetHostname",
                                 SD_BUS_ARGS("s", hostname, "b", interactive),
@@ -1524,7 +1599,7 @@ static int run(int argc, char *argv[]) {
 
         umask(0022);
 
-        r = mac_selinux_init();
+        r = mac_init();
         if (r < 0)
                 return r;
 
