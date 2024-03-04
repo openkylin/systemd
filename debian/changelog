@@ -2,7 +2,7 @@ systemd (251.4-ok1.7) yangtze; urgency=medium
 
   * add rv64g nocheck
 
- -- root <root@ubuntu>  Mon, 04 Mar 2024 08:38:37 +0000
+ -- root <fanxiaoqi@smart-core.cn>  Mon, 04 Mar 2024 08:38:37 +0000
 
 systemd (251.4-ok1.6) yangtze; urgency=medium
 
