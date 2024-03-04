@@ -1,3 +1,9 @@
+systemd (251.4-ok1.7) yangtze; urgency=medium
+
+  * add rv64g nocheck
+
+ -- root <fanxiaoqi@smart-core.cn>  Mon, 04 Mar 2024 08:38:37 +0000
+
 systemd (251.4-ok1.6) yangtze; urgency=medium
 
   * close: #I7NIXG, set DefaultTimeoutStopSec to 10s.

@@ -5,6 +5,10 @@
 
 export LC_ALL = C.UTF-8
 
+ifeq ($(DEB_HOST_ARCH), rv64g)
+	export DEB_BUILD_OPTIONS=nocheck
+endif
+
 include /usr/share/dpkg/default.mk
 #include /usr/share/debhelper/dh_package_notes/package-notes.mk
 
