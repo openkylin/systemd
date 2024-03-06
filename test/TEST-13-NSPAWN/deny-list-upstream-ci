@@ -1,0 +1,4 @@
+# The default ram size of 1024M for qemu virt is not sufficient
+# to make the test pass reliably on Debian sid/trixie.
+# Disable the test for now until this has been addressed in debci:
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1059840

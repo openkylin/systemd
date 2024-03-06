@@ -32,6 +32,7 @@
 #include "memory-util.h"
 #include "missing_capability.h"
 #include "path-util.h"
+#include "ro-etc-hack.h"
 #include "selinux-util.h"
 #include "service-util.h"
 #include "signal-util.h"
@@ -302,22 +303,22 @@ static int context_write_data_timezone(Context *c) {
 
                 if (access("/usr/share/zoneinfo/UTC", F_OK) < 0) {
 
-                        if (unlink("/etc/localtime") < 0 && errno != ENOENT)
+                        if (unlink(writable_filename("/etc/localtime")) < 0 && errno != ENOENT)
                                 return -errno;
 
                         return 0;
                 }
 
-                source = "../usr/share/zoneinfo/UTC";
+                source = "/usr/share/zoneinfo/UTC";
         } else {
-                p = path_join("../usr/share/zoneinfo", c->zone);
+                p = path_join("/usr/share/zoneinfo", c->zone);
                 if (!p)
                         return -ENOMEM;
 
                 source = p;
         }
 
-        return symlink_atomic(source, "/etc/localtime");
+        return symlink_atomic(source, writable_filename("/etc/localtime"));
 }
 
 static int context_write_data_local_rtc(Context *c) {
@@ -378,7 +379,7 @@ static int context_write_data_local_rtc(Context *c) {
                 *(char*) mempcpy(stpcpy(stpcpy(mempcpy(w, s, a), prepend), c->local_rtc ? "LOCAL" : "UTC"), e, b) = 0;
 
                 if (streq(w, NULL_ADJTIME_UTC)) {
-                        if (unlink("/etc/adjtime") < 0)
+                        if (unlink(writable_filename("/etc/adjtime")) < 0)
                                 if (errno != ENOENT)
                                         return -errno;
 

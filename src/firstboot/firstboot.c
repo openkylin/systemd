@@ -42,6 +42,7 @@
 #include "pretty-print.h"
 #include "proc-cmdline.h"
 #include "random-util.h"
+#include "ro-etc-hack.h"
 #include "smack-util.h"
 #include "string-util.h"
 #include "strv.h"
@@ -592,7 +593,7 @@ static int process_timezone(int rfd) {
 
         assert(rfd >= 0);
 
-        pfd = chase_and_open_parent_at(rfd, "/etc/localtime",
+        pfd = chase_and_open_parent_at(rfd, writable_filename("/etc/localtime"),
                                        CHASE_AT_RESOLVE_IN_ROOT|CHASE_MKDIR_0755|CHASE_WARN|CHASE_NOFOLLOW,
                                        &f);
         if (pfd < 0)
@@ -611,7 +612,7 @@ static int process_timezone(int rfd) {
         if (arg_copy_timezone && r == 0) {
                 _cleanup_free_ char *s = NULL;
 
-                r = readlink_malloc("/etc/localtime", &s);
+                r = readlink_malloc(writable_filename("/etc/localtime"), &s);
                 if (r != -ENOENT) {
                         if (r < 0)
                                 return log_error_errno(r, "Failed to read host's /etc/localtime: %m");
@@ -632,7 +633,7 @@ static int process_timezone(int rfd) {
         if (isempty(arg_timezone))
                 return 0;
 
-        e = strjoina("../usr/share/zoneinfo/", arg_timezone);
+        e = strjoina("/usr/share/zoneinfo/", arg_timezone);
 
         r = symlinkat_atomic_full(e, pfd, f, /* make_relative= */ false);
         if (r < 0)

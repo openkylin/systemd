@@ -1,0 +1,2 @@
+# Upstream disables this too, see https://github.com/systemd/systemd/pull/28813.
+# It makes sense for us to disable this as well, because we don't run systemd in the initrd.

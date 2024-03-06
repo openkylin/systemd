@@ -78,6 +78,7 @@ basic_sources = files(
         'recurse-dir.c',
         'replace-var.c',
         'rlimit-util.c',
+        'ro-etc-hack.c',
         'runtime-scope.c',
         'sigbus.c',
         'signal-util.c',
