@@ -13,12 +13,11 @@ Documentation=man:systemd-fsck@.service(8)
 DefaultDependencies=no
 BindsTo=%i.device
 Conflicts=shutdown.target
-Wants=systemd-fsckd.socket
-After=%i.device systemd-fsck-root.service local-fs-pre.target systemd-fsckd.socket
+After=%i.device systemd-fsck-root.service local-fs-pre.target
 Before=systemd-quotacheck.service shutdown.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart={{ROOTLIBEXECDIR}}/systemd-fsck %f
-TimeoutSec=0
+ExecStart={{LIBEXECDIR}}/systemd-fsck %f
+TimeoutSec=infinity

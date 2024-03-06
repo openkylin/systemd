@@ -15,6 +15,7 @@
 #include "build.h"
 #include "bus-common-errors.h"
 #include "bus-error.h"
+#include "bus-locator.h"
 #include "bus-map-properties.h"
 #include "format-table.h"
 #include "hostname-setup.h"
@@ -55,6 +56,8 @@ typedef struct StatusInfo {
         const char *hardware_model;
         const char *firmware_version;
         usec_t firmware_date;
+        sd_id128_t machine_id;
+        sd_id128_t boot_id;
 } StatusInfo;
 
 static const char* chassis_string_to_glyph(const char *chassis) {
@@ -96,7 +99,6 @@ static const char *os_support_end_color(usec_t n, usec_t eol) {
 
 static int print_status_info(StatusInfo *i) {
         _cleanup_(table_unrefp) Table *table = NULL;
-        sd_id128_t mid = {}, bid = {};
         TableCell *cell;
         int r;
 
@@ -173,20 +175,18 @@ static int print_status_info(StatusInfo *i) {
                         return table_log_add_error(r);
         }
 
-        r = sd_id128_get_machine(&mid);
-        if (r >= 0) {
+        if (!sd_id128_is_null(i->machine_id)) {
                 r = table_add_many(table,
                                    TABLE_FIELD, "Machine ID",
-                                   TABLE_ID128, mid);
+                                   TABLE_ID128, i->machine_id);
                 if (r < 0)
                         return table_log_add_error(r);
         }
 
-        r = sd_id128_get_boot(&bid);
-        if (r >= 0) {
+        if (!sd_id128_is_null(i->boot_id)) {
                 r = table_add_many(table,
                                    TABLE_FIELD, "Boot ID",
-                                   TABLE_ID128, bid);
+                                   TABLE_ID128, i->boot_id);
                 if (r < 0)
                         return table_log_add_error(r);
         }
@@ -273,11 +273,22 @@ static int print_status_info(StatusInfo *i) {
         }
 
         if (timestamp_is_set(i->firmware_date)) {
+                usec_t n = now(CLOCK_REALTIME);
+
                 r = table_add_many(table,
                                    TABLE_FIELD, "Firmware Date",
                                    TABLE_TIMESTAMP_DATE, i->firmware_date);
                 if (r < 0)
                         return table_log_add_error(r);
+
+                if (i->firmware_date < n) {
+                        r = table_add_many(table,
+                                           TABLE_FIELD, "Firmware Age",
+                                           TABLE_TIMESPAN_DAY, n - i->firmware_date,
+                                           TABLE_SET_COLOR, n - i->firmware_date > USEC_PER_YEAR*2 ? ANSI_HIGHLIGHT_YELLOW : NULL);
+                        if (r < 0)
+                                return table_log_add_error(r);
+                }
         }
 
         r = table_print(table, NULL);
@@ -298,13 +309,7 @@ static int get_one_name(sd_bus *bus, const char* attr, char **ret) {
 
         /* This obtains one string property, and copy it if 'ret' is set, or print it otherwise. */
 
-        r = sd_bus_get_property(
-                        bus,
-                        "org.freedesktop.hostname1",
-                        "/org/freedesktop/hostname1",
-                        "org.freedesktop.hostname1",
-                        attr,
-                        &error, &reply, "s");
+        r = bus_get_property(bus, bus_hostname, attr, &error, &reply, "s");
         if (r < 0)
                 return log_error_errno(r, "Could not get property: %s", bus_error_message(&error, r));
 
@@ -330,29 +335,29 @@ static int show_all_names(sd_bus *bus) {
         StatusInfo info = {};
 
         static const struct bus_properties_map hostname_map[]  = {
-                { "Hostname",                  "s", NULL, offsetof(StatusInfo, hostname)         },
-                { "StaticHostname",            "s", NULL, offsetof(StatusInfo, static_hostname)  },
-                { "PrettyHostname",            "s", NULL, offsetof(StatusInfo, pretty_hostname)  },
-                { "IconName",                  "s", NULL, offsetof(StatusInfo, icon_name)        },
-                { "Chassis",                   "s", NULL, offsetof(StatusInfo, chassis)          },
-                { "Deployment",                "s", NULL, offsetof(StatusInfo, deployment)       },
-                { "Location",                  "s", NULL, offsetof(StatusInfo, location)         },
-                { "KernelName",                "s", NULL, offsetof(StatusInfo, kernel_name)      },
-                { "KernelRelease",             "s", NULL, offsetof(StatusInfo, kernel_release)   },
-                { "OperatingSystemPrettyName", "s", NULL, offsetof(StatusInfo, os_pretty_name)   },
-                { "OperatingSystemCPEName",    "s", NULL, offsetof(StatusInfo, os_cpe_name)      },
-                { "OperatingSystemSupportEnd", "t", NULL, offsetof(StatusInfo, os_support_end)   },
-                { "HomeURL",                   "s", NULL, offsetof(StatusInfo, home_url)         },
-                { "HardwareVendor",            "s", NULL, offsetof(StatusInfo, hardware_vendor)  },
-                { "HardwareModel",             "s", NULL, offsetof(StatusInfo, hardware_model)   },
-                { "FirmwareVersion",           "s", NULL, offsetof(StatusInfo, firmware_version) },
-                { "FirmwareDate",              "t", NULL, offsetof(StatusInfo, firmware_date)    },
+                { "Hostname",                  "s",  NULL,          offsetof(StatusInfo, hostname)         },
+                { "StaticHostname",            "s",  NULL,          offsetof(StatusInfo, static_hostname)  },
+                { "PrettyHostname",            "s",  NULL,          offsetof(StatusInfo, pretty_hostname)  },
+                { "IconName",                  "s",  NULL,          offsetof(StatusInfo, icon_name)        },
+                { "Chassis",                   "s",  NULL,          offsetof(StatusInfo, chassis)          },
+                { "Deployment",                "s",  NULL,          offsetof(StatusInfo, deployment)       },
+                { "Location",                  "s",  NULL,          offsetof(StatusInfo, location)         },
+                { "KernelName",                "s",  NULL,          offsetof(StatusInfo, kernel_name)      },
+                { "KernelRelease",             "s",  NULL,          offsetof(StatusInfo, kernel_release)   },
+                { "OperatingSystemPrettyName", "s",  NULL,          offsetof(StatusInfo, os_pretty_name)   },
+                { "OperatingSystemCPEName",    "s",  NULL,          offsetof(StatusInfo, os_cpe_name)      },
+                { "OperatingSystemSupportEnd", "t",  NULL,          offsetof(StatusInfo, os_support_end)   },
+                { "HomeURL",                   "s",  NULL,          offsetof(StatusInfo, home_url)         },
+                { "HardwareVendor",            "s",  NULL,          offsetof(StatusInfo, hardware_vendor)  },
+                { "HardwareModel",             "s",  NULL,          offsetof(StatusInfo, hardware_model)   },
+                { "FirmwareVersion",           "s",  NULL,          offsetof(StatusInfo, firmware_version) },
+                { "FirmwareDate",              "t",  NULL,          offsetof(StatusInfo, firmware_date)    },
+                { "MachineID",                 "ay", bus_map_id128, offsetof(StatusInfo, machine_id)       },
+                { "BootID",                    "ay", bus_map_id128, offsetof(StatusInfo, boot_id)          },
                 {}
-        };
-
-        static const struct bus_properties_map manager_map[] = {
-                { "Virtualization",            "s", NULL, offsetof(StatusInfo, virtualization)  },
-                { "Architecture",              "s", NULL, offsetof(StatusInfo, architecture)    },
+        }, manager_map[] = {
+                { "Virtualization",            "s",  NULL,          offsetof(StatusInfo, virtualization)   },
+                { "Architecture",              "s",  NULL,          offsetof(StatusInfo, architecture)     },
                 {}
         };
 
@@ -382,6 +387,14 @@ static int show_all_names(sd_bus *bus) {
         if (r < 0)
                 return log_error_errno(r, "Failed to query system properties: %s", bus_error_message(&error, r));
 
+        /* For older version of hostnamed. */
+        if (!arg_host) {
+                if (sd_id128_is_null(info.machine_id))
+                        (void) sd_id128_get_machine(&info.machine_id);
+                if (sd_id128_is_null(info.boot_id))
+                        (void) sd_id128_get_boot(&info.boot_id);
+        }
+
         return print_status_info(&info);
 }
 
@@ -408,15 +421,7 @@ static int show_status(int argc, char **argv, void *userdata) {
                 _cleanup_(json_variant_unrefp) JsonVariant *v = NULL;
                 const char *text = NULL;
 
-                r = sd_bus_call_method(
-                                bus,
-                                "org.freedesktop.hostname1",
-                                "/org/freedesktop/hostname1",
-                                "org.freedesktop.hostname1",
-                                "Describe",
-                                &error,
-                                &reply,
-                                NULL);
+                r = bus_call_method(bus, bus_hostname, "Describe", &error, &reply, NULL);
                 if (r < 0)
                         return log_error_errno(r, "Could not get description: %s", bus_error_message(&error, r));
 
@@ -448,14 +453,7 @@ static int set_simple_string_internal(sd_bus *bus, sd_bus_error *error, const ch
         if (!error)
                 error = &e;
 
-        r = sd_bus_call_method(
-                        bus,
-                        "org.freedesktop.hostname1",
-                        "/org/freedesktop/hostname1",
-                        "org.freedesktop.hostname1",
-                        method,
-                        error, NULL,
-                        "sb", value, arg_ask_password);
+        r = bus_call_method(bus, bus_hostname, method, error, NULL, "sb", value, arg_ask_password);
         if (r < 0)
                 return log_error_errno(r, "Could not set %s: %s", target, bus_error_message(error, r));
 
@@ -732,7 +730,7 @@ static int run(int argc, char *argv[]) {
         if (r <= 0)
                 return r;
 
-        r = bus_connect_transport(arg_transport, arg_host, false, &bus);
+        r = bus_connect_transport(arg_transport, arg_host, RUNTIME_SCOPE_SYSTEM, &bus);
         if (r < 0)
                 return bus_log_connect_error(r, arg_transport);
 

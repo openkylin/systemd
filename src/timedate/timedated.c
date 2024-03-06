@@ -18,6 +18,7 @@
 #include "bus-log-control-api.h"
 #include "bus-map-properties.h"
 #include "bus-polkit.h"
+#include "bus-unit-util.h"
 #include "clock-util.h"
 #include "conf-files.h"
 #include "constants.h"
@@ -31,7 +32,6 @@
 #include "memory-util.h"
 #include "missing_capability.h"
 #include "path-util.h"
-#include "ro-etc-hack.h"
 #include "selinux-util.h"
 #include "service-util.h"
 #include "signal-util.h"
@@ -116,8 +116,6 @@ static UnitStatusInfo *unit_status_info_free(UnitStatusInfo *p) {
 DEFINE_TRIVIAL_CLEANUP_FUNC(UnitStatusInfo*, unit_status_info_free);
 
 static void context_clear(Context *c) {
-        UnitStatusInfo *p;
-
         assert(c);
 
         free(c->zone);
@@ -126,10 +124,7 @@ static void context_clear(Context *c) {
 
         sd_bus_slot_unref(c->slot_job_removed);
 
-        while ((p = c->units)) {
-                LIST_REMOVE(units, c->units, p);
-                unit_status_info_free(p);
-        }
+        LIST_CLEAR(units, c->units, unit_status_info_free);
 }
 
 static int context_add_ntp_service(Context *c, const char *s, const char *source) {
@@ -216,9 +211,8 @@ static int context_parse_ntp_services_from_disk(Context *c) {
 
                 for (;;) {
                         _cleanup_free_ char *line = NULL;
-                        const char *word;
 
-                        r = read_line(file, LINE_MAX, &line);
+                        r = read_stripped_line(file, LINE_MAX, &line);
                         if (r < 0) {
                                 log_error_errno(r, "Failed to read %s, ignoring: %m", *f);
                                 continue;
@@ -226,13 +220,12 @@ static int context_parse_ntp_services_from_disk(Context *c) {
                         if (r == 0)
                                 break;
 
-                        word = strstrip(line);
-                        if (isempty(word) || startswith(word, "#"))
+                        if (isempty(line) || startswith(line, "#"))
                                 continue;
 
-                        r = context_add_ntp_service(c, word, *f);
+                        r = context_add_ntp_service(c, line, *f);
                         if (r < 0)
-                                log_warning_errno(r, "Failed to add NTP service \"%s\", ignoring: %m", word);
+                                log_warning_errno(r, "Failed to add NTP service \"%s\", ignoring: %m", line);
                 }
         }
 
@@ -309,22 +302,22 @@ static int context_write_data_timezone(Context *c) {
 
                 if (access("/usr/share/zoneinfo/UTC", F_OK) < 0) {
 
-                        if (unlink(writable_filename("/etc/localtime")) < 0 && errno != ENOENT)
+                        if (unlink("/etc/localtime") < 0 && errno != ENOENT)
                                 return -errno;
 
                         return 0;
                 }
 
-                source = "/usr/share/zoneinfo/UTC";
+                source = "../usr/share/zoneinfo/UTC";
         } else {
-                p = path_join("/usr/share/zoneinfo", c->zone);
+                p = path_join("../usr/share/zoneinfo", c->zone);
                 if (!p)
                         return -ENOMEM;
 
                 source = p;
         }
 
-        return symlink_atomic(source, writable_filename("/etc/localtime"));
+        return symlink_atomic(source, "/etc/localtime");
 }
 
 static int context_write_data_local_rtc(Context *c) {
@@ -385,7 +378,7 @@ static int context_write_data_local_rtc(Context *c) {
                 *(char*) mempcpy(stpcpy(stpcpy(mempcpy(w, s, a), prepend), c->local_rtc ? "LOCAL" : "UTC"), e, b) = 0;
 
                 if (streq(w, NULL_ADJTIME_UTC)) {
-                        if (unlink(writable_filename("/etc/adjtime")) < 0)
+                        if (unlink("/etc/adjtime") < 0)
                                 if (errno != ENOENT)
                                         return -errno;
 
@@ -393,7 +386,7 @@ static int context_write_data_local_rtc(Context *c) {
                 }
         }
 
-        r = mac_selinux_init();
+        r = mac_init();
         if (r < 0)
                 return r;
 
@@ -551,7 +544,7 @@ static int unit_enable_or_disable(UnitStatusInfo *u, sd_bus *bus, sd_bus_error *
         if (r < 0)
                 return r;
 
-        r = bus_call_method(bus, bus_systemd_mgr, "Reload", error, NULL, NULL);
+        r = bus_service_manager_reload(bus);
         if (r < 0)
                 return r;
 

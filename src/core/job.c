@@ -48,6 +48,28 @@ Job* job_new_raw(Unit *unit) {
         return j;
 }
 
+static uint32_t manager_get_new_job_id(Manager *m) {
+        bool overflow = false;
+
+        assert(m);
+
+        for (;;) {
+                uint32_t id = m->current_job_id;
+
+                if (_unlikely_(id == UINT32_MAX)) {
+                        assert_se(!overflow);
+                        m->current_job_id = 1;
+                        overflow = true;
+                } else
+                        m->current_job_id++;
+
+                if (hashmap_contains(m->jobs, UINT32_TO_PTR(id)))
+                        continue;
+
+                return id;
+        }
+}
+
 Job* job_new(Unit *unit, JobType type) {
         Job *j;
 
@@ -57,7 +79,7 @@ Job* job_new(Unit *unit, JobType type) {
         if (!j)
                 return NULL;
 
-        j->id = j->manager->current_job_id++;
+        j->id = manager_get_new_job_id(j->manager);
         j->type = type;
 
         /* We don't link it here, that's what job_dependency() is for */
@@ -195,10 +217,11 @@ static void job_merge_into_installed(Job *j, Job *other) {
         j->ignore_order = j->ignore_order || other->ignore_order;
 }
 
-Job* job_install(Job *j) {
+Job* job_install(Job *j, bool refuse_late_merge) {
         Job **pj;
         Job *uj;
 
+        assert(j);
         assert(!j->installed);
         assert(j->type < _JOB_TYPE_MAX_IN_TRANSACTION);
         assert(j->state == JOB_WAITING);
@@ -213,7 +236,7 @@ Job* job_install(Job *j) {
                         /* not conflicting, i.e. mergeable */
 
                         if (uj->state == JOB_WAITING ||
-                            (job_type_allows_late_merge(j->type) && job_type_is_superset(uj->type, j->type))) {
+                            (!refuse_late_merge && job_type_allows_late_merge(j->type) && job_type_is_superset(uj->type, j->type))) {
                                 job_merge_into_installed(uj, j);
                                 log_unit_debug(uj->unit,
                                                "Merged %s/%s into installed job %s/%s as %"PRIu32,
@@ -237,6 +260,7 @@ Job* job_install(Job *j) {
         }
 
         /* Install the job */
+        assert(!*pj);
         *pj = j;
         j->installed = true;
 
@@ -261,13 +285,17 @@ int job_install_deserialized(Job *j) {
 
         if (j->type < 0 || j->type >= _JOB_TYPE_MAX_IN_TRANSACTION)
                 return log_unit_debug_errno(j->unit, SYNTHETIC_ERRNO(EINVAL),
-                                       "Invalid job type %s in deserialization.",
-                                       strna(job_type_to_string(j->type)));
+                                            "Invalid job type %s in deserialization.",
+                                            strna(job_type_to_string(j->type)));
 
         pj = j->type == JOB_NOP ? &j->unit->nop_job : &j->unit->job;
         if (*pj)
                 return log_unit_debug_errno(j->unit, SYNTHETIC_ERRNO(EEXIST),
                                             "Unit already has a job installed. Not installing deserialized job.");
+
+        /* When the job does not have ID, or we failed to deserialize the job ID, then use a new ID. */
+        if (j->id <= 0)
+                j->id = manager_get_new_job_id(j->manager);
 
         r = hashmap_ensure_put(&j->manager->jobs, NULL, UINT32_TO_PTR(j->id), j);
         if (r == -EEXIST)
@@ -805,13 +833,12 @@ static int job_perform_on_unit(Job **j) {
         Manager *m;
         JobType t;
         Unit *u;
+        bool wait_only;
         int r;
 
-        /* While we execute this operation the job might go away (for
-         * example: because it finishes immediately or is replaced by
-         * a new, conflicting job.) To make sure we don't access a
-         * freed job later on we store the id here, so that we can
-         * verify the job is still valid. */
+        /* While we execute this operation the job might go away (for example: because it finishes immediately
+         * or is replaced by a new, conflicting job). To make sure we don't access a freed job later on we
+         * store the id here, so that we can verify the job is still valid. */
 
         assert(j);
         assert(*j);
@@ -825,6 +852,7 @@ static int job_perform_on_unit(Job **j) {
         switch (t) {
                 case JOB_START:
                         r = unit_start(u, a);
+                        wait_only = r == -EBADR; /* If the unit type does not support starting, then simply wait. */
                         break;
 
                 case JOB_RESTART:
@@ -832,24 +860,28 @@ static int job_perform_on_unit(Job **j) {
                         _fallthrough_;
                 case JOB_STOP:
                         r = unit_stop(u);
+                        wait_only = r == -EBADR; /* If the unit type does not support stopping, then simply wait. */
                         break;
 
                 case JOB_RELOAD:
                         r = unit_reload(u);
+                        wait_only = false; /* A clear error is generated if reload is not supported. */
                         break;
 
                 default:
                         assert_not_reached();
         }
 
-        /* Log if the job still exists and the start/stop/reload function actually did something. Note that this means
-         * for units for which there's no 'activating' phase (i.e. because we transition directly from 'inactive' to
-         * 'active') we'll possibly skip the "Starting..." message. */
+        /* Log if the job still exists and the start/stop/reload function actually did something or we're
+         * only waiting for unit status change (common for device units). The latter ensures that job start
+         * messages for device units are correctly shown. Note that if the job disappears too quickly, e.g.
+         * for units for which there's no 'activating' phase (i.e. because we transition directly from
+         * 'inactive' to 'active'), we'll possibly skip the "Starting..." message. */
         *j = manager_get_job(m, id);
-        if (*j && r > 0)
+        if (*j && (r > 0 || wait_only))
                 job_emit_start_message(u, id, t);
 
-        return r;
+        return wait_only ? 0 : r;
 }
 
 int job_run_and_invalidate(Job *j) {
@@ -891,13 +923,6 @@ int job_run_and_invalidate(Job *j) {
                 case JOB_START:
                 case JOB_STOP:
                 case JOB_RESTART:
-                        r = job_perform_on_unit(&j);
-
-                        /* If the unit type does not support starting/stopping, then simply wait. */
-                        if (r == -EBADR)
-                                r = 0;
-                        break;
-
                 case JOB_RELOAD:
                         r = job_perform_on_unit(&j);
                         break;
@@ -1205,21 +1230,15 @@ int job_deserialize(Job *j, FILE *f) {
         assert(f);
 
         for (;;) {
-                _cleanup_free_ char *line = NULL;
-                char *l, *v;
+                _cleanup_free_ char *l = NULL;
                 size_t k;
+                char *v;
 
-                r = read_line(f, LONG_LINE_MAX, &line);
+                r = deserialize_read_line(f, &l);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to read serialization line: %m");
-                if (r == 0)
-                        return 0;
-
-                l = strstrip(line);
-
-                /* End marker */
-                if (isempty(l))
-                        return 0;
+                        return r;
+                if (r == 0) /* eof or end marker */
+                        break;
 
                 k = strcspn(l, "=");
 
@@ -1298,6 +1317,8 @@ int job_deserialize(Job *j, FILE *f) {
                 } else
                         log_debug("Unknown job serialization key: %s", l);
         }
+
+        return 0;
 }
 
 int job_coldplug(Job *j) {
@@ -1377,10 +1398,12 @@ void job_shutdown_magic(Job *j) {
         (void) asynchronous_sync(NULL);
 }
 
-int job_get_timeout(Job *j, usec_t *timeout) {
+int job_get_timeout(Job *j, usec_t *ret) {
         usec_t x = USEC_INFINITY, y = USEC_INFINITY;
         Unit *u = ASSERT_PTR(ASSERT_PTR(j)->unit);
         int r;
+
+        assert(ret);
 
         if (j->timer_event_source) {
                 r = sd_event_source_get_time(j->timer_event_source, &x);
@@ -1394,10 +1417,12 @@ int job_get_timeout(Job *j, usec_t *timeout) {
                         return r;
         }
 
-        if (x == USEC_INFINITY && y == USEC_INFINITY)
+        if (x == USEC_INFINITY && y == USEC_INFINITY) {
+                *ret = 0;
                 return 0;
+        }
 
-        *timeout = MIN(x, y);
+        *ret = MIN(x, y);
         return 1;
 }
 
@@ -1411,6 +1436,10 @@ bool job_may_gc(Job *j) {
          * Returns true if the job can be collected. */
 
         if (!UNIT_VTABLE(j->unit)->gc_jobs)
+                return false;
+
+        /* Make sure to send out pending D-Bus events before we unload the unit */
+        if (j->in_dbus_queue)
                 return false;
 
         if (sd_bus_track_count(j->bus_track) > 0)
@@ -1599,6 +1628,7 @@ static const char* const job_mode_table[_JOB_MODE_MAX] = {
         [JOB_IGNORE_DEPENDENCIES]  = "ignore-dependencies",
         [JOB_IGNORE_REQUIREMENTS]  = "ignore-requirements",
         [JOB_TRIGGERING]           = "triggering",
+        [JOB_RESTART_DEPENDENCIES] = "restart-dependencies",
 };
 
 DEFINE_STRING_TABLE_LOOKUP(job_mode, JobMode);

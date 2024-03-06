@@ -8,6 +8,9 @@ TEST_NO_NSPAWN=1
 # shellcheck source=test/test-functions
 . "${TEST_BASE_DIR:?}/test-functions"
 
-QEMU_MEM="1024M"
+test_append_files() {
+    instmods snd_seq snd_timer tun
+    generate_module_dependencies
+}
 
 do_test "$@"

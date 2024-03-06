@@ -314,27 +314,25 @@ static int list_x11_keymaps(int argc, char **argv, void *userdata) {
 
         for (;;) {
                 _cleanup_free_ char *line = NULL;
-                char *l, *w;
+                char *w;
 
-                r = read_line(f, LONG_LINE_MAX, &line);
+                r = read_stripped_line(f, LONG_LINE_MAX, &line);
                 if (r < 0)
                         return log_error_errno(r, "Failed to read keyboard mapping list: %m");
                 if (r == 0)
                         break;
 
-                l = strstrip(line);
-
-                if (isempty(l))
+                if (isempty(line))
                         continue;
 
-                if (l[0] == '!') {
-                        if (startswith(l, "! model"))
+                if (line[0] == '!') {
+                        if (startswith(line, "! model"))
                                 state = MODELS;
-                        else if (startswith(l, "! layout"))
+                        else if (startswith(line, "! layout"))
                                 state = LAYOUTS;
-                        else if (startswith(l, "! variant"))
+                        else if (startswith(line, "! variant"))
                                 state = VARIANTS;
-                        else if (startswith(l, "! option"))
+                        else if (startswith(line, "! option"))
                                 state = OPTIONS;
                         else
                                 state = NONE;
@@ -345,7 +343,7 @@ static int list_x11_keymaps(int argc, char **argv, void *userdata) {
                 if (state != look_for)
                         continue;
 
-                w = l + strcspn(l, WHITESPACE);
+                w = line + strcspn(line, WHITESPACE);
 
                 if (argc > 1) {
                         char *e;
@@ -368,8 +366,7 @@ static int list_x11_keymaps(int argc, char **argv, void *userdata) {
                 } else
                         *w = 0;
 
-                r = strv_extend(&list, l);
-                if (r < 0)
+                if (strv_consume(&list, TAKE_PTR(line)) < 0)
                         return log_oom();
         }
 
@@ -386,10 +383,6 @@ static int list_x11_keymaps(int argc, char **argv, void *userdata) {
         return 0;
 }
 
-static int not_supported(int argc, char **argv, void *userdata) {
-        return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "Setting X11 and console keymaps is not supported in Debian.");
-}
-
 static int help(void) {
         _cleanup_free_ char *link = NULL;
         int r;
@@ -404,7 +397,10 @@ static int help(void) {
                "  status                   Show current locale settings\n"
                "  set-locale LOCALE...     Set system locale\n"
                "  list-locales             Show known locales\n"
+               "  set-keymap MAP [MAP]     Set console and X11 keyboard mappings\n"
                "  list-keymaps             Show known virtual console keyboard mappings\n"
+               "  set-x11-keymap LAYOUT [MODEL [VARIANT [OPTIONS]]]\n"
+               "                           Set X11 and console keyboard mappings\n"
                "  list-x11-keymap-models   Show known X11 keyboard mapping models\n"
                "  list-x11-keymap-layouts  Show known X11 keyboard mapping layouts\n"
                "  list-x11-keymap-variants [LAYOUT]\n"
@@ -504,9 +500,9 @@ static int localectl_main(sd_bus *bus, int argc, char *argv[]) {
                 { "status",                   VERB_ANY, 1,        VERB_DEFAULT, show_status           },
                 { "set-locale",               2,        VERB_ANY, 0,            set_locale            },
                 { "list-locales",             VERB_ANY, 1,        0,            list_locales          },
-                { "set-keymap",               2,        3,        0,            not_supported         },
+                { "set-keymap",               2,        3,        0,            set_vconsole_keymap   },
                 { "list-keymaps",             VERB_ANY, 1,        0,            list_vconsole_keymaps },
-                { "set-x11-keymap",           2,        5,        0,            not_supported         },
+                { "set-x11-keymap",           2,        5,        0,            set_x11_keymap        },
                 { "list-x11-keymap-models",   VERB_ANY, 1,        0,            list_x11_keymaps      },
                 { "list-x11-keymap-layouts",  VERB_ANY, 1,        0,            list_x11_keymaps      },
                 { "list-x11-keymap-variants", VERB_ANY, 2,        0,            list_x11_keymaps      },
@@ -529,7 +525,7 @@ static int run(int argc, char *argv[]) {
         if (r <= 0)
                 return r;
 
-        r = bus_connect_transport(arg_transport, arg_host, false, &bus);
+        r = bus_connect_transport(arg_transport, arg_host, RUNTIME_SCOPE_SYSTEM, &bus);
         if (r < 0)
                 return bus_log_connect_error(r, arg_transport);
 

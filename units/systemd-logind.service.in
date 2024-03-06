@@ -16,8 +16,6 @@ Documentation=man:org.freedesktop.login1(5)
 
 Wants=user.slice modprobe@drm.service
 After=nss-user-lookup.target user.slice modprobe@drm.service
-ConditionPathExists=|/lib/systemd/system/dbus.service
-ConditionPathExists=|/lib/systemd/system/dbus-broker.service
 
 # Ask for the dbus socket.
 Wants=dbus.socket
@@ -32,7 +30,7 @@ DeviceAllow=char-drm rw
 DeviceAllow=char-input rw
 DeviceAllow=char-tty rw
 DeviceAllow=char-vcs rw
-ExecStart={{ROOTLIBEXECDIR}}/systemd-logind
+ExecStart={{LIBEXECDIR}}/systemd-logind
 FileDescriptorStoreMax=512
 IPAddressDeny=any
 LockPersonality=yes
