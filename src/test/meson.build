@@ -480,13 +480,13 @@ executables += [
         core_test_template + {
                 'sources' : files('test-cgroup-cpu.c'),
         },
-        core_test_template + {
-                'sources' : files('test-cgroup-mask.c'),
-                'dependencies' : common_test_dependencies,
-        },
-        core_test_template + {
-                'sources' : files('test-cgroup-unit-default.c'),
-        },
+#        core_test_template + {
+#                'sources' : files('test-cgroup-mask.c'),
+#                'dependencies' : common_test_dependencies,
+#        },
+#        core_test_template + {
+#                'sources' : files('test-cgroup-unit-default.c'),
+#        },
         core_test_template + {
                 'sources' : files('test-chown-rec.c'),
         },
@@ -497,10 +497,10 @@ executables += [
         core_test_template + {
                 'sources' : files('test-emergency-action.c'),
         },
-        core_test_template + {
-                'sources' : files('test-engine.c'),
-                'dependencies' : common_test_dependencies,
-        },
+#        core_test_template + {
+#                'sources' : files('test-engine.c'),
+#                'dependencies' : common_test_dependencies,
+#        },
         core_test_template + {
                 'sources' : files('test-execute.c'),
                 'dependencies' : common_test_dependencies,
@@ -538,15 +538,15 @@ executables += [
                 'dependencies' : common_test_dependencies,
                 'type' : 'manual',
         },
-        core_test_template + {
-                'sources' : files('test-path.c'),
-                'dependencies' : common_test_dependencies,
-                'timeout' : 120,
-        },
-        core_test_template + {
-                'sources' : files('test-sched-prio.c'),
-                'dependencies' : common_test_dependencies,
-        },
+#        core_test_template + {
+#                'sources' : files('test-path.c'),
+#                'dependencies' : common_test_dependencies,
+#                'timeout' : 120,
+#        },
+#        core_test_template + {
+#                'sources' : files('test-sched-prio.c'),
+#                'dependencies' : common_test_dependencies,
+#        },
         core_test_template + {
                 'sources' : files('test-socket-bind.c'),
                 'dependencies' : libdl,

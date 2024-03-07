@@ -75,7 +75,7 @@ elif get_option('sbat-distro') != ''
         efi_conf.set('SBAT_DISTRO_GENERATION', get_option('sbat-distro-generation'))
         foreach sbatvar : [['sbat-distro', 'ID'],
                            ['sbat-distro-summary', 'NAME'],
-                           ['sbat-distro-url', 'BUG_REPORT_URL']]
+                           ['sbat-distro-url', 'HOME_URL']]
                 value = get_option(sbatvar[0])
                 if (value == '' or value == 'auto') and not meson.is_cross_build()
                         cmd = 'if [ -e /etc/os-release ]; then . /etc/os-release; else . /usr/lib/os-release; fi; echo $@0@'.format(sbatvar[1])

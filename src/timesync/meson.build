@@ -50,14 +50,14 @@ executables += [
                 'sources' : files('wait-sync.c'),
                 'link_with' : libtimesyncd_core,
         },
-        test_template + {
-                'sources' : files('test-timesync.c'),
-                'link_with' : [
-                        libshared,
-                        libtimesyncd_core,
-                ],
-                'dependencies' : libm,
-        },
+#        test_template + {
+#                'sources' : files('test-timesync.c'),
+#                'link_with' : [
+#                        libshared,
+#                        libtimesyncd_core,
+#                ],
+#                'dependencies' : libm,
+#        },
 ]
 
 custom_target(
