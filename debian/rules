@@ -124,7 +124,7 @@ CONFFLAGS += \
 	-Dhomed=enabled \
 	-Duserdb=true \
 	-Dpcre2=enabled \
-	-Dukify=enabled \
+#	-Dukify=enabled
 	-Dbootloader=$(if $(filter x32,$(DEB_HOST_ARCH)),disabled,auto) \
 	-Dsysupdate=enabled
 else
@@ -148,7 +148,7 @@ CONFFLAGS += \
 	-Dhomed=disabled \
 	-Duserdb=false \
 	-Dpcre2=disabled \
-	-Dukify=disabled \
+#	-Dukify=disabled
 	-Dbootloader=disabled \
 	-Dsysupdate=disabled
 endif
