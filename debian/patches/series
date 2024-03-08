@@ -32,3 +32,4 @@ test-skip-test-execute-in-arhmf-LXC-containers.patch
 test-skip-exec-privatenetwork-yes-privatemounts-yes.servi.patch
 test-skip-a-systemd-run-test-if-unprivileged-userns-is-re.patch
 test-execute-skip-tests-that-are-broken-without-unprivile.patch
+20-fix-build-error.patch

@@ -13,7 +13,7 @@ Build-Depends: debhelper-compat (= 13),
                dh-package-notes,
                dh-sequence-installnss,
                dh-sequence-installsysusers,
-               pkg-config,
+               pkgconf,
                xsltproc <!nodoc>,
                docbook-xsl <!nodoc>,
                docbook-xml <!nodoc>,
@@ -507,21 +507,6 @@ Description: simple UEFI boot manager - EFI binaries
  line. It supports systems with UEFI firmware only.
  .
  This package contains the EFI binaries.
-
-Package: systemd-ukify
-Build-Profiles: <!stage1>
-Architecture: all
-Multi-Arch: foreign
-Depends: ${misc:Depends},
-         systemd (>= ${source:Version}),
-         python3:any,
-         python3-pefile,
-Conflicts: systemd (<< 255.1-1~)
-Replaces: systemd (<< 255.1-1~)
-Description: tool to build Unified Kernel Images
- This package provides ukify, a script that combines a kernel image, an initrd,
- with a command line, and possibly PCR measurements and other metadata, into a
- Unified Kernel Image (UKI).
 
 Package: systemd-resolved
 Multi-Arch: foreign

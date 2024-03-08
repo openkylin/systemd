@@ -7,7 +7,7 @@ export LC_ALL = C.UTF-8
 export DEB_CFLAGS_MAINT_APPEND = -ffat-lto-objects
 
 include /usr/share/dpkg/default.mk
-include /usr/share/debhelper/dh_package_notes/package-notes.mk
+# include /usr/share/debhelper/dh_package_notes/package-notes.mk
 
 ifeq ($(DEB_VENDOR),Ubuntu)
     DEFAULT_NTP_SERVERS = ntp.ubuntu.com
@@ -124,7 +124,7 @@ CONFFLAGS += \
 	-Dhomed=enabled \
 	-Duserdb=true \
 	-Dpcre2=enabled \
-	-Dukify=enabled \
+#	-Dukify=enabled
 	-Dbootloader=$(if $(filter x32,$(DEB_HOST_ARCH)),disabled,auto) \
 	-Dsysupdate=enabled
 else
@@ -148,7 +148,7 @@ CONFFLAGS += \
 	-Dhomed=disabled \
 	-Duserdb=false \
 	-Dpcre2=disabled \
-	-Dukify=disabled \
+#	-Dukify=disabled
 	-Dbootloader=disabled \
 	-Dsysupdate=disabled
 endif
