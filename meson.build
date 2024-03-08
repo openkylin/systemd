@@ -2440,15 +2440,16 @@ foreach dict : modules
 endforeach
 
 ############################################################
-
-ukify = custom_target(
-        'ukify',
-        input : 'src/ukify/ukify.py',
-        output : 'ukify',
-        command : [jinja2_cmdline, '@INPUT@', '@OUTPUT@'],
-        install : want_ukify,
-        install_mode : 'rwxr-xr-x',
-        install_dir : bindir)
+if want_ukify
+        ukify = custom_target(
+                'ukify',
+                input : 'src/ukify/ukify.py',
+                output : 'ukify',
+                command : [jinja2_cmdline, '@INPUT@', '@OUTPUT@'],
+                install : want_ukify,
+                install_mode : 'rwxr-xr-x',
+                install_dir : bindir)
+endif
 if want_ukify
         public_programs += ukify
 
