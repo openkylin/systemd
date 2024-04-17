@@ -1,0 +1,39 @@
+From: niubix <liaoxianfu@kylinos.cn>
+Date: Wed, 17 Apr 2024 07:55:21 +0000
+Subject: !21 fix build error Merge pull request !21 from
+ niubix/openkylin/nile
+
+---
+ meson.build | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 26ce587..232323e 100644
+--- a/meson.build
++++ b/meson.build
+@@ -2440,16 +2440,15 @@ foreach dict : modules
+ endforeach
+ 
+ ############################################################
+-if want_ukify
+-        ukify = custom_target(
+-                'ukify',
+-                input : 'src/ukify/ukify.py',
+-                output : 'ukify',
+-                command : [jinja2_cmdline, '@INPUT@', '@OUTPUT@'],
+-                install : want_ukify,
+-                install_mode : 'rwxr-xr-x',
+-                install_dir : bindir)
+-endif
++
++ukify = custom_target(
++        'ukify',
++        input : 'src/ukify/ukify.py',
++        output : 'ukify',
++        command : [jinja2_cmdline, '@INPUT@', '@OUTPUT@'],
++        install : want_ukify,
++        install_mode : 'rwxr-xr-x',
++        install_dir : bindir)
+ if want_ukify
+         public_programs += ukify
+ 
