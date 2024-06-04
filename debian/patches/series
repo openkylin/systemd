@@ -34,3 +34,4 @@ test-skip-a-systemd-run-test-if-unprivileged-userns-is-re.patch
 test-execute-skip-tests-that-are-broken-without-unprivile.patch
 20-fix-build-error.patch
 21-fix-build-error.patch
+changelog-255.2-ok1.2.patch
