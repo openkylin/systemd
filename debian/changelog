@@ -1,5 +1,11 @@
 systemd (255.2-ok1.2) nile; urgency=medium
 
+  * add ug_CN.po
+
+ -- shilongzhen <shilongzhen@kylinos.cn>  Mon, 17 Jun 2024 16:49:18 +0800
+
+systemd (255.2-ok1.2) nile; urgency=medium
+
   * modify ntp server to modify ntp server to ntp4.aliyun.com ntp3.aliyun.com ntp2.aliyun.com ntp1.aliyun.com
 
  -- liaoxianfu <liaoxianfu@kylinos.cn>  Tue, 04 Jun 2024 09:39:54 +0800
