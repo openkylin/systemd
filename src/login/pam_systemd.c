@@ -48,6 +48,16 @@
 #include "user-util.h"
 #include "userdb.h"
 
+#include "sd-path.h"
+#include "conf-files.h"
+#include "constants.h"
+#include "env-file.h"
+#include "escape.h"
+#include "glyph-util.h"
+#include "log.h"
+#include "main-func.h"
+#include "path-lookup.h"
+
 #define LOGIN_SLOW_BUS_CALL_TIMEOUT_USEC (2*USEC_PER_MINUTE)
 
 static int parse_caps(
@@ -598,6 +608,91 @@ static int pam_putenv_and_log(pam_handle_t *handle, const char *e, bool debug) {
         pam_debug_syslog(handle, debug, "PAM environment variable %s set based on user record.", e);
 
         return PAM_SUCCESS;
+}
+
+static int environment_dirs(char ***ret) {
+        _cleanup_strv_free_ char **dirs = NULL;
+        _cleanup_free_ char *c = NULL;
+        int r;
+
+        dirs = strv_new(CONF_PATHS_USR("environment.d"), NULL);
+        if (!dirs)
+                return -ENOMEM;
+
+        /* ~/.config/systemd/environment.d */
+        r = sd_path_lookup(SD_PATH_USER_CONFIGURATION, "environment.d", &c);
+        if (r < 0)
+                return r;
+
+        r = strv_extend_front(&dirs, c);
+        if (r < 0)
+                return r;
+
+        if (DEBUG_LOGGING) {
+                _cleanup_free_ char *t = NULL;
+
+                t = strv_join(dirs, "\n\t");
+                log_debug("Looking for environment.d files in (higher priority first):\n\t%s", strna(t));
+        }
+
+        *ret = TAKE_PTR(dirs);
+        return 0;
+}
+
+/*
+ *  load environment.d env to DisplayManager
+ */
+static int load_environment(pam_handle_t *handle) {
+        _cleanup_strv_free_ char **dirs = NULL, **files = NULL, **env = NULL;
+        int r;
+        char key[2048] = {0};
+
+        r = environment_dirs(&dirs);
+        if (r < 0)
+                return r;
+
+        r = conf_files_list_strv(&files, ".conf", NULL, 0, (const char **) dirs);
+        if (r < 0)
+                return r;
+
+        /* This will mutate the existing environment, based on the presumption
+         * that in case of failure, a partial update is better than none. */
+
+        STRV_FOREACH(i, files) {
+                log_debug("Reading %s%s", *i, special_glyph(SPECIAL_GLYPH_ELLIPSIS));
+
+                r = merge_env_file(&env, NULL, *i);
+                if (r == -ENOMEM)
+                        return r;
+        }
+
+        STRV_FOREACH(i, env) {
+                char *t;
+                _cleanup_free_ char *q = NULL;
+
+                t = strchr(*i, '=');
+
+                q = shell_maybe_quote(t + 1, 0);
+                if (!q)
+                	continue;
+
+                if ((int)(t-*i) < 2048) {
+                        memset(key, 0, sizeof(key));
+                        sprintf(key, "%.*s", (int) (t - *i), *i);
+                        if (!*key)
+                                continue;
+                } else {
+                        continue;
+                }
+
+                r = update_environment(handle, key, q);
+                if (r != PAM_SUCCESS)
+                        continue;
+
+                log_info("load environment: %s=%s", key, q);
+        }
+
+        return 0;
 }
 
 static int apply_user_record_settings(
@@ -1178,6 +1273,8 @@ _public_ PAM_EXTERN int pam_sm_open_session(
                 if (r != PAM_SUCCESS)
                         return r;
         }
+
+        load_environment(handle);
 
         r = pam_set_data(handle, "systemd.existing", INT_TO_PTR(!!existing), NULL);
         if (r != PAM_SUCCESS)
