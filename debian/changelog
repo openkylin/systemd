@@ -1,3 +1,15 @@
+systemd (255.2-ok1.7) nile; urgency=medium
+
+  * 更新翻译
+
+ -- Kevin Duan <duankaiwen@kylinos.cn>  Tue, 18 Jun 2024 21:01:17 +0800
+
+systemd (255.2-ok1.6) nile; urgency=medium
+
+  * 更新翻译
+
+ -- Kevin Duan <duankaiwen@kylinos.cn>  Tue, 18 Jun 2024 21:01:17 +0800
+
 systemd (255.2-ok1.5) nile; urgency=medium
 
   * use i18n-management translate ug, revert 255.2-ok1.3
