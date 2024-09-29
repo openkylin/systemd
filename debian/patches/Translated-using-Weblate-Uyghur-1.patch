@@ -1,0 +1,1466 @@
+From: KevinDuan <duankaiwen@kylinos.cn>
+Date: Sun, 29 Sep 2024 07:20:53 +0000
+Subject: Translated using Weblate (Uyghur)
+
+Currently translated at 100.0% (227 of 227 strings)
+
+Translation: openkylin-nile-new/systemd
+Translate-URL: http://weblate.openkylin.top/projects/openkylin-nile-new/systemd/ug/
+---
+ po/kk.po | 155 +++++++++++++++++++++++++++++++--------------------------------
+ po/ky.po | 146 +++++++++++++++++++++++++++++------------------------------
+ po/ug.po | 136 +++++++++++++++++++++++++++----------------------------
+ 3 files changed, 215 insertions(+), 222 deletions(-)
+
+diff --git a/po/kk.po b/po/kk.po
+index 514da7a..c6a3782 100644
+--- a/po/kk.po
++++ b/po/kk.po
+@@ -10,7 +10,7 @@ msgid ""
+ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2023-11-14 21:25+0000\n"
+-"PO-Revision-Date: 2024-08-29 13:06+0000\n"
++"PO-Revision-Date: 2024-09-29 07:22+0000\n"
+ "Last-Translator: KevinDuan <duankaiwen@kylinos.cn>\n"
+ "Language-Team: Kazakh <http://weblate.openkylin.top/projects/"
+ "openkylin-nile-new/systemd/kk/>\n"
+@@ -108,7 +108,7 @@ msgstr "بٸر وتباسى رايوننى جاڭالاۋ"
+ # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
+ #: src/home/org.freedesktop.home1.policy:44
+ msgid "Authentication is required to update a user's home area."
+-msgstr "ئابۇنتلارنىڭ وتباسى رايوننى جاڭالاۋ ٷشٸن دالەلدەۋ كەرەك."
++msgstr "قاريدارلاردىڭ وتباسى رايوننى جاڭالاۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/home/org.freedesktop.home1.policy:53
+ msgid "Resize a home area"
+@@ -130,14 +130,13 @@ msgstr "ٴۇي رايوننىڭ قۇپيا نۇمىردى وزگەرتۋ ٷشٸ
+ #, c-format
+ msgid "Home of user %s is currently absent, please plug in the necessary storage device or backing file system."
+ msgstr ""
+-"الارماندار %s نىڭ وتباسى باسمازمۇن قازىر ساقتالعان ەمەس، ٴسوزسىز بولعان "
+-"ساقتاۋ اسپابٸ ياكي تومەن دارەجەلىك حۇجات سەستاماسىن قىستىرىڭىز."
++"ابونتتار %s نىڭ وتباسى باسمازمۇن قازىر ساقتالعان ەمەس، ٴسوزسىز بولعان ساقتاۋ "
++"اسپابٸ ياكي تومەن دارەجەلىك حۇجات سەستاماسىن قىستىرىڭىز."
+ 
+ #: src/home/pam_systemd_home.c:292
+ #, c-format
+ msgid "Too frequent login attempts for user %s, try again later."
+-msgstr ""
+-"ئابۇنىتلار %s نىڭ كىرۋ سىنىعى وتە كوپ بولىپ كەتتى، سەل تۇرٸپ قاتە سىناڭ."
++msgstr "ابونتتار %s نىڭ كىرۋ سىنىعى وتە كوپ بولىپ كەتتى، سەل تۇرٸپ قاتە سىناڭ."
+ 
+ #: src/home/pam_systemd_home.c:304
+ msgid "Password: "
+@@ -196,7 +195,7 @@ msgstr "%s ٸستەتۋشٸنٸڭ حاۋىپسىزدىك تاقتاسٸندا ف
+ #: src/home/pam_systemd_home.c:404
+ #, c-format
+ msgid "Please confirm presence on security token of user %s."
+-msgstr "%sحاۋىپسىزدىك تاقتاسٸندا ابونتتارىنڭ ساقتالعان ەكەندگٸ كەسٸم جاساۋ."
++msgstr "%sحاۋىپسىزدىك تاقتاسٸندا قاريدارلاردىڭ ساقتالعان ەكەندگٸ انىقتاڭىز."
+ 
+ #: src/home/pam_systemd_home.c:415
+ #, c-format
+@@ -212,7 +211,7 @@ msgstr ""
+ #: src/home/pam_systemd_home.c:432
+ #, c-format
+ msgid "Security token PIN incorrect for user %s."
+-msgstr "الارماندار %s نىڭ حاۋىپسىزدىك تاقتاسى PIN دۇرٸس ەمەس."
++msgstr "ابونتتار %s نىڭ حاۋىپسىزدىك تاقتاسى PIN دۇرٸس ەمەس."
+ 
+ #: src/home/pam_systemd_home.c:433 src/home/pam_systemd_home.c:452
+ #: src/home/pam_systemd_home.c:471
+@@ -223,54 +222,51 @@ msgstr "كەشىرىڭ، كەشىرىڭ. حاۋىپسىزدىك تاقتاسٸن
+ #, c-format
+ msgid "Security token PIN of user %s incorrect (only a few tries left!)"
+ msgstr ""
+-"ئابۇنتلارنىڭ %s حاۋىپسىزدىك بەلگى تاقتاسى PIN دۇرٸس ەمەس (تەك بٸر نەشە رەت "
++"قاريدارلاردىڭ %s حاۋىپسىزدىك بەلگى تاقتاسى PIN دۇرٸس ەمەس (تەك بٸر نەشە رەت "
+ "قاتە سىناپ باعۋ ورايى قالدى! )"
+ 
+ #: src/home/pam_systemd_home.c:470
+ #, c-format
+ msgid "Security token PIN of user %s incorrect (only one try left!)"
+ msgstr ""
+-"قاريدارلاردىڭ %s حاۋىپسىزدىك توغىنى PIN دۇرٸس ەمەس (تەك بٸر رەتتىك قاتە "
++"قاريدارلاردىڭ %s حاۋىپسىزدىك تۇغىنى PIN دۇرٸس ەمەس (تەك بٸر رەتتىك قاتە "
+ "سىناۋ ورايى قالدى! )"
+ 
+ #: src/home/pam_systemd_home.c:616
+ #, c-format
+ msgid "Home of user %s is currently not active, please log in locally first."
+ msgstr ""
+-"الارماندار %s نىڭ وتباسى باسمازمۇن قازىرشا قوزعالتىمدى، الدٸمەن نۇ جەرگە "
++"ابونتتار %s نىڭ وتباسى باسمازمۇن قازىرشا قوزعالتىمدى، الدٸمەن نۇ جەرگە "
+ "كىرىڭىز."
+ 
+ #: src/home/pam_systemd_home.c:618
+ #, c-format
+ msgid "Home of user %s is currently locked, please unlock locally first."
+ msgstr ""
+-"الارماندار %s نىڭ وتباسى باسمازمۇن قازىر قۇلىپتاندى، الدٸمەن وسى جەردە "
+-"قۇلىبىن ٴٸشڭٸز."
++"ابونتتار %s نىڭ وتباسى باسمازمۇن قازىر قۇلىپتاندى، الدٸمەن وسى جەردە قۇلىبىن "
++"ٴٸشڭٸز."
+ 
+ #: src/home/pam_systemd_home.c:645
+ #, c-format
+ msgid "Too many unsuccessful login attempts for user %s, refusing."
+ msgstr ""
+-"ئابۇنىتلار %s كوپ رەت ناتيجەلى بولماعان كىرۋ سىنىعى العان، كىرۋنى رەت "
+-"ورىندادى."
++"ابونتتار %s كوپ رەت ٴساتتٸ بولماعان كىرۋ سىنىعى العان، كىرۋدى رەت ورىندادى."
+ 
+ #: src/home/pam_systemd_home.c:868
+ msgid "User record is blocked, prohibiting access."
+-msgstr "ئابونېنتچىلار ەستەلىگى، توسىپ قېلىندى ۇسىنس ەتۋ تيىم سالىنعان قىلىندى."
++msgstr "ئابۇنىچىلار ەستەلىگى، توسىپ قېلىندى ۇسىنس ەتۋ مانى قىلىندى."
+ 
+ #: src/home/pam_systemd_home.c:872
+ msgid "User record is not valid yet, prohibiting access."
+-msgstr ""
+-"الارماندار ەستەلىگى ٵلٸ كۇشكە يە بولمادى، ۇسىنس ەتۋ تيىم سالىنعان قىلىندى."
++msgstr "ابونتتار ەستەلىگى ٵلٸ كۇشكە يە بولمادى، ۇسىنس ەتۋ مانى قىلىندى."
+ 
+ #: src/home/pam_systemd_home.c:876
+ msgid "User record is not valid anymore, prohibiting access."
+-msgstr ""
+-"الارماندار ەستەلىگى، ەندٸ كۇشكە يە بولمايدى ۇسىنس ەتۋ تيىم سالىنعان قىلىندى."
++msgstr "ابونتتار ەستەلىگى، ەندٸ كۇشكە يە بولمايدى ۇسىنس ەتۋ مانى قىلىندى."
+ 
+ #: src/home/pam_systemd_home.c:881 src/home/pam_systemd_home.c:932
+ msgid "User record not valid, prohibiting access."
+-msgstr "ئابونېنتچىلار ەستەلىگى كۇشكە يە ەمەس، ۇسىنس ەتۋ تيىم سالىنعان قىلىندى."
++msgstr "ئابۇنىچىلار ەستەلىگى كۇشكە يە ەمەس، ۇسىنس ەتۋ مانى قىلىندى."
+ 
+ #: src/home/pam_systemd_home.c:893
+ #, c-format
+@@ -329,7 +325,7 @@ msgstr "تاۋار UUID عا يە بولۋ"
+ 
+ #: src/hostname/org.freedesktop.hostname1.policy:52
+ msgid "Authentication is required to get product UUID."
+-msgstr "تاۋار UUID عا يە بولۋ ئۈچۈندەلىللەش كەرەك."
++msgstr "تاۋار UUID عا يە بولۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/hostname/org.freedesktop.hostname1.policy:61
+ msgid "Get hardware serial number"
+@@ -390,23 +386,23 @@ msgstr "سەستيما كىنوپكا تاقتاسى ورنالاسترعان ە
+ #: src/login/org.freedesktop.login1.policy:22
+ msgid "Allow applications to inhibit system shutdown"
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ بەكتلىپ قىلىنۋى توسۇشىغا جول قويىڭىز"
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ بەكتلىپ قىلىنۋى توسۇشىغا جول قويىڭىز"
+ 
+ #: src/login/org.freedesktop.login1.policy:23
+ msgid "Authentication is required for an application to inhibit system shutdown."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ بەكتلىپ قىلىنۋى توسۇشىغا جول قويۋ "
+-"ٷشٸن دالەلدەۋ كەرەك."
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ بەكتلىپ قىلىنۋى توسۇشىغا جول قويۋ ٷشٸن "
++"دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:33
+ msgid "Allow applications to delay system shutdown"
+-msgstr "قولدانعىش پٸروگٸراممانٸ كەشىكتىرىپ سەستامانى ئېتىۋېتىشكە جول قويۋ."
++msgstr "قولدانعىش پروگراممانى كەشىكتىرىپ سەستامانى ئېتىۋېتىشكە جول قويۋ."
+ 
+ #: src/login/org.freedesktop.login1.policy:34
+ msgid "Authentication is required for an application to delay system shutdown."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ ئېتىلىشىنى كېچىكتۈرۈشىگە جول قويۋ "
+-"ٷشٸن دالەلدەۋ كەرەك."
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ ئېتىلىشىنى كېچىكتۈرۈشىگە جول قويۋ ٷشٸن "
++"دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:44
+ msgid "Allow applications to inhibit system sleep"
+@@ -415,7 +411,7 @@ msgstr "ئەپلەرنىڭ سەستيما ۇيقىسىن توسۇشىغا جول
+ #: src/login/org.freedesktop.login1.policy:45
+ msgid "Authentication is required for an application to inhibit system sleep."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستيما ۇيقىسىن توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ "
++"قولدانعىش پرٶگراممالاردىڭ سەستيما ۇيقىسىن توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ "
+ "كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:55
+@@ -425,100 +421,99 @@ msgstr "ئەپلەرنىڭ سەستيما ۇيقىسىن كېچىكتۈرۈشى
+ #: src/login/org.freedesktop.login1.policy:56
+ msgid "Authentication is required for an application to delay system sleep."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستيما ۇيقىسىن كېچىكتۈرۈشىگە جول قويۋ ٷشٸن "
++"قولدانعىش پرٶگراممالاردىڭ سەستيما ۇيقىسىن كېچىكتۈرۈشىگە جول قويۋ ٷشٸن "
+ "دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:65
+ msgid "Allow applications to inhibit automatic system suspend"
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ اۆتوماتتى ئېسىلىشىنى توسۇشىغا جول "
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ اۆتوماتتى ئېسىلىشىنى توسۇشىغا جول "
+ "قويىڭىز"
+ 
+ #: src/login/org.freedesktop.login1.policy:66
+ msgid "Authentication is required for an application to inhibit automatic system suspend."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ اۆتوماتتى ئېسىلىشىنى توسۇشىغا جول "
+-"قويۋ كەرەك."
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ اۆتوماتتى ئېسىلىشىنى توسۇشىغا جول قويۋ "
++"كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:75
+ msgid "Allow applications to inhibit system handling of the power key"
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ توك قاينار كىنوپكاسىنا جاۋاپ "
+-"قايتارۋىن توسۇشىغا جول قويىڭىز"
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ توك قاينار كىنوپكاسىنا جاۋاپ قايتارۋىن "
++"توسۇشىغا جول قويىڭىز"
+ 
+ #: src/login/org.freedesktop.login1.policy:76
+ msgid "Authentication is required for an application to inhibit system handling of the power key."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ توك قاينار كىنوپكاسىنا جاۋاپ "
+-"قايتارۋىن توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ كەرەك."
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ توك قاينار كىنوپكاسىنا جاۋاپ قايتارۋىن "
++"توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:86
+ msgid "Allow applications to inhibit system handling of the suspend key"
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ كنوپكانى اسىپ قويۋعا جاۋاپ قايتارۋىن "
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ كىنوپكانى اسىپ قويۋعا جاۋاپ قايتارۋىن "
+ "توسۇشىغا جول قويىڭىز"
+ 
+ #: src/login/org.freedesktop.login1.policy:87
+ msgid "Authentication is required for an application to inhibit system handling of the suspend key."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ كىنوپكانى اسۋعا جاۋاپ قايتارۋىن "
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ كىنوپكانى اسۋعا جاۋاپ قايتارۋىن "
+ "توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:97
+ msgid "Allow applications to inhibit system handling of the hibernate key"
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ كنوپكانى اسىپ قويۋعا جاۋاپ قايتارۋىن "
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ كىنوپكانى اسىپ قويۋعا جاۋاپ قايتارۋىن "
+ "توسۇشىغا جول قويىڭىز"
+ 
+ #: src/login/org.freedesktop.login1.policy:98
+ msgid "Authentication is required for an application to inhibit system handling of the hibernate key."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ كىنوپكانى اسۋعا جاۋاپ قايتارۋىن "
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ كىنوپكانى اسۋعا جاۋاپ قايتارۋىن "
+ "توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:107
+ msgid "Allow applications to inhibit system handling of the lid switch"
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ ەستەلىك كومپيوتوردىڭ ٷستٸن قاپقىقىنىڭ "
+-"ايىرپ قوسقىش ۋەقەسىگە جاۋاپ قايتارۋىن توسۇشىغا جول قويىڭىز"
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ ەستەلىك كومپيوتوردىڭ ٷستٸن قاپقىقىنىڭ "
++"ئۈزچات ۋەقەسىگە جاۋاپ قايتارۋىن توسۇشىغا جول قويىڭىز"
+ 
+ #: src/login/org.freedesktop.login1.policy:108
+ msgid "Authentication is required for an application to inhibit system handling of the lid switch."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ ەستەلىك كومپيوتوردىڭ ٷستٸنكٸ "
+-"قاپقىقىدىكى ۋىكليۇچاتېلغا جاۋاپ قايتارۋىن توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ "
+-"كەرەك."
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ ەستەلىك كومپيوتوردىڭ ٷستٸنكٸ "
++"قاپقىقىدىكى ئۈزچاتقا جاۋاپ قايتارۋىن توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:117
+ msgid "Allow applications to inhibit system handling of the reboot key"
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ قاتە قوزعالتۋ كىنوپكاسىنا جاۋاپ "
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ قاتە قوزعالتۋ كىنوپكاسىنا جاۋاپ "
+ "قايتارۋىن توسۇشىغا جول قويىڭىز"
+ 
+ #: src/login/org.freedesktop.login1.policy:118
+ msgid "Authentication is required for an application to inhibit system handling of the reboot key."
+ msgstr ""
+-"قولدانعىش پٸروگٸراممالاردٸڭ سەستامانىڭ قاتە قوزعالتۋ كىنوپكاسىنا جاۋاپ "
++"قولدانعىش پرٶگراممالاردىڭ سەستامانىڭ قاتە قوزعالتۋ كىنوپكاسىنا جاۋاپ "
+ "قايتارۋىن توسۇشىغا جول قويۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:128
+ msgid "Allow non-logged-in user to run programs"
+-msgstr "تٸزٸمدەتٸپ كىرمەگەن ابونتتارىنڭ اتقار ەتۋ پٸروگٸرامماسٸ."
++msgstr "تٸزٸمدەتٸپ كىرمەگەن قاريدارلاردىڭ اتقار ەتۋ پىروگىرامماسى."
+ 
+ #: src/login/org.freedesktop.login1.policy:129
+ msgid "Explicit request is required to run programs as a non-logged-in user."
+ msgstr ""
+-"تىزىمگە الدىرماعان الارماندار پٸروگٸرامماسٸن اتقار ورىنداۋى كەرەك، انىق "
+-"تالاپ ەتۋ كەرەك."
++"تىزىمگە الدىرماعان ابونتتار پروگىرامماسىن اتقار ورىنداۋى كەرەك، انىق تالاپ "
++"ەتۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:138
+ msgid "Allow non-logged-in users to run programs"
+-msgstr "تٸزٸمدەتٸپ كىرمەگەن ابونتتارىنڭ اتقار ەتۋ پٸروگٸرامماسٸ."
++msgstr "تٸزٸمدەتٸپ كىرمەگەن قاريدارلاردىڭ اتقار ەتۋ پىروگىرامماسى."
+ 
+ #: src/login/org.freedesktop.login1.policy:139
+ msgid "Authentication is required to run programs as a non-logged-in user."
+ msgstr ""
+-"تٸزٸمدەتٸپ كىرمەگەن ابونتتارىنڭ اتقار ەتۋ پٸروگٸرامماسٸن دالەلدەۋ كەرەك."
++"تٸزٸمدەتٸپ كىرمەگەن قاريدارلاردىڭ اتقار ەتۋ پروگىرامماسىن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:148
+ msgid "Allow attaching devices to seats"
+@@ -544,7 +539,7 @@ msgstr ""
+ 
+ #: src/login/org.freedesktop.login1.policy:169
+ msgid "Power off the system"
+-msgstr "سەستەماسىن جابىپ الۋ"
++msgstr "سەستامانى جابىپ الۋ"
+ 
+ #: src/login/org.freedesktop.login1.policy:170
+ msgid "Authentication is required to power off the system."
+@@ -553,12 +548,12 @@ msgstr "سەستامانى تاقاۋ ٷشٸن دالەلدەۋ كەرەك."
+ #: src/login/org.freedesktop.login1.policy:180
+ msgid "Power off the system while other users are logged in"
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ بولعان ئابۇنتلار ساقتالعان بولعاندا جانەدە بەكتۋلى بولادٸ."
++"باسقا تٸزٸمدەتٸپ بولعان ابونتتار ساقتالعان بولعاندا جانەدە بەكتۋلى بولادٸ."
+ 
+ #: src/login/org.freedesktop.login1.policy:181
+ msgid "Authentication is required to power off the system while other users are logged in."
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ كىرگۈگەن ئابۇنتلار ساقتالعان بولعاندا سەستامانى جابىپ الۋ "
++"باسقا تٸزٸمدەتٸپ كىرگۈگەن ابونتتار ساقتالعان بولعاندا سەستامانى جابىپ الۋ "
+ "ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:191
+@@ -568,8 +563,8 @@ msgstr "باسقا ئەپلەر توسقاندا جانەدە بەكتلەدى."
+ #: src/login/org.freedesktop.login1.policy:192
+ msgid "Authentication is required to power off the system while an application is inhibiting this."
+ msgstr ""
+-"باسقا قولدانعىش پٸروگٸراممالاردٸڭ بەكتلىپ قىلىنۋى توسقاندا سەستامانى جابىپ "
+-"الۋ ٷشٸن دالەلدەۋ كەرەك."
++"باسقا قولدانعىش پرٶگراممالاردىڭ بەكتلىپ قىلىنۋى توسقاندا سەستامانى جابىپ الۋ "
++"ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:202
+ msgid "Reboot the system"
+@@ -582,12 +577,12 @@ msgstr "سەستامانى قاتە قوزعالتۋ ٷشٸن دالەلدەۋ 
+ #: src/login/org.freedesktop.login1.policy:213
+ msgid "Reboot the system while other users are logged in"
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ بولعان ئابۇنتلار ساقتالعان بولعاندا جانەدە قاتە قوزعالدى"
++"باسقا تٸزٸمدەتٸپ بولعان ابونتتار ساقتالعان بولعاندا جانەدە قاتە قوزعالدى"
+ 
+ #: src/login/org.freedesktop.login1.policy:214
+ msgid "Authentication is required to reboot the system while other users are logged in."
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ بولعان ئابۇنتلار ساقتالعان بولعاندا سەستامانى قاتە قوزعالتۋ "
++"باسقا تٸزٸمدەتٸپ بولعان ابونتتار ساقتالعان بولعاندا سەستامانى قاتە قوزعالتۋ "
+ "ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:224
+@@ -602,7 +597,7 @@ msgstr ""
+ 
+ #: src/login/org.freedesktop.login1.policy:235
+ msgid "Halt the system"
+-msgstr "سەستەماسىن توقتاتۋ"
++msgstr "سەستامانى توقتاتۋ"
+ 
+ #: src/login/org.freedesktop.login1.policy:236
+ msgid "Authentication is required to halt the system."
+@@ -611,28 +606,28 @@ msgstr "سەستامانى توقتاتۋ ٷشٸن دالەلدەۋ كەرەك."
+ #: src/login/org.freedesktop.login1.policy:246
+ msgid "Halt the system while other users are logged in"
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ بولعان ئابۇنتلار ساقتالعان بولعاندا جانەدە سەستامانى "
++"باسقا تٸزٸمدەتٸپ بولعان ابونتتار ساقتالعان بولعاندا جانەدە سەستامانى "
+ "توقتاتادٸ"
+ 
+ #: src/login/org.freedesktop.login1.policy:247
+ msgid "Authentication is required to halt the system while other users are logged in."
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ كىرگۈگەن ئابۇنتلار ساقتالعان بولعاندا سەستامانى توقتاتۋ "
+-"ٷشٸن دالەلدەۋ كەرەك."
++"باسقا تٸزٸمدەتٸپ كىرگۈگەن ابونتتار ساقتالعان بولعاندا سەستامانى توقتاتۋ ٷشٸن "
++"دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:257
+ msgid "Halt the system while an application is inhibiting this"
+ msgstr ""
+-"قولدانعىش پٸروگٸرامما توسۋ ساقتالعان بولعاندا جانەدە سەستامانى توقتاتۋ كەرەك"
++"قولدانعىش پروگرامما توسۋ ساقتالعان بولعاندا جانەدە سەستامانى توقتاتۋ كەرەك"
+ 
+ #: src/login/org.freedesktop.login1.policy:258
+ msgid "Authentication is required to halt the system while an application is inhibiting this."
+ msgstr ""
+-"قولدانعىش پٸروگٸرامما سەستامانى توقتاتۋدى توسقاندا دالەلدەۋگە دۇرٸس كەلەدى."
++"قولدانعىش پروگرامما سەستامانى توقتاتۋدى توسقاندا دالەلدەۋگە دۇرٸس كەلەدى."
+ 
+ #: src/login/org.freedesktop.login1.policy:268
+ msgid "Suspend the system"
+-msgstr "سەستەماسىن اسىپ قويۋ"
++msgstr "سەستامانى اسىپ قويۋ"
+ 
+ #: src/login/org.freedesktop.login1.policy:269
+ msgid "Authentication is required to suspend the system."
+@@ -647,19 +642,19 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:279
+ msgid "Authentication is required to suspend the system while other users are logged in."
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ بولعان ئابۇنىتلار ساقتالعان بولعاندا سەستامانى اسىپ قويۋ "
+-"ٷشٸن دالەلدەۋ كەرەك."
++"باسقا تٸزٸمدەتٸپ بولعان ابونتتار ساقتالعان بولعاندا سەستامانى اسىپ قويۋ ٷشٸن "
++"دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:289
+ msgid "Suspend the system while an application is inhibiting this"
+ msgstr ""
+-"باسقا قولدانعىش پٸروگٸرامما توسقىندىققا كەزٸككەندە جانەدە سەستامانى اسىپ "
++"باسقا قولدانعىش پروگرامما توسقىندىققا كەزٸككەندە جانەدە سەستامانى اسىپ "
+ "قويىڭىز."
+ 
+ #: src/login/org.freedesktop.login1.policy:290
+ msgid "Authentication is required to suspend the system while an application is inhibiting this."
+ msgstr ""
+-"باسقا قولدانعىش پٸروگٸراممالار اسۋدى توسقاندا سەستامانى اسىۋ ٷشٸن دالەلدەۋ "
++"باسقا قولدانعىش پىروگراممىلار اسۋدى توسقاندا سەستامانى اسىۋ ٷشٸن دالەلدەۋ "
+ "كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:300
+@@ -668,7 +663,7 @@ msgstr "مۈگدەش سەستيماسى"
+ 
+ #: src/login/org.freedesktop.login1.policy:301
+ msgid "Authentication is required to hibernate the system."
+-msgstr "مۈگدەش سەستيماسىن دالەلدەۋ كەرەك."
++msgstr "مۈگدەش سەستاماسىن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:310
+ msgid "Hibernate the system while other users are logged in"
+@@ -679,7 +674,7 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:311
+ msgid "Authentication is required to hibernate the system while other users are logged in."
+ msgstr ""
+-"باسقا تٸزٸمدەتٸپ كىرگۈگەن ئابۇنىتلار ساقتالعان بولعاندا قىسقى ۇيقىعا كىرۋ "
++"باسقا تٸزٸمدەتٸپ كىرگۈگەن ابونتتار ساقتالعان بولعاندا قىسقى ۇيقىعا كىرۋ "
+ "سەستاماسىن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:321
+@@ -730,24 +725,24 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:374
+ msgid "Indicate to the boot loader to boot to the boot loader menu"
+ msgstr ""
+-"كورسەتپە جۇكتەۋ پٸروگٸرامماسٸن قوزعالتۋ جۇكتەۋ پٸروگٸرامماسٸ تىزىمدىگىنە "
++"كورسەتپە جۇكتەۋ پروگىرامماسىن قوزعالتۋ جۇكتەۋ پىروگىرامماسى تىزىمدىگىنە "
+ "كورسەتپە بەرۋ"
+ 
+ #: src/login/org.freedesktop.login1.policy:375
+ msgid "Authentication is required to indicate to the boot loader to boot to the boot loader menu."
+ msgstr ""
+-"كورسەتپە جۇكتەۋ پٸروگٸرامماسٸ قوزغىتىلغۇچە جەتەكتەۋ جۇكتەۋ پٸروگٸرامماسٸ "
++"كورسەتپە جۇكتەۋ پىروگىرامماسى قوزغالغۇچە جەتەكتەۋ جۇكتەۋ پىروگىرامماسى "
+ "تٸزٸمدٸگٸ دەلىللىنىشى كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:385
+ msgid "Indicate to the boot loader to boot a specific entry"
+ msgstr ""
+-"كورسەتپە جۇكتەۋ پٸروگٸرامماسٸ بەلگٸلەنگەن توردى قوزعالتۋعا يېتەكچىلىك ىستەيدى"
++"كورسەتپە جۇكتەۋ پىروگىرامماسى بەلگٸلەنگەن توردى قوزعالتۋعا يېتەكچىلىك ىستەيدى"
+ 
+ #: src/login/org.freedesktop.login1.policy:386
+ msgid "Authentication is required to indicate to the boot loader to boot into a specific boot loader entry."
+ msgstr ""
+-"كورسەتپە جۇكتەۋ پٸروگٸرامماسٸن قوزعالتىپ بەلگٸلەنگەن جەتەكتەۋ جۇكتەۋ تۇرگە "
++"كورسەتپە جۇكتەۋ پروگىرامماسىن قوزعالتىپ بەلگٸلەنگەن جەتەكتەۋ جۇكتەۋ تۇرگە "
+ "كىرگىزۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:396
+@@ -768,11 +763,11 @@ msgstr "جاساندى اقىرىن وزگەرتۋ ٷشٸن دالەلدەۋ ك
+ 
+ #: src/machine/org.freedesktop.machine1.policy:22
+ msgid "Log into a local container"
+-msgstr "جەرلىك شىنىعا كىرۋ"
++msgstr "جەرلىككە كىرۋ"
+ 
+ #: src/machine/org.freedesktop.machine1.policy:23
+ msgid "Authentication is required to log into a local container."
+-msgstr "بٸر جەرلىك شىنىعا كىرۋ ٷشٸن دالەلدەۋ كەرەك."
++msgstr "بٸر جەرلىككە كىرۋ ٷشٸن دالەلدەۋ كەرەك."
+ 
+ #: src/machine/org.freedesktop.machine1.policy:32
+ msgid "Log into the local host"
+@@ -1046,7 +1041,7 @@ msgstr ""
+ 
+ #: src/timedate/org.freedesktop.timedate1.policy:53
+ msgid "Turn network time synchronization on or off"
+-msgstr "تور ۋاقىتىن بۇرشاق قادامداستىرۋدى ٸشٸۋ ياكي تاقاۋ"
++msgstr "تور ۋاقىتىن بۇرشاق قادامداستىرعىش ٸشٸۋ ياكي تاقاۋ"
+ 
+ #: src/timedate/org.freedesktop.timedate1.policy:54
+ msgid "Authentication is required to control whether network time synchronization shall be enabled."
+diff --git a/po/ky.po b/po/ky.po
+index 1732ad7..e4c81ef 100644
+--- a/po/ky.po
++++ b/po/ky.po
+@@ -10,7 +10,7 @@ msgid ""
+ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2023-11-14 21:25+0000\n"
+-"PO-Revision-Date: 2024-08-29 13:06+0000\n"
++"PO-Revision-Date: 2024-09-29 07:22+0000\n"
+ "Last-Translator: KevinDuan <duankaiwen@kylinos.cn>\n"
+ "Language-Team: Kyrgyz <http://weblate.openkylin.top/projects/"
+ "openkylin-nile-new/systemd/ky/>\n"
+@@ -87,7 +87,7 @@ msgstr "بىر  ۉي بۉلۅۅ رايونۇ  پايدا قىلۇۇ جاسوو 
+ #: src/home/org.freedesktop.home1.policy:14
+ msgid "Authentication is required to create a user's home area."
+ msgstr ""
+-"ىشتەتۉۉچۉلۅردۉن ۉي بۉلۅۅ رايونۇن  پايدا قىلۇۇ جاسوو ،اتقارۇۇ  ۉچۉن  دالىلدۅ "
++"ابونىتتاردىن ۉي بۉلۅۅ رايونۇن  پايدا قىلۇۇ جاسوو ،اتقارۇۇ  ۉچۉن  دالىلدۅ "
+ "كەرەك."
+ 
+ #: src/home/org.freedesktop.home1.policy:23
+@@ -115,7 +115,7 @@ msgstr "بىر  ۉي بۉلۅۅ رايونۇن  جاڭىلوو"
+ # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
+ #: src/home/org.freedesktop.home1.policy:44
+ msgid "Authentication is required to update a user's home area."
+-msgstr "ئابۇنتلارنىڭ ۉي بۉلۅۅ رايونۇن  جاڭىلوو ۉچۉن  دالىلدۅ كەرەك."
++msgstr "ابونىتتاردىن ۉي بۉلۅۅ رايونۇن  جاڭىلوو ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/home/org.freedesktop.home1.policy:53
+ msgid "Resize a home area"
+@@ -144,7 +144,7 @@ msgstr ""
+ #, c-format
+ msgid "Too frequent login attempts for user %s, try again later."
+ msgstr ""
+-"ئابۇنىتلار %s نىڭ  كىرۉۉ  سىنىعى ۅتۅ  كۅپ بولۇپ كەتتى، سەل تۇرۇپ قايرا سىناڭ."
++"ابونتتار %s نىڭ  كىرۉۉ  سىنىعى ۅتۅ  كۅپ بولۇپ كەتتى، سەل تۇرۇپ قايرا سىناڭ."
+ 
+ #: src/home/pam_systemd_home.c:304
+ msgid "Password: "
+@@ -154,7 +154,7 @@ msgstr "جاشىرۇۇن  نومۇرۇ : "
+ #, c-format
+ msgid "Password incorrect or not sufficient for authentication of user %s."
+ msgstr ""
+-"ىشتەتۉۉچۉلۅردۉن %s جاشىرۇۇن  نومۇرۇ  تۇۇرا  ەمەس  كۅرۉنۉشتۅرۉ دالىلدۅنۉ "
++"ابونىتتاردىن %s جاشىرۇۇن  نومۇرۇ  تۇۇرا  ەمەس  كۅرۉنۉشتۅرۉ دالىلدۅنۉ "
+ "بۉتۉرۉشكە  جەتبەيت."
+ 
+ #: src/home/pam_systemd_home.c:307
+@@ -204,7 +204,7 @@ msgstr "%s ىشتەتكۉۉچۉنۉن  قووپسۇزدۇق  تاقتاسىند
+ #: src/home/pam_systemd_home.c:404
+ #, c-format
+ msgid "Please confirm presence on security token of user %s."
+-msgstr "%sقووپسۇزدۇق  تاقتاسىندا ابونتتارردىن باربولۇۇسۇ  ەكەندىگى  بەكىتىڭ."
++msgstr "%sقووپسۇزدۇق  تاقتاسىندا ابونىتتاردىن باربولۇۇسۇ  ەكەندىگى  ايقىنداڭ."
+ 
+ #: src/home/pam_systemd_home.c:415
+ #, c-format
+@@ -231,14 +231,14 @@ msgstr "كەچىرۉۉ، كەچىرۉۉ. قووپسۇزدۇق   تاقتاسىن
+ #, c-format
+ msgid "Security token PIN of user %s incorrect (only a few tries left!)"
+ msgstr ""
+-"ئابۇنتلارنىڭ %s قووپسۇزدۇق  بەلگە  تاقتاسى PIN تۇۇرا  ەمەس  (جالاڭ عانا  "
++"ابونىتتاردىن %s قووپسۇزدۇق  بەلگە  تاقتاسى PIN تۇۇرا  ەمەس  (جالاڭ عانا  "
+ "بىر  قانچا  ىرەت  قايرا سىناپ باعۇۇ مۅۅرتۉ قالدى! )"
+ 
+ #: src/home/pam_systemd_home.c:470
+ #, c-format
+ msgid "Security token PIN of user %s incorrect (only one try left!)"
+ msgstr ""
+-"ىشتەتۉۉچۉلۅردۉن %s قووپسۇزدۇق  توغىنى PIN تۇۇرا  ەمەس  (جالاڭ عانا  بىر  "
++"ابونىتتاردىن %s قووپسۇزدۇق  تۇغىنى PIN تۇۇرا  ەمەس  (جالاڭ عانا  بىر  "
+ "قاتىمدۇۇ قايرا سىنوو  مۅۅرتۉ قالدى! )"
+ 
+ #: src/home/pam_systemd_home.c:616
+@@ -259,32 +259,31 @@ msgstr ""
+ #, c-format
+ msgid "Too many unsuccessful login attempts for user %s, refusing."
+ msgstr ""
+-"ئابۇنىتلار %s كۅپ ىقاتار  جەڭىشتۉۉ بولبوعون  كىرۉۉ  سىنىعى جاساعان ، كىرۉۉ "
+-"نى قاتار قىلدى."
++"ابونتتار %s كۅپ ىرەت  جەڭىشتۉۉ بولبوعون  كىرۉۉ  سىنىعى جاساعان ، كىرۉۉنۉ "
++"قاتار قىلدى."
+ 
+ #: src/home/pam_systemd_home.c:868
+ msgid "User record is blocked, prohibiting access."
+ msgstr ""
+-"ئابونېنتچىلار قاتىرەسىن، توسۇپ   قىلىندى زىيارات جاسوو ،اتقارۇۇ  تىيۇۇ   ، "
+-"بوشوتۇۇ جاسالات."
++"ئابۇنىچىلار قاتىرەسىن، توسۇپ   قىلىندى زىيارات جاسوو ،اتقارۇۇ  چەكتۅۅ "
++"جاسالات."
+ 
+ #: src/home/pam_systemd_home.c:872
+ msgid "User record is not valid yet, prohibiting access."
+ msgstr ""
+ "ابونتتار قاتىرەسىن داعى كۉچۉنۅ ەە بولموق  بولبودۇ، زىيارات جاسوو ،اتقارۇۇ  "
+-"تىيۇۇ   ، بوشوتۇۇ جاسالات."
++"چەكتۅۅ جاسالات."
+ 
+ #: src/home/pam_systemd_home.c:876
+ msgid "User record is not valid anymore, prohibiting access."
+ msgstr ""
+ "ابونتتار قاتىرەسىن، ەمى كۉچۉنۅ ەە بولموق  بولبويت  زىيارات جاسوو ،اتقارۇۇ  "
+-"تىيۇۇ   ، بوشوتۇۇ جاسالات."
++"چەكتۅۅ جاسالات."
+ 
+ #: src/home/pam_systemd_home.c:881 src/home/pam_systemd_home.c:932
+ msgid "User record not valid, prohibiting access."
+ msgstr ""
+-"ئابونېنتچىلار قاتىرەسىن ەسەپ ەمەس، زىيارات جاسوو ،اتقارۇۇ  تىيۇۇ   ، بوشوتۇۇ "
+-"جاسالات."
++"ئابۇنىچىلار قاتىرەسىن ەسەپ ەمەس، زىيارات جاسوو ،اتقارۇۇ  چەكتۅۅ جاسالات."
+ 
+ #: src/home/pam_systemd_home.c:893
+ #, c-format
+@@ -352,7 +351,7 @@ msgstr "تۉشۉم  UUID عا ەە بولۇۇ"
+ 
+ #: src/hostname/org.freedesktop.hostname1.policy:52
+ msgid "Authentication is required to get product UUID."
+-msgstr "تۉشۉم  UUID عا ەە بولۇۇ  ئۈچۈندەلىللەش كەرەك."
++msgstr "تۉشۉم  UUID عا ەە بولۇۇ  ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/hostname/org.freedesktop.hostname1.policy:61
+ msgid "Get hardware serial number"
+@@ -417,13 +416,13 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:22
+ msgid "Allow applications to inhibit system shutdown"
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن ەتىلىپ قېلىشىنى توسۇشىغا جول قويۇڭ"
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن ەتىلىپ قېلىشىنى توسۇشىغا جول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:23
+ msgid "Authentication is required for an application to inhibit system shutdown."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن ەتىلىپ قېلىشىنى توسۇشىغا جول "
+-"قويۇش  ۉچۉن  دالىلدۅ كەرەك."
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن ەتىلىپ قېلىشىنى توسۇشىغا جول قويۇش  "
++"ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:33
+ msgid "Allow applications to delay system shutdown"
+@@ -432,8 +431,8 @@ msgstr "قولدونۇشچان  پراگراممانى كەچكىتىرىپ  س
+ #: src/login/org.freedesktop.login1.policy:34
+ msgid "Authentication is required for an application to delay system shutdown."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن ئېتىلىشىنى كېچىكتۈرۈشىگە جول "
+-"قويۇش  ۉچۉن  دالىلدۅ كەرەك."
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن ئېتىلىشىنى كېچىكتۈرۈشىگە جول قويۇش  "
++"ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:44
+ msgid "Allow applications to inhibit system sleep"
+@@ -442,7 +441,7 @@ msgstr "ئەپلەرنىڭ ساامالىق  ئۇيقۇسىنى توسۇشىغا
+ #: src/login/org.freedesktop.login1.policy:45
+ msgid "Authentication is required for an application to inhibit system sleep."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  ساامالىق  ئۇيقۇسىنى توسۇشىغا جول قويۇش  ۉچۉن  "
++"قولدونۇشچان پىروگىراممالاردىن ساامالىق  ئۇيقۇسىنى توسۇشىغا جول قويۇش  ۉچۉن  "
+ "دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:55
+@@ -452,102 +451,102 @@ msgstr "ئەپلەرنىڭ ساامالىق  ئۇيقۇسىنى كېچىكتۈر
+ #: src/login/org.freedesktop.login1.policy:56
+ msgid "Authentication is required for an application to delay system sleep."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  ساامالىق  ئۇيقۇسىنى كېچىكتۈرۈشىگە جول قويۇش  "
++"قولدونۇشچان پىروگىراممالاردىن ساامالىق  ئۇيقۇسىنى كېچىكتۈرۈشىگە جول قويۇش  "
+ "ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:65
+ msgid "Allow applications to inhibit automatic system suspend"
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن اپتوماتتىك ئېسىلىشىنى توسۇشىغا جول "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن اپتوماتتىك ئېسىلىشىنى توسۇشىغا جول "
+ "قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:66
+ msgid "Authentication is required for an application to inhibit automatic system suspend."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن اپتوماتتىك ئېسىلىشىنى توسۇشىغا جول "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن اپتوماتتىك ئېسىلىشىنى توسۇشىغا جول "
+ "قويۇش  كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:75
+ msgid "Allow applications to inhibit system handling of the power key"
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن تۅك كەلۉۉ جەر جانى  كونۇپكاسىنا  "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن تۅك كەلۉۉ جەر جانى  كونۇپكاسىنا  "
+ "ىنكاس قايتارىشىن توسۇشىغا جول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:76
+ msgid "Authentication is required for an application to inhibit system handling of the power key."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن تۅك كەلۉۉ جەر جانى  كونۇپكاسىنا  "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن تۅك كەلۉۉ جەر جانى  كونۇپكاسىنا  "
+ "ىنكاس قايتارىشىن توسۇشىغا جول قويۇش  ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:86
+ msgid "Allow applications to inhibit system handling of the suspend key"
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن  كۇنۇپكانى اسىپ قويۇشقا  ىنكاس "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن كونۇپكانى  اسىپ قويۇشقا  ىنكاس "
+ "قايتارىشىن توسۇشىغا جول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:87
+ msgid "Authentication is required for an application to inhibit system handling of the suspend key."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن كونۇپكانى  ئېسىشقا ىنكاس "
+-"قايتارىشىن توسۇشىغا جول قويۇش  ۉچۉن  دالىلدۅ كەرەك."
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن كونۇپكانى  ئېسىشقا ىنكاس قايتارىشىن "
++"توسۇشىغا جول قويۇش  ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:97
+ msgid "Allow applications to inhibit system handling of the hibernate key"
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن  كۇنۇپكانى اسىپ قويۇشقا  ىنكاس "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن كونۇپكانى  اسىپ قويۇشقا  ىنكاس "
+ "قايتارىشىن توسۇشىغا جول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:98
+ msgid "Authentication is required for an application to inhibit system handling of the hibernate key."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن كونۇپكانى  ئېسىشقا ىنكاس "
+-"قايتارىشىن توسۇشىغا جول قويۇش  ۉچۉن  دالىلدۅ كەرەك."
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن كونۇپكانى  ئېسىشقا ىنكاس قايتارىشىن "
++"توسۇشىغا جول قويۇش  ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:107
+ msgid "Allow applications to inhibit system handling of the lid switch"
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن جازما دارەك  ەلەكتىروندۇق مەە  "
+-"ۉستۉ قاپقىقىنىڭ ۋىكلىۇچاتەل ۋەقەسىگە ىنكاس قايتارىشىن توسۇشىغا جول قويۇڭ"
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن جازما دارەك  ەلەكتىروندۇق مەە  ۉستۉ "
++"قاپقىقىنىڭ ئۈزچات ۋەقەسىگە ىنكاس قايتارىشىن توسۇشىغا جول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:108
+ msgid "Authentication is required for an application to inhibit system handling of the lid switch."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن جازما دارەك  ەلەكتىروندۇق مەە  "
+-"ۉستۉنكۉ  قاپقىقىدىكى ۋٸكلىيوچاتىعا ىنكاس قايتارىشىن توسۇشىغا جول قويۇش  "
+-"ۉچۉن  دالىلدۅ كەرەك."
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن جازما دارەك  ەلەكتىروندۇق مەە  "
++"ۉستۉنكۉ  قاپقىقىدىكى ئۈزچاتقا ىنكاس قايتارىشىن توسۇشىغا جول قويۇش  ۉچۉن  "
++"دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:117
+ msgid "Allow applications to inhibit system handling of the reboot key"
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن قايرا قوزعوتۇۇ كونۇپكاسىنا  ىنكاس "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن قايرا قوزعوتۇۇ كونۇپكاسىنا  ىنكاس "
+ "قايتارىشىن توسۇشىغا جول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:118
+ msgid "Authentication is required for an application to inhibit system handling of the reboot key."
+ msgstr ""
+-"قولدونۇشچان پىروگىراممالاردىن  سەستىمانىن قايرا قوزعوتۇۇ كونۇپكاسىنا  ىنكاس "
++"قولدونۇشچان پىروگىراممالاردىن سەستىمانىن قايرا قوزعوتۇۇ كونۇپكاسىنا  ىنكاس "
+ "قايتارىشىن توسۇشىغا جول قويۇش  ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:128
+ msgid "Allow non-logged-in user to run programs"
+ msgstr ""
+-"تىزىمدەتىپ كىربەگەن ابونتتارردىن اتقارماق  جاسوو ،اتقارۇۇ  پىروگىرامماسى ."
++"تىزىمدەتىپ كىربەگەن ابونىتتاردىن اتقارماق  جاسوو ،اتقارۇۇ   پراگرامماسى."
+ 
+ #: src/login/org.freedesktop.login1.policy:129
+ msgid "Explicit request is required to run programs as a non-logged-in user."
+ msgstr ""
+-"تىزىمگە  الدىرباعان ابونتتار پىروگىرامماسىن  اتقارماق   قىلۇۇ كەرەك، انىق "
++"تىزىمگە  الدىرباعان ابونتتار  پراگرامماسىن اتقارماق   قىلۇۇ كەرەك، انىق "
+ "تالاپ جاسوو ،اتقارۇۇ  كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:138
+ msgid "Allow non-logged-in users to run programs"
+ msgstr ""
+-"تىزىمدەتىپ كىربەگەن ابونتتارردىن اتقارماق  جاسوو ،اتقارۇۇ  پىروگىرامماسى ."
++"تىزىمدەتىپ كىربەگەن ابونىتتاردىن اتقارماق  جاسوو ،اتقارۇۇ   پراگرامماسى."
+ 
+ #: src/login/org.freedesktop.login1.policy:139
+ msgid "Authentication is required to run programs as a non-logged-in user."
+ msgstr ""
+-"تىزىمدەتىپ كىربەگەن ابونتتارردىن اتقارماق  جاسوو ،اتقارۇۇ  پىروگىرامماسىن  "
++"تىزىمدەتىپ كىربەگەن ابونىتتاردىن اتقارماق  جاسوو ،اتقارۇۇ   پراگرامماسىن "
+ "دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:148
+@@ -574,7 +573,7 @@ msgstr ""
+ 
+ #: src/login/org.freedesktop.login1.policy:169
+ msgid "Power off the system"
+-msgstr "سەستىماسىن ەتىپ جىبەرۉۉ"
++msgstr "سەستىمانى ەتىپ جىبەرۉۉ"
+ 
+ #: src/login/org.freedesktop.login1.policy:170
+ msgid "Authentication is required to power off the system."
+@@ -583,12 +582,12 @@ msgstr "سەستىمانى بەكىتىش  ۉچۉن  دالىلدۅ كەرەك."
+ #: src/login/org.freedesktop.login1.policy:180
+ msgid "Power off the system while other users are logged in"
+ msgstr ""
+-"باشقا تىزىمدەتىپ بولعون ئابۇنتلار باربولۇۇسۇ  بولعوندا داعى ەلە ەتىك بولوت ."
++"باشقا تىزىمدەتىپ بولعون ابونتتار باربولۇۇسۇ  بولعوندا داعى ەلە ەتىك بولوت ."
+ 
+ #: src/login/org.freedesktop.login1.policy:181
+ msgid "Authentication is required to power off the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىمدەتىپ  كىرگىزگەن ئابۇنتلار باربولۇۇسۇ  بولعوندو   سەستىمانى ەتىپ "
++"باشقا تىزىمدەتىپ  كىرگىزگەن ابونتتار باربولۇۇسۇ  بولعوندو   سەستىمانى ەتىپ "
+ "جىبەرۉۉ ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:191
+@@ -598,8 +597,8 @@ msgstr "باشقا ئەپلەر توسقاندا داعى ەلە ەتىلەت."
+ #: src/login/org.freedesktop.login1.policy:192
+ msgid "Authentication is required to power off the system while an application is inhibiting this."
+ msgstr ""
+-"باشقا قولدونۇشچان پىروگىراممالاردىن  ەتىلىپ قېلىشىنى توسقاندا  سەستىمانى "
+-"ەتىپ جىبەرۉۉ ۉچۉن  دالىلدۅ كەرەك."
++"باشقا قولدونۇشچان پىروگىراممالاردىن ەتىلىپ قېلىشىنى توسقاندا  سەستىمانى ەتىپ "
++"جىبەرۉۉ ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:202
+ msgid "Reboot the system"
+@@ -612,13 +611,13 @@ msgstr "سەستىمانى قايرا قوزعوتۇۇ ۉچۉن  دالىلدۅ
+ #: src/login/org.freedesktop.login1.policy:213
+ msgid "Reboot the system while other users are logged in"
+ msgstr ""
+-"باشقا تىزىمدەتىپ بولعون ئابۇنتلار باربولۇۇسۇ  بولعوندا داعى ەلە قايرا "
++"باشقا تىزىمدەتىپ بولعون ابونتتار باربولۇۇسۇ  بولعوندا داعى ەلە قايرا "
+ "قوزعوتۇلات"
+ 
+ #: src/login/org.freedesktop.login1.policy:214
+ msgid "Authentication is required to reboot the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىمدەتىپ بولعون ئابۇنتلار باربولۇۇسۇ  بولعوندا  سەستىمانى قايرا "
++"باشقا تىزىمدەتىپ بولعون ابونتتار باربولۇۇسۇ  بولعوندا  سەستىمانى قايرا "
+ "قوزعوتۇۇ ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:224
+@@ -633,7 +632,7 @@ msgstr ""
+ 
+ #: src/login/org.freedesktop.login1.policy:235
+ msgid "Halt the system"
+-msgstr "سەستىماسىن توقتوتۇۇ"
++msgstr "سەستىمانى توقتوتۇۇ"
+ 
+ #: src/login/org.freedesktop.login1.policy:236
+ msgid "Authentication is required to halt the system."
+@@ -642,30 +641,30 @@ msgstr "سەستىمانى توقتوتۇۇ ۉچۉن  دالىلدۅ كەرەك.
+ #: src/login/org.freedesktop.login1.policy:246
+ msgid "Halt the system while other users are logged in"
+ msgstr ""
+-"باشقا تىزىمدەتىپ بولعون ئابۇنتلار باربولۇۇسۇ  بولعوندا داعى ەلە  سەستىمانى "
++"باشقا تىزىمدەتىپ بولعون ابونتتار باربولۇۇسۇ  بولعوندا داعى ەلە  سەستىمانى "
+ "توقتوتوت"
+ 
+ #: src/login/org.freedesktop.login1.policy:247
+ msgid "Authentication is required to halt the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىمدەتىپ  كىرگىزگەن ئابۇنتلار باربولۇۇسۇ  بولعوندو   سەستىمانى "
++"باشقا تىزىمدەتىپ  كىرگىزگەن ابونتتار باربولۇۇسۇ  بولعوندو   سەستىمانى "
+ "توقتوتۇۇ ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:257
+ msgid "Halt the system while an application is inhibiting this"
+ msgstr ""
+-"قولدونۇشچان پراگرامما توسۇۇ باربولۇۇسۇ  بولعوندو  داعى ەلە  سەستىمانى "
++"قولدونۇشچان  پراگرامما توسۇۇ باربولۇۇسۇ  بولعوندو  داعى ەلە  سەستىمانى "
+ "توقتوتۇۇ كەرەك"
+ 
+ #: src/login/org.freedesktop.login1.policy:258
+ msgid "Authentication is required to halt the system while an application is inhibiting this."
+ msgstr ""
+-"قولدونۇشچان پراگرامما  سەستىمانى توقتوتۇۇنۇ توسقاندا دالىلدۅۅگۅ تۇۇرا  گەلەت "
+-"."
++"قولدونۇشچان  پراگرامما  سەستىمانى توقتوتۇۇنۇ توسقاندا دالىلدۅۅگۅ تۇۇرا  "
++"گەلەت ."
+ 
+ #: src/login/org.freedesktop.login1.policy:268
+ msgid "Suspend the system"
+-msgstr "سەستىماسىن اسىپ قويۇش"
++msgstr "سەستىمانى اسىپ قويۇش"
+ 
+ #: src/login/org.freedesktop.login1.policy:269
+ msgid "Authentication is required to suspend the system."
+@@ -680,19 +679,19 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:279
+ msgid "Authentication is required to suspend the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىمدەتىپ بولعون ئابۇنىتلار باربولۇۇسۇ  بولعوندا  سەستىمانى اسىپ "
+-"قويۇش  ۉچۉن  دالىلدۅ كەرەك."
++"باشقا تىزىمدەتىپ بولعون ابونتتار باربولۇۇسۇ  بولعوندا  سەستىمانى اسىپ قويۇش  "
++"ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:289
+ msgid "Suspend the system while an application is inhibiting this"
+ msgstr ""
+-"باشقا قولدونۇشچان پراگرامما توسقۇندۇققا ۇچۇراعاندا داعى ەلە  سەستىمانى اسىپ "
++"باشقا قولدونۇشچان  پراگرامما توسقۇندۇققا ۇچۇراعاندا داعى ەلە  سەستىمانى اسىپ "
+ "قويۇڭ."
+ 
+ #: src/login/org.freedesktop.login1.policy:290
+ msgid "Authentication is required to suspend the system while an application is inhibiting this."
+ msgstr ""
+-"باشقا قولدونۇشچان  پراگراممالار اسۇۇنى توسقاندا  سەستىمانى اسۇۇ ۉچۉن  "
++"باشقا قولدونۇشچان پىروگراممىلار اسۇۇنى توسقاندا  سەستىمانى اسۇۇ ۉچۉن  "
+ "دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:300
+@@ -701,7 +700,7 @@ msgstr "مۈگدەش ساامالىعى"
+ 
+ #: src/login/org.freedesktop.login1.policy:301
+ msgid "Authentication is required to hibernate the system."
+-msgstr "مۈگدەش سىستېمىسنى دالىلدۅ كەرەك."
++msgstr "مۈگدەش سەستىمانى دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:310
+ msgid "Hibernate the system while other users are logged in"
+@@ -712,7 +711,7 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:311
+ msgid "Authentication is required to hibernate the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىمدەتىپ  كىرگىزگەن ئابۇنىتلار باربولۇۇسۇ  بولعوندو  ئۈچەككە كىرۉۉ  "
++"باشقا تىزىمدەتىپ  كىرگىزگەن ابونتتار باربولۇۇسۇ  بولعوندو  ئۈچەككە كىرۉۉ  "
+ "سەستىمانى دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:321
+@@ -764,26 +763,25 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:374
+ msgid "Indicate to the boot loader to boot to the boot loader menu"
+ msgstr ""
+-"جولجورۇق  جۉكتۅۅ پىروگىرامماسىن  قوزعوتۇۇ جۉكتۅۅ پىروگىرامماسى  تىزىمدىگىنە  "
++"جولجورۇق  جۉكتۅۅ  پراگرامماسىن قوزعوتۇۇ جۉكتۅۅ  پراگرامماسى تىزىمدىگىنە  "
+ "جولجورۇق  بەرۉۉ"
+ 
+ #: src/login/org.freedesktop.login1.policy:375
+ msgid "Authentication is required to indicate to the boot loader to boot to the boot loader menu."
+ msgstr ""
+-"جولجورۇق  جۉكتۅۅ پىروگىرامماسى  قوزغىتىلغۇچە جەتەكتۅ جۉكتۅۅ پىروگىرامماسى  "
++"جولجورۇق  جۉكتۅۅ  پراگرامماسى قوزغالغۇچە جەتەكتۅ جۉكتۅۅ  پراگرامماسى "
+ "تىزىمدىگى دەلىللىنىشى كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:385
+ msgid "Indicate to the boot loader to boot a specific entry"
+ msgstr ""
+-"جولجورۇق  جۉكتۅۅ پىروگىرامماسى  بەلگىلەنگەن تۉردۉ قوزعوتۇشقا  يېتەكچىلىك "
+-"جاسايت"
++"جولجورۇق  جۉكتۅۅ  پراگرامماسى بەلگىلەنگەن تۉردۉ قوزعوتۇشقا  يېتەكچىلىك جاسايت"
+ 
+ #: src/login/org.freedesktop.login1.policy:386
+ msgid "Authentication is required to indicate to the boot loader to boot into a specific boot loader entry."
+ msgstr ""
+-"جولجورۇق  جۉكتۅۅ پىروگىرامماسىن    قوزعوتۇپ بەلگىلەنگەن جەتەكتۅ جۉكتۅۅ "
+-"تۉرۉنۅ كىرگىزۉۉ ۉچۉن  دالىلدۅ كەرەك."
++"جولجورۇق  جۉكتۅۅ  پراگرامماسىن   قوزعوتۇپ بەلگىلەنگەن جەتەكتۅ جۉكتۅۅ تۉرۉنۅ "
++"كىرگىزۉۉ ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:396
+ msgid "Set a wall message"
+@@ -803,11 +801,11 @@ msgstr "جورۇما تەرمىلدى ۅزگۅرتۉش  ۉچۉن  دالىلدۅ
+ 
+ #: src/machine/org.freedesktop.machine1.policy:22
+ msgid "Log into a local container"
+-msgstr "جەردىك قاچاعا كىرۉۉ"
++msgstr "جەرلىككە كىرۉۉ"
+ 
+ #: src/machine/org.freedesktop.machine1.policy:23
+ msgid "Authentication is required to log into a local container."
+-msgstr "بىر  جەردىك قاچاعا كىرۉۉ  ۉچۉن  دالىلدۅ كەرەك."
++msgstr "بىر  جەرلىككە كىرۉۉ  ۉچۉن  دالىلدۅ كەرەك."
+ 
+ #: src/machine/org.freedesktop.machine1.policy:32
+ msgid "Log into the local host"
+@@ -1087,7 +1085,7 @@ msgstr ""
+ 
+ #: src/timedate/org.freedesktop.timedate1.policy:53
+ msgid "Turn network time synchronization on or off"
+-msgstr "تور  ۇباقتىن شاي  چامداشتىرىشتى  اچۇۇ كۅرۉنۉشتۅرۉ بەكىتىش"
++msgstr "تور  ۇباقتىن شاي  قادامداشتىرعىچ اچۇۇ كۅرۉنۉشتۅرۉ بەكىتىش"
+ 
+ #: src/timedate/org.freedesktop.timedate1.policy:54
+ msgid "Authentication is required to control whether network time synchronization shall be enabled."
+diff --git a/po/ug.po b/po/ug.po
+index 4efda54..52d8aac 100644
+--- a/po/ug.po
++++ b/po/ug.po
+@@ -10,7 +10,7 @@ msgid ""
+ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2023-11-14 21:25+0000\n"
+-"PO-Revision-Date: 2024-08-29 13:06+0000\n"
++"PO-Revision-Date: 2024-09-29 07:22+0000\n"
+ "Last-Translator: KevinDuan <duankaiwen@kylinos.cn>\n"
+ "Language-Team: Uyghur <http://weblate.openkylin.top/projects/"
+ "openkylin-nile-new/systemd/ug/>\n"
+@@ -82,7 +82,7 @@ msgstr "بىر ئائىلە رايونى بەرپا قىلىش"
+ 
+ #: src/home/org.freedesktop.home1.policy:14
+ msgid "Authentication is required to create a user's home area."
+-msgstr "ئابۇنىتلارنىڭ ئائىلە رايونىنى بەرپا قىلىش ئۈچۈن دەلىللەش كېرەك."
++msgstr "ئابونتلارنىڭ ئائىلە رايونىنى بەرپا قىلىش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/home/org.freedesktop.home1.policy:23
+ msgid "Remove a home area"
+@@ -109,7 +109,7 @@ msgstr "بىر ئائىلە رايونىنى يېڭىلاش"
+ # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
+ #: src/home/org.freedesktop.home1.policy:44
+ msgid "Authentication is required to update a user's home area."
+-msgstr "ئابۇنتلارنىڭ ئائىلە رايونىنى يېڭىلاش ئۈچۈن دەلىللەش كېرەك."
++msgstr "ئابونتلارنىڭ ئائىلە رايونىنى يېڭىلاش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/home/org.freedesktop.home1.policy:53
+ msgid "Resize a home area"
+@@ -131,14 +131,14 @@ msgstr "ئۆي رايونىنىڭ مەخپىي نومۇرىنى ئۆزگەرتى
+ #, c-format
+ msgid "Home of user %s is currently absent, please plug in the necessary storage device or backing file system."
+ msgstr ""
+-"ئابونىتلار %s نىڭ ئائىلە مۇندەرىجىسى ھازىر مەۋجۇت ئەمەس، زۆرۈر بولغان ساقلاش "
++"ئابونتلار %s نىڭ ئائىلە مۇندەرىجىسى ھازىر مەۋجۇت ئەمەس، زۆرۈر بولغان ساقلاش "
+ "ئۈسكۈنىسى ياكى تۆۋەن دەرىجىلىك ھۆججەت سىستېمىسىنى قىستۇرۇڭ."
+ 
+ #: src/home/pam_systemd_home.c:292
+ #, c-format
+ msgid "Too frequent login attempts for user %s, try again later."
+ msgstr ""
+-"ئابۇنىتلار %s نىڭ كىرىش سىنىقى بەك كۆپ بولۇپ كەتتى، سەل تۇرۇپ قايتا سىناڭ."
++"ئابونتلار %s نىڭ كىرىش سىنىقى بەك كۆپ بولۇپ كەتتى، سەل تۇرۇپ قايتا سىناڭ."
+ 
+ #: src/home/pam_systemd_home.c:304
+ msgid "Password: "
+@@ -148,7 +148,7 @@ msgstr "مەخپىي نومۇرى: "
+ #, c-format
+ msgid "Password incorrect or not sufficient for authentication of user %s."
+ msgstr ""
+-"ئابۇنىتلارنىڭ %s مەخپىي نومۇرى توغرا ئەمەس ياكى دەلىللەشنى تاماملاشقا "
++"ئابونتلارنىڭ %s مەخپىي نومۇرى توغرا ئەمەس ياكى دەلىللەشنى تاماملاشقا "
+ "يەتمەيدۇ."
+ 
+ #: src/home/pam_systemd_home.c:307
+@@ -198,7 +198,7 @@ msgstr "%s ئىشلەتكۈچىنىڭ بىخەتەرلىك تاختىسىدا ف
+ #: src/home/pam_systemd_home.c:404
+ #, c-format
+ msgid "Please confirm presence on security token of user %s."
+-msgstr "%sبىخەتەرلىك تاختىسىدا ئابونىتلارنىڭ مەۋجۇت ئىكەنلىكىنى جەزىملەشتۈرۈڭ."
++msgstr "%sبىخەتەرلىك تاختىسىدا ئابونتلارنىڭ مەۋجۇت ئىكەنلىكىنى جەزملەشتۈرۈڭ."
+ 
+ #: src/home/pam_systemd_home.c:415
+ #, c-format
+@@ -214,7 +214,7 @@ msgstr ""
+ #: src/home/pam_systemd_home.c:432
+ #, c-format
+ msgid "Security token PIN incorrect for user %s."
+-msgstr "ئابونىتلار %s نىڭ بىخەتەرلىك تاختىسى PIN توغرا ئەمەس."
++msgstr "ئابونتلار %s نىڭ بىخەتەرلىك تاختىسى PIN توغرا ئەمەس."
+ 
+ #: src/home/pam_systemd_home.c:433 src/home/pam_systemd_home.c:452
+ #: src/home/pam_systemd_home.c:471
+@@ -225,54 +225,54 @@ msgstr "كەچۈرۈڭ، كەچۈرۈڭ. بىخەتەرلىك تاختىسىنى
+ #, c-format
+ msgid "Security token PIN of user %s incorrect (only a few tries left!)"
+ msgstr ""
+-"ئابۇنتلارنىڭ %s بىخەتەرلىك بەلگە تاختىسى PIN توغرا ئەمەس (پەقەت بىر نەچچە "
++"ئابونتلارنىڭ %s بىخەتەرلىك بەلگە تاختىسى PIN توغرا ئەمەس (پەقەت بىر نەچچە "
+ "قېتىم قايتا سىناپ بېقىش پۇرسىتى قالدى! )"
+ 
+ #: src/home/pam_systemd_home.c:470
+ #, c-format
+ msgid "Security token PIN of user %s incorrect (only one try left!)"
+ msgstr ""
+-"ئابۇنىتلارنىڭ %s بىخەتەرلىك توغىنى PIN توغرا ئەمەس (پەقەت بىر قېتىملىق قايتا "
++"ئابونتلارنىڭ %s بىخەتەرلىك تۇغىنى PIN توغرا ئەمەس (پەقەت بىر قېتىملىق قايتا "
+ "سىناش پۇرسىتى قالدى! )"
+ 
+ #: src/home/pam_systemd_home.c:616
+ #, c-format
+ msgid "Home of user %s is currently not active, please log in locally first."
+ msgstr ""
+-"ئابونىتلار %s نىڭ ئائىلە مۇندەرىجىسى ھازىرچە قوزغىتىلمىدى، ئاۋۋال بۇ يەرگە "
++"ئابونتلار %s نىڭ ئائىلە مۇندەرىجىسى ھازىرچە قوزغىتىلمىدى، ئاۋۋال بۇ يەرگە "
+ "كىرىڭ."
+ 
+ #: src/home/pam_systemd_home.c:618
+ #, c-format
+ msgid "Home of user %s is currently locked, please unlock locally first."
+ msgstr ""
+-"ئابونىتلار %s نىڭ ئائىلە مۇندەرىجىسى ھازىر قۇلۇپلاندى، ئاۋۋال مۇشۇ يەردە "
++"ئابونتلار %s نىڭ ئائىلە مۇندەرىجىسى ھازىر قۇلۇپلاندى، ئاۋۋال مۇشۇ يەردە "
+ "قۇلۇپنى ئېچىڭ."
+ 
+ #: src/home/pam_systemd_home.c:645
+ #, c-format
+ msgid "Too many unsuccessful login attempts for user %s, refusing."
+ msgstr ""
+-"ئابۇنىتلار %s كۆپ قېتىم مۇۋەپپەقىيەتلىك بولمىغان كىرىش سىنىقى قىلغان، "
+-"كىرىشنى رەت قىلدى."
++"ئابونتلار %s كۆپ قېتىم ئوڭۇشلۇق بولمىغان كىرىش سىنىقى قىلغان، كىرىشنى رەت "
++"قىلدى."
+ 
+ #: src/home/pam_systemd_home.c:868
+ msgid "User record is blocked, prohibiting access."
+-msgstr "ئابونېنتچىلار خاتىرىسى، توسۇپ قېلىندى زىيارەت قىلىش مەنئىي قىلىنىدۇ."
++msgstr "ئابۇنىچىلار خاتىرىسى، توسۇپ قېلىندى زىيارەت قىلىش مەنئى قىلىنىدۇ."
+ 
+ #: src/home/pam_systemd_home.c:872
+ msgid "User record is not valid yet, prohibiting access."
+ msgstr ""
+-"ئابونىتلار خاتىرىسى تېخى كۈچكە ئىگە بولمىدى، زىيارەت قىلىش مەنئىي قىلىنىدۇ."
++"ئابونتلار خاتىرىسى تېخى كۈچكە ئىگە بولمىدى، زىيارەت قىلىش مەنئى قىلىنىدۇ."
+ 
+ #: src/home/pam_systemd_home.c:876
+ msgid "User record is not valid anymore, prohibiting access."
+ msgstr ""
+-"ئابونىتلار خاتىرىسى، ئەمدى كۈچكە ئىگە بولمايدۇ زىيارەت قىلىش مەنئىي قىلىنىدۇ."
++"ئابونتلار خاتىرىسى، ئەمدى كۈچكە ئىگە بولمايدۇ زىيارەت قىلىش مەنئى قىلىنىدۇ."
+ 
+ #: src/home/pam_systemd_home.c:881 src/home/pam_systemd_home.c:932
+ msgid "User record not valid, prohibiting access."
+-msgstr "ئابونېنتچىلار خاتىرىسى ئىناۋەتسىز، زىيارەت قىلىش مەنئىي قىلىنىدۇ."
++msgstr "ئابۇنىچىلار خاتىرىسى ئىناۋەتسىز، زىيارەت قىلىش مەنئى قىلىنىدۇ."
+ 
+ #: src/home/pam_systemd_home.c:893
+ #, c-format
+@@ -333,7 +333,7 @@ msgstr "مەھسۇلات UUID غا ئېرىشىش"
+ 
+ #: src/hostname/org.freedesktop.hostname1.policy:52
+ msgid "Authentication is required to get product UUID."
+-msgstr "مەھسۇلات UUID غا ئېرىشىش ئۈچۈندەلىللەش كېرەك."
++msgstr "مەھسۇلات UUID غا ئېرىشىش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/hostname/org.freedesktop.hostname1.policy:61
+ msgid "Get hardware serial number"
+@@ -394,22 +394,22 @@ msgstr "سىستېما كۇنۇپكا تاختىسى تەسىس قىلىش ئۈ
+ #: src/login/org.freedesktop.login1.policy:22
+ msgid "Allow applications to inhibit system shutdown"
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ ئېتىلىپ قېلىشىنى توسۇشىغا يول قويۇڭ"
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ ئېتىلىپ قېلىشىنى توسۇشىغا يول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:23
+ msgid "Authentication is required for an application to inhibit system shutdown."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ ئېتىلىپ قېلىشىنى توسۇشىغا يول قويۇش "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ ئېتىلىپ قېلىشىنى توسۇشىغا يول قويۇش "
+ "ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:33
+ msgid "Allow applications to delay system shutdown"
+-msgstr "قوللىنىشچان پروگراممىنى كېچىكتۈرۈپ سىستېمىنى ئېتىۋېتىشكە يول قويۇش."
++msgstr "قوللىنىشچان پىروگراممىنى كېچىكتۈرۈپ سىستېمىنى ئېتىۋېتىشكە يول قويۇش."
+ 
+ #: src/login/org.freedesktop.login1.policy:34
+ msgid "Authentication is required for an application to delay system shutdown."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ ئېتىلىشىنى كېچىكتۈرۈشىگە يول قويۇش "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ ئېتىلىشىنى كېچىكتۈرۈشىگە يول قويۇش "
+ "ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:44
+@@ -419,7 +419,7 @@ msgstr "ئەپلەرنىڭ سىستېما ئۇيقۇسىنى توسۇشىغا ي
+ #: src/login/org.freedesktop.login1.policy:45
+ msgid "Authentication is required for an application to inhibit system sleep."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېما ئۇيقۇسىنى توسۇشىغا يول قويۇش ئۈچۈن "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېما ئۇيقۇسىنى توسۇشىغا يول قويۇش ئۈچۈن "
+ "دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:55
+@@ -429,100 +429,100 @@ msgstr "ئەپلەرنىڭ سىستېما ئۇيقۇسىنى كېچىكتۈرۈ
+ #: src/login/org.freedesktop.login1.policy:56
+ msgid "Authentication is required for an application to delay system sleep."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېما ئۇيقۇسىنى كېچىكتۈرۈشىگە يول قويۇش ئۈچۈن "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېما ئۇيقۇسىنى كېچىكتۈرۈشىگە يول قويۇش ئۈچۈن "
+ "دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:65
+ msgid "Allow applications to inhibit automatic system suspend"
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ ئاپتوماتىك ئېسىلىشىنى توسۇشىغا يول "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ ئاپتوماتىك ئېسىلىشىنى توسۇشىغا يول "
+ "قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:66
+ msgid "Authentication is required for an application to inhibit automatic system suspend."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ ئاپتوماتىك ئېسىلىشىنى توسۇشىغا يول "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ ئاپتوماتىك ئېسىلىشىنى توسۇشىغا يول "
+ "قويۇش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:75
+ msgid "Allow applications to inhibit system handling of the power key"
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ توك مەنبە كۇنۇپكىسىغا ئىنكاس "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ توك مەنبە كۇنۇپكىسىغا ئىنكاس "
+ "قايتۇرۇشىنى توسۇشىغا يول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:76
+ msgid "Authentication is required for an application to inhibit system handling of the power key."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ توك مەنبە كۇنۇپكىسىغا ئىنكاس "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ توك مەنبە كۇنۇپكىسىغا ئىنكاس "
+ "قايتۇرۇشىنى توسۇشىغا يول قويۇش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:86
+ msgid "Allow applications to inhibit system handling of the suspend key"
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ كونۇپكىنى ئېسىپ قويۇشقا ئىنكاس "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ كۇنۇپكىنى ئېسىپ قويۇشقا ئىنكاس "
+ "قايتۇرۇشىنى توسۇشىغا يول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:87
+ msgid "Authentication is required for an application to inhibit system handling of the suspend key."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ كۇنۇپكىنى ئېسىشقا ئىنكاس قايتۇرۇشىنى "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ كۇنۇپكىنى ئېسىشقا ئىنكاس قايتۇرۇشىنى "
+ "توسۇشىغا يول قويۇش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:97
+ msgid "Allow applications to inhibit system handling of the hibernate key"
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ كونۇپكىنى ئېسىپ قويۇشقا ئىنكاس "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ كۇنۇپكىنى ئېسىپ قويۇشقا ئىنكاس "
+ "قايتۇرۇشىنى توسۇشىغا يول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:98
+ msgid "Authentication is required for an application to inhibit system handling of the hibernate key."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ كۇنۇپكىنى ئېسىشقا ئىنكاس قايتۇرۇشىنى "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ كۇنۇپكىنى ئېسىشقا ئىنكاس قايتۇرۇشىنى "
+ "توسۇشىغا يول قويۇش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:107
+ msgid "Allow applications to inhibit system handling of the lid switch"
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ خاتىرە كومپيۇتېرنىڭ ئۈستى قاپقىقىنىڭ "
+-"ۋىكليۇچاتېل ۋەقەسىگە ئىنكاس قايتۇرۇشىنى توسۇشىغا يول قويۇڭ"
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ خاتىرە كومپيۇتېرنىڭ ئۈستى قاپقىقىنىڭ "
++"ئۈزچات ۋەقەسىگە ئىنكاس قايتۇرۇشىنى توسۇشىغا يول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:108
+ msgid "Authentication is required for an application to inhibit system handling of the lid switch."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ خاتىرە كومپيۇتېرنىڭ ئۈستۈنكى "
+-"قاپقىقىدىكى ۋىكليۇچاتېلغا ئىنكاس قايتۇرۇشىنى توسۇشىغا يول قويۇش ئۈچۈن "
+-"دەلىللەش كېرەك."
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ خاتىرە كومپيۇتېرنىڭ ئۈستۈنكى "
++"قاپقىقىدىكى ئۈزچاتقا ئىنكاس قايتۇرۇشىنى توسۇشىغا يول قويۇش ئۈچۈن دەلىللەش "
++"كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:117
+ msgid "Allow applications to inhibit system handling of the reboot key"
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ قايتا قوزغىتىش كۇنۇپكىسىغا ئىنكاس "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ قايتا قوزغىتىش كۇنۇپكىسىغا ئىنكاس "
+ "قايتۇرۇشىنى توسۇشىغا يول قويۇڭ"
+ 
+ #: src/login/org.freedesktop.login1.policy:118
+ msgid "Authentication is required for an application to inhibit system handling of the reboot key."
+ msgstr ""
+-"قوللىنىشچان پروگراممىلارنىڭ سىستېمىنىڭ قايتا قوزغىتىش كۇنۇپكىسىغا ئىنكاس "
++"قوللىنىشچان پىروگراممىلارنىڭ سىستېمىنىڭ قايتا قوزغىتىش كۇنۇپكىسىغا ئىنكاس "
+ "قايتۇرۇشىنى توسۇشىغا يول قويۇش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:128
+ msgid "Allow non-logged-in user to run programs"
+-msgstr "تىزىملىتىپ كىرمىگەن ئابونىتلارنىڭ ئىجرا قىلىش پروگراممىسى."
++msgstr "تىزىملىتىپ كىرمىگەن ئابونتلارنىڭ ئىجرا قىلىش پىروگراممىسى."
+ 
+ #: src/login/org.freedesktop.login1.policy:129
+ msgid "Explicit request is required to run programs as a non-logged-in user."
+ msgstr ""
+-"تىزىمغا ئالدۇرمىغان ئابونىتلار پروگراممىسىنى ئىجرا قىلىشى كېرەك، ئېنىق تەلەپ "
++"تىزىمغا ئالدۇرمىغان ئابونتلار پىروگراممىسىنى ئىجرا قىلىشى كېرەك، ئېنىق تەلەپ "
+ "قىلىش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:138
+ msgid "Allow non-logged-in users to run programs"
+-msgstr "تىزىملىتىپ كىرمىگەن ئابونىتلارنىڭ ئىجرا قىلىش پروگراممىسى."
++msgstr "تىزىملىتىپ كىرمىگەن ئابونتلارنىڭ ئىجرا قىلىش پىروگراممىسى."
+ 
+ #: src/login/org.freedesktop.login1.policy:139
+ msgid "Authentication is required to run programs as a non-logged-in user."
+ msgstr ""
+-"تىزىملىتىپ كىرمىگەن ئابونىتلارنىڭ ئىجرا قىلىش پروگراممىسىنى دەلىللەش كېرەك."
++"تىزىملىتىپ كىرمىگەن ئابونتلارنىڭ ئىجرا قىلىش پىروگراممىسىنى دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:148
+ msgid "Allow attaching devices to seats"
+@@ -549,7 +549,7 @@ msgstr ""
+ 
+ #: src/login/org.freedesktop.login1.policy:169
+ msgid "Power off the system"
+-msgstr "سېستىمىنى ئېتىۋېتىش"
++msgstr "سىستېمىنى ئېتىۋېتىش"
+ 
+ #: src/login/org.freedesktop.login1.policy:170
+ msgid "Authentication is required to power off the system."
+@@ -557,12 +557,12 @@ msgstr "سىستېمىنى تاقاش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:180
+ msgid "Power off the system while other users are logged in"
+-msgstr "باشقا تىزىملىتىپ بولغان ئابۇنتلار مەۋجۇت بولغاندا يەنىلا ئېتىك بولىدۇ."
++msgstr "باشقا تىزىملىتىپ بولغان ئابونتلار مەۋجۇت بولغاندا يەنىلا ئېتىك بولىدۇ."
+ 
+ #: src/login/org.freedesktop.login1.policy:181
+ msgid "Authentication is required to power off the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىملىتىپ كىرگەن ئابۇنتلار مەۋجۇت بولغاندا سىستېمىنى ئېتىۋېتىش ئۈچۈن "
++"باشقا تىزىملىتىپ كىرگەن ئابونتلار مەۋجۇت بولغاندا سىستېمىنى ئېتىۋېتىش ئۈچۈن "
+ "دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:191
+@@ -572,7 +572,7 @@ msgstr "باشقا ئەپلەر توسقاندا يەنىلا ئېتىلىدۇ."
+ #: src/login/org.freedesktop.login1.policy:192
+ msgid "Authentication is required to power off the system while an application is inhibiting this."
+ msgstr ""
+-"باشقا قوللىنىشچان پروگراممىلارنىڭ ئېتىلىپ قېلىشىنى توسقاندا سىستېمىنى "
++"باشقا قوللىنىشچان پىروگراممىلارنىڭ ئېتىلىپ قېلىشىنى توسقاندا سىستېمىنى "
+ "ئېتىۋېتىش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:202
+@@ -586,12 +586,12 @@ msgstr "سىستېمىنى قايتا قوزغىتىش ئۈچۈن دەلىللە
+ #: src/login/org.freedesktop.login1.policy:213
+ msgid "Reboot the system while other users are logged in"
+ msgstr ""
+-"باشقا تىزىملىتىپ بولغان ئابۇنتلار مەۋجۇت بولغاندا يەنىلا قايتا قوزغىتىلىدۇ"
++"باشقا تىزىملىتىپ بولغان ئابونتلار مەۋجۇت بولغاندا يەنىلا قايتا قوزغىتىلىدۇ"
+ 
+ #: src/login/org.freedesktop.login1.policy:214
+ msgid "Authentication is required to reboot the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىملىتىپ بولغان ئابۇنتلار مەۋجۇت بولغاندا سىستېمىنى قايتا قوزغىتىش "
++"باشقا تىزىملىتىپ بولغان ئابونتلار مەۋجۇت بولغاندا سىستېمىنى قايتا قوزغىتىش "
+ "ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:224
+@@ -606,7 +606,7 @@ msgstr ""
+ 
+ #: src/login/org.freedesktop.login1.policy:235
+ msgid "Halt the system"
+-msgstr "سېستىمىنى توختىتىش"
++msgstr "سىستېمىنى توختىتىش"
+ 
+ #: src/login/org.freedesktop.login1.policy:236
+ msgid "Authentication is required to halt the system."
+@@ -615,27 +615,27 @@ msgstr "سىستېمىنى توختىتىش ئۈچۈن دەلىللەش كېرە
+ #: src/login/org.freedesktop.login1.policy:246
+ msgid "Halt the system while other users are logged in"
+ msgstr ""
+-"باشقا تىزىملىتىپ بولغان ئابۇنتلار مەۋجۇت بولغاندا يەنىلا سىستېمىنى توختىتىدۇ"
++"باشقا تىزىملىتىپ بولغان ئابونتلار مەۋجۇت بولغاندا يەنىلا سىستېمىنى توختىتىدۇ"
+ 
+ #: src/login/org.freedesktop.login1.policy:247
+ msgid "Authentication is required to halt the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىملىتىپ كىرگەن ئابۇنتلار مەۋجۇت بولغاندا سىستېمىنى توختىتىش ئۈچۈن "
++"باشقا تىزىملىتىپ كىرگەن ئابونتلار مەۋجۇت بولغاندا سىستېمىنى توختىتىش ئۈچۈن "
+ "دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:257
+ msgid "Halt the system while an application is inhibiting this"
+ msgstr ""
+-"قوللىنىشچان پروگرامما توسۇش مەۋجۇت بولغاندا يەنىلا سىستېمىنى توختىتىش كېرەك"
++"قوللىنىشچان پىروگرامما توسۇش مەۋجۇت بولغاندا يەنىلا سىستېمىنى توختىتىش كېرەك"
+ 
+ #: src/login/org.freedesktop.login1.policy:258
+ msgid "Authentication is required to halt the system while an application is inhibiting this."
+ msgstr ""
+-"قوللىنىشچان پروگرامما سىستېمىنى توختىتىشنى توسقاندا دەلىللەشكە توغرا كېلىدۇ."
++"قوللىنىشچان پىروگرامما سىستېمىنى توختىتىشنى توسقاندا دەلىللەشكە توغرا كېلىدۇ."
+ 
+ #: src/login/org.freedesktop.login1.policy:268
+ msgid "Suspend the system"
+-msgstr "سېستىمىنى ئېسىپ قويۇش"
++msgstr "سىستېمىنى ئېسىپ قويۇش"
+ 
+ #: src/login/org.freedesktop.login1.policy:269
+ msgid "Authentication is required to suspend the system."
+@@ -650,19 +650,19 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:279
+ msgid "Authentication is required to suspend the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىملىتىپ بولغان ئابۇنىتلار مەۋجۇت بولغاندا سىستېمىنى ئېسىپ قويۇش "
++"باشقا تىزىملىتىپ بولغان ئابونتلار مەۋجۇت بولغاندا سىستېمىنى ئېسىپ قويۇش "
+ "ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:289
+ msgid "Suspend the system while an application is inhibiting this"
+ msgstr ""
+-"باشقا قوللىنىشچان پروگرامما توسقۇنلۇققا ئۇچرىغاندا يەنىلا سىستېمىنى ئېسىپ "
++"باشقا قوللىنىشچان پىروگرامما توسقۇنلۇققا ئۇچرىغاندا يەنىلا سىستېمىنى ئېسىپ "
+ "قويۇڭ."
+ 
+ #: src/login/org.freedesktop.login1.policy:290
+ msgid "Authentication is required to suspend the system while an application is inhibiting this."
+ msgstr ""
+-"باشقا قوللىنىشچان پروگراممىلار ئېسىشنى توسقاندا سىستېمىنى ئېسىش ئۈچۈن "
++"باشقا قوللىنىشچان پىروگراممىلار ئېسىشنى توسقاندا سىستېمىنى ئېسىش ئۈچۈن "
+ "دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:300
+@@ -671,7 +671,7 @@ msgstr "مۈگدەش سىستېمىسى"
+ 
+ #: src/login/org.freedesktop.login1.policy:301
+ msgid "Authentication is required to hibernate the system."
+-msgstr "مۈگدەش سىستېمىسنى دەلىللەش كېرەك."
++msgstr "مۈگدەش سىستېمىسىنى دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:310
+ msgid "Hibernate the system while other users are logged in"
+@@ -682,7 +682,7 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:311
+ msgid "Authentication is required to hibernate the system while other users are logged in."
+ msgstr ""
+-"باشقا تىزىملىتىپ كىرگەن ئابۇنىتلار مەۋجۇت بولغاندا ئۈچەككە كىرىش سىستېمىسىنى "
++"باشقا تىزىملىتىپ كىرگەن ئابونتلار مەۋجۇت بولغاندا ئۈچەككە كىرىش سىستېمىسىنى "
+ "دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:321
+@@ -734,24 +734,24 @@ msgstr ""
+ #: src/login/org.freedesktop.login1.policy:374
+ msgid "Indicate to the boot loader to boot to the boot loader menu"
+ msgstr ""
+-"كۆرسەتمە يۈكلەش پروگراممىسىنى قوزغىتىش يۈكلەش پروگراممىسى تىزىملىكىگە "
++"كۆرسەتمە يۈكلەش پىروگراممىسىنى قوزغىتىش يۈكلەش پىروگراممىسى تىزىملىكىگە "
+ "كۆرسەتمە بېرىش"
+ 
+ #: src/login/org.freedesktop.login1.policy:375
+ msgid "Authentication is required to indicate to the boot loader to boot to the boot loader menu."
+ msgstr ""
+-"كۆرسەتمە يۈكلەش پروگراممىسى قوزغىتىلغۇچە يېتەكلەش يۈكلەش پروگراممىسى "
++"كۆرسەتمە يۈكلەش پىروگراممىسى قوزغالغۇچە يېتەكلەش يۈكلەش پىروگراممىسى "
+ "تىزىملىكى دەلىللىنىشى كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:385
+ msgid "Indicate to the boot loader to boot a specific entry"
+ msgstr ""
+-"كۆرسەتمە يۈكلەش پروگراممىسى بەلگىلەنگەن تۈرنى قوزغىتىشقا يېتەكچىلىك قىلىدۇ"
++"كۆرسەتمە يۈكلەش پىروگراممىسى بەلگىلەنگەن تۈرنى قوزغىتىشقا يېتەكچىلىك قىلىدۇ"
+ 
+ #: src/login/org.freedesktop.login1.policy:386
+ msgid "Authentication is required to indicate to the boot loader to boot into a specific boot loader entry."
+ msgstr ""
+-"كۆرسەتمە يۈكلەش پروگراممىسىنى قوزغىتىپ بەلگىلەنگەن يېتەكلەش يۈكلەش تۈرىگە "
++"كۆرسەتمە يۈكلەش پىروگراممىسىنى قوزغىتىپ بەلگىلەنگەن يېتەكلەش يۈكلەش تۈرىگە "
+ "كىرگۈزۈش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/login/org.freedesktop.login1.policy:396
+@@ -772,11 +772,11 @@ msgstr "مەۋھۇم تېرمىنالنى ئۆزگەرتىش ئۈچۈن دەلى
+ 
+ #: src/machine/org.freedesktop.machine1.policy:22
+ msgid "Log into a local container"
+-msgstr "يەرلىك قاچىغا كىرىش"
++msgstr "يەرلىككە كىرىش"
+ 
+ #: src/machine/org.freedesktop.machine1.policy:23
+ msgid "Authentication is required to log into a local container."
+-msgstr "بىر يەرلىك قاچىغا كىرىش ئۈچۈن دەلىللەش كېرەك."
++msgstr "بىر يەرلىككە كىرىش ئۈچۈن دەلىللەش كېرەك."
+ 
+ #: src/machine/org.freedesktop.machine1.policy:32
+ msgid "Log into the local host"
+@@ -1053,7 +1053,7 @@ msgstr ""
+ 
+ #: src/timedate/org.freedesktop.timedate1.policy:53
+ msgid "Turn network time synchronization on or off"
+-msgstr "تور ۋاقتىنى ماس قەدەملەشتۈرۈشنى ئېچىش ياكى تاقاش"
++msgstr "تور ۋاقتىنى ماس قەدەملەشتۈرگۈچ ئېچىش ياكى تاقاش"
+ 
+ #: src/timedate/org.freedesktop.timedate1.policy:54
+ msgid "Authentication is required to control whether network time synchronization shall be enabled."
