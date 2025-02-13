@@ -10,272 +10,285 @@ msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-11-14 21:25+0000\n"
-"PO-Revision-Date: 2023-11-18 11:17+0000\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2025-02-13 08:12+0000\n"
+"Last-Translator: KevinDuan <duankaiwen@kylinos.cn>\n"
+"Language-Team: Arabic <http://weblate.openkylin.top/projects/"
+"openkylin-nile-new/systemd/ar/>\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 5.2\n"
+"X-Generator: Weblate 4.12.1-dev\n"
 
 #: src/core/org.freedesktop.systemd1.policy.in:22
 msgid "Send passphrase back to system"
-msgstr ""
+msgstr "إرسال عبارة المرور مرة أخرى إلى النظام"
 
 #: src/core/org.freedesktop.systemd1.policy.in:23
 msgid "Authentication is required to send the entered passphrase back to the system."
 msgstr ""
+"المصادقة مطلوبة لإرسال عبارة المرور التي تم إدخالها مرة أخرى إلى النظام."
 
 #: src/core/org.freedesktop.systemd1.policy.in:33
 msgid "Manage system services or other units"
-msgstr ""
+msgstr "إدارة خدمات النظام أو الوحدات الأخرى"
 
 #: src/core/org.freedesktop.systemd1.policy.in:34
 msgid "Authentication is required to manage system services or other units."
-msgstr ""
+msgstr "المصادقة مطلوبة لإدارة خدمات النظام أو الوحدات الأخرى."
 
 #: src/core/org.freedesktop.systemd1.policy.in:43
 msgid "Manage system service or unit files"
-msgstr ""
+msgstr "إدارة ملفات خدمة النظام أو الوحدة"
 
 #: src/core/org.freedesktop.systemd1.policy.in:44
 msgid "Authentication is required to manage system service or unit files."
-msgstr ""
+msgstr "المصادقة مطلوبة لإدارة خدمة النظام أو ملفات الوحدة."
 
 #: src/core/org.freedesktop.systemd1.policy.in:54
 msgid "Set or unset system and service manager environment variables"
-msgstr ""
+msgstr "تعيين أو إلغاء تعيين متغيرات بيئة النظام ومدير الخدمة"
 
 #: src/core/org.freedesktop.systemd1.policy.in:55
 msgid "Authentication is required to set or unset system and service manager environment variables."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين أو إلغاء تعيين متغيرات بيئة النظام ومدير الخدمة."
 
 #: src/core/org.freedesktop.systemd1.policy.in:64
 msgid "Reload the systemd state"
-msgstr ""
+msgstr "أعد تحميل حالة systemd"
 
 #: src/core/org.freedesktop.systemd1.policy.in:65
 msgid "Authentication is required to reload the systemd state."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تحميل حالة systemd."
 
 #: src/core/org.freedesktop.systemd1.policy.in:74
 msgid "Dump the systemd state without rate limits"
-msgstr ""
+msgstr "تفريغ حالة systemd بدون حدود معدل"
 
 #: src/core/org.freedesktop.systemd1.policy.in:75
 msgid "Authentication is required to dump the systemd state without rate limits."
-msgstr ""
+msgstr "المصادقة مطلوبة لتفريغ حالة systemd دون حدود معدل."
 
 #: src/home/org.freedesktop.home1.policy:13
 msgid "Create a home area"
-msgstr ""
+msgstr "إنشاء منطقة منزلية"
 
 #: src/home/org.freedesktop.home1.policy:14
 msgid "Authentication is required to create a user's home area."
-msgstr ""
+msgstr "المصادقة مطلوبة لإنشاء منطقة رئيسية للمستخدم."
 
 #: src/home/org.freedesktop.home1.policy:23
 msgid "Remove a home area"
-msgstr ""
+msgstr "إزالة منطقة منزلية"
 
 #: src/home/org.freedesktop.home1.policy:24
 msgid "Authentication is required to remove a user's home area."
-msgstr ""
+msgstr "المصادقة مطلوبة لإزالة المنطقة الرئيسية للمستخدم."
 
 #: src/home/org.freedesktop.home1.policy:33
 msgid "Check credentials of a home area"
-msgstr ""
+msgstr "التحقق من بيانات اعتماد منطقة المنزل"
 
 #: src/home/org.freedesktop.home1.policy:34
 msgid "Authentication is required to check credentials against a user's home area."
 msgstr ""
+"المصادقة مطلوبة للتحقق من بيانات الاعتماد مقابل المنطقة الرئيسية للمستخدم."
 
 #: src/home/org.freedesktop.home1.policy:43
 msgid "Update a home area"
-msgstr ""
+msgstr "تحديث منطقة منزلية"
 
 # Pay attention to the concept of "seat".
 #
 # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
 #: src/home/org.freedesktop.home1.policy:44
 msgid "Authentication is required to update a user's home area."
-msgstr ""
+msgstr "المصادقة مطلوبة لتحديث المنطقة الرئيسية للمستخدم."
 
 #: src/home/org.freedesktop.home1.policy:53
 msgid "Resize a home area"
-msgstr ""
+msgstr "تغيير حجم منطقة المنزل"
 
 #: src/home/org.freedesktop.home1.policy:54
 msgid "Authentication is required to resize a user's home area."
-msgstr ""
+msgstr "المصادقة مطلوبة لتغيير حجم المنطقة الرئيسية للمستخدم."
 
 #: src/home/org.freedesktop.home1.policy:63
 msgid "Change password of a home area"
-msgstr ""
+msgstr "تغيير كلمة مرور منطقة منزلية"
 
 #: src/home/org.freedesktop.home1.policy:64
 msgid "Authentication is required to change the password of a user's home area."
-msgstr ""
+msgstr "المصادقة مطلوبة لتغيير كلمة مرور المنطقة الرئيسية للمستخدم."
 
 #: src/home/pam_systemd_home.c:287
 #, c-format
 msgid "Home of user %s is currently absent, please plug in the necessary storage device or backing file system."
 msgstr ""
+"منزل المستخدم %s غائب حاليا ، يرجى توصيل جهاز التخزين الضروري أو نظام "
+"الملفات الاحتياطي."
 
 #: src/home/pam_systemd_home.c:292
 #, c-format
 msgid "Too frequent login attempts for user %s, try again later."
-msgstr ""
+msgstr "محاولات تسجيل دخول متكررة جدا للمستخدم %s، حاول مرة أخرى لاحقا."
 
 #: src/home/pam_systemd_home.c:304
 msgid "Password: "
-msgstr ""
+msgstr "شعار: "
 
 #: src/home/pam_systemd_home.c:306
 #, c-format
 msgid "Password incorrect or not sufficient for authentication of user %s."
-msgstr ""
+msgstr "كلمة المرور غير صحيحة أو غير كافية لمصادقة المستخدم %s."
 
 #: src/home/pam_systemd_home.c:307
 msgid "Sorry, try again: "
-msgstr ""
+msgstr "عذرا، حاول مرة أخرى: "
 
 #: src/home/pam_systemd_home.c:329
 msgid "Recovery key: "
-msgstr ""
+msgstr "مفتاح الاسترداد: "
 
 #: src/home/pam_systemd_home.c:331
 #, c-format
 msgid "Password/recovery key incorrect or not sufficient for authentication of user %s."
-msgstr ""
+msgstr "كلمة المرور/مفتاح الاسترداد غير صحيحة أو غير كافية لمصادقة المستخدم %s."
 
 #: src/home/pam_systemd_home.c:332
 msgid "Sorry, reenter recovery key: "
-msgstr ""
+msgstr "عذرا، أعد إدخال مفتاح الاسترداد: "
 
 #: src/home/pam_systemd_home.c:352
 #, c-format
 msgid "Security token of user %s not inserted."
-msgstr ""
+msgstr "لم يتم إدراج رمز الأمان المميز للمستخدم %s."
 
 #: src/home/pam_systemd_home.c:353 src/home/pam_systemd_home.c:356
 msgid "Try again with password: "
-msgstr ""
+msgstr "حاول مرة أخرى باستخدام كلمة المرور: "
 
 #: src/home/pam_systemd_home.c:355
 #, c-format
 msgid "Password incorrect or not sufficient, and configured security token of user %s not inserted."
 msgstr ""
+"كلمة المرور غير صحيحة أو غير كافية، ولم يتم إدراج رمز الأمان الذي تم تكوينه "
+"للمستخدم %s."
 
 #: src/home/pam_systemd_home.c:376
 msgid "Security token PIN: "
-msgstr ""
+msgstr "رقم التعريف الشخصي لرمز الأمان: "
 
 #: src/home/pam_systemd_home.c:393
 #, c-format
 msgid "Please authenticate physically on security token of user %s."
-msgstr ""
+msgstr "يرجى المصادقة فعليا على رمز الأمان المميز للمستخدم %s."
 
 #: src/home/pam_systemd_home.c:404
 #, c-format
 msgid "Please confirm presence on security token of user %s."
-msgstr ""
+msgstr "يرجى تأكيد التواجد على رمز الأمان المميز للمستخدم %s."
 
 #: src/home/pam_systemd_home.c:415
 #, c-format
 msgid "Please verify user on security token of user %s."
-msgstr ""
+msgstr "يرجى التحقق من المستخدم على رمز الأمان للمستخدم %s."
 
 #: src/home/pam_systemd_home.c:424
 msgid "Security token PIN is locked, please unlock it first. (Hint: Removal and re-insertion might suffice.)"
 msgstr ""
+"رقم التعريف الشخصي لرمز الأمان مؤمن ، يرجى إلغاء قفله أولا. (تلميح: قد تكون "
+"الإزالة وإعادة الإدراج كافية.)"
 
 #: src/home/pam_systemd_home.c:432
 #, c-format
 msgid "Security token PIN incorrect for user %s."
-msgstr ""
+msgstr "رمز PIN المميز للأمان غير صحيح للمستخدم %s."
 
 #: src/home/pam_systemd_home.c:433 src/home/pam_systemd_home.c:452
 #: src/home/pam_systemd_home.c:471
 msgid "Sorry, retry security token PIN: "
-msgstr ""
+msgstr "عذرا، أعد محاولة رمز PIN المميز للأمان: "
 
 #: src/home/pam_systemd_home.c:451
 #, c-format
 msgid "Security token PIN of user %s incorrect (only a few tries left!)"
 msgstr ""
+"رمز PIN للرمز المميز للأمان للمستخدم %s غير صحيح (لم يتبق سوى بضع محاولات!)"
 
 #: src/home/pam_systemd_home.c:470
 #, c-format
 msgid "Security token PIN of user %s incorrect (only one try left!)"
 msgstr ""
+"رقم التعريف الشخصي لرمز الأمان للمستخدم %s غير صحيح (لم يتبق سوى محاولة "
+"واحدة!)"
 
 #: src/home/pam_systemd_home.c:616
 #, c-format
 msgid "Home of user %s is currently not active, please log in locally first."
 msgstr ""
+"الصفحة الرئيسية للمستخدم %s غير نشط حاليا، يرجى تسجيل الدخول محليا أولا."
 
 #: src/home/pam_systemd_home.c:618
 #, c-format
 msgid "Home of user %s is currently locked, please unlock locally first."
-msgstr ""
+msgstr "منزل المستخدم %s مغلق حاليا ، يرجى إلغاء القفل محليا أولا."
 
 #: src/home/pam_systemd_home.c:645
 #, c-format
 msgid "Too many unsuccessful login attempts for user %s, refusing."
-msgstr ""
+msgstr "عدد كبير جدا من محاولات تسجيل الدخول غير الناجحة للمستخدم %s ، الرفض."
 
 #: src/home/pam_systemd_home.c:868
 msgid "User record is blocked, prohibiting access."
-msgstr ""
+msgstr "تم حظر سجل المستخدم ، مما يحظر الوصول."
 
 #: src/home/pam_systemd_home.c:872
 msgid "User record is not valid yet, prohibiting access."
-msgstr ""
+msgstr "سجل المستخدم غير صالح حتى الآن ، مما يحظر الوصول."
 
 #: src/home/pam_systemd_home.c:876
 msgid "User record is not valid anymore, prohibiting access."
-msgstr ""
+msgstr "لم يعد سجل المستخدم صالحا بعد الآن، مما يحظر الوصول."
 
 #: src/home/pam_systemd_home.c:881 src/home/pam_systemd_home.c:932
 msgid "User record not valid, prohibiting access."
-msgstr ""
+msgstr "سجل المستخدم غير صالح ، مما يحظر الوصول."
 
 #: src/home/pam_systemd_home.c:893
 #, c-format
 msgid "Too many logins, try again in %s."
-msgstr ""
+msgstr "عدد كبير جدا من عمليات تسجيل الدخول، حاول مرة أخرى في %s."
 
 #: src/home/pam_systemd_home.c:904
 msgid "Password change required."
-msgstr ""
+msgstr "يلزم تغيير كلمة المرور."
 
 #: src/home/pam_systemd_home.c:908
 msgid "Password expired, change required."
-msgstr ""
+msgstr "انتهت صلاحية كلمة المرور ، يلزم التغيير."
 
 #: src/home/pam_systemd_home.c:914
 msgid "Password is expired, but can't change, refusing login."
-msgstr ""
+msgstr "كلمة المرور منتهية الصلاحية، ولكن لا يمكن تغييرها، مع رفض تسجيل الدخول."
 
 #: src/home/pam_systemd_home.c:918
 msgid "Password will expire soon, please change."
-msgstr ""
+msgstr "ستنتهي صلاحية كلمة المرور قريبا ، يرجى التغيير."
 
 #: src/hostname/org.freedesktop.hostname1.policy:20
 msgid "Set hostname"
-msgstr ""
+msgstr "تعيين اسم المضيف"
 
 #: src/hostname/org.freedesktop.hostname1.policy:21
 msgid "Authentication is required to set the local hostname."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين اسم المضيف المحلي."
 
 #: src/hostname/org.freedesktop.hostname1.policy:30
 msgid "Set static hostname"
-msgstr ""
+msgstr "تعيين اسم مضيف ثابت"
 
 # For pretty hostname, the zh_CN/zh_TW translation should be discussed again.
 #
@@ -283,693 +296,704 @@ msgstr ""
 #: src/hostname/org.freedesktop.hostname1.policy:31
 msgid "Authentication is required to set the statically configured local hostname, as well as the pretty hostname."
 msgstr ""
+"المصادقة مطلوبة لتعيين اسم المضيف المحلي الذي تم تكوينه بشكل ثابت، بالإضافة "
+"إلى اسم المضيف الجميل."
 
 #: src/hostname/org.freedesktop.hostname1.policy:41
 msgid "Set machine information"
-msgstr ""
+msgstr "تعيين معلومات الجهاز"
 
 #: src/hostname/org.freedesktop.hostname1.policy:42
 msgid "Authentication is required to set local machine information."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين معلومات الجهاز المحلي."
 
 #: src/hostname/org.freedesktop.hostname1.policy:51
 msgid "Get product UUID"
-msgstr ""
+msgstr "احصل على UUID للمنتج"
 
 #: src/hostname/org.freedesktop.hostname1.policy:52
 msgid "Authentication is required to get product UUID."
-msgstr ""
+msgstr "المصادقة مطلوبة للحصول على UUID للمنتج."
 
 #: src/hostname/org.freedesktop.hostname1.policy:61
 msgid "Get hardware serial number"
-msgstr ""
+msgstr "الحصول على الرقم التسلسلي للأجهزة"
 
 #: src/hostname/org.freedesktop.hostname1.policy:62
 msgid "Authentication is required to get hardware serial number."
-msgstr ""
+msgstr "المصادقة مطلوبة للحصول على الرقم التسلسلي للأجهزة."
 
 #: src/hostname/org.freedesktop.hostname1.policy:71
 msgid "Get system description"
-msgstr ""
+msgstr "احصل على وصف النظام"
 
 #: src/hostname/org.freedesktop.hostname1.policy:72
 msgid "Authentication is required to get system description."
-msgstr ""
+msgstr "المصادقة مطلوبة للحصول على وصف النظام."
 
 #: src/import/org.freedesktop.import1.policy:22
 msgid "Import a VM or container image"
-msgstr ""
+msgstr "استيراد جهاز ظاهري أو صورة حاوية"
 
 #: src/import/org.freedesktop.import1.policy:23
 msgid "Authentication is required to import a VM or container image"
-msgstr ""
+msgstr "المصادقة مطلوبة لاستيراد صورة جهاز ظاهري أو حاوية"
 
 #: src/import/org.freedesktop.import1.policy:32
 msgid "Export a VM or container image"
-msgstr ""
+msgstr "تصدير صورة جهاز ظاهري أو حاوية"
 
 #: src/import/org.freedesktop.import1.policy:33
 msgid "Authentication is required to export a VM or container image"
-msgstr ""
+msgstr "المصادقة مطلوبة لتصدير صورة جهاز ظاهري أو حاوية"
 
 #: src/import/org.freedesktop.import1.policy:42
 msgid "Download a VM or container image"
-msgstr ""
+msgstr "تنزيل صورة جهاز ظاهري أو حاوية"
 
 #: src/import/org.freedesktop.import1.policy:43
 msgid "Authentication is required to download a VM or container image"
-msgstr ""
+msgstr "المصادقة مطلوبة لتنزيل صورة جهاز ظاهري أو حاوية"
 
 #: src/locale/org.freedesktop.locale1.policy:22
 msgid "Set system locale"
-msgstr ""
+msgstr "تعيين الإعدادات المحلية للنظام"
 
 #: src/locale/org.freedesktop.locale1.policy:23
 msgid "Authentication is required to set the system locale."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين الإعدادات المحلية للنظام."
 
 #: src/locale/org.freedesktop.locale1.policy:33
 msgid "Set system keyboard settings"
-msgstr ""
+msgstr "ضبط إعدادات لوحة مفاتيح النظام"
 
 #: src/locale/org.freedesktop.locale1.policy:34
 msgid "Authentication is required to set the system keyboard settings."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين إعدادات لوحة مفاتيح النظام."
 
 #: src/login/org.freedesktop.login1.policy:22
 msgid "Allow applications to inhibit system shutdown"
-msgstr ""
+msgstr "السماح للتطبيقات بمنع إيقاف تشغيل النظام"
 
 #: src/login/org.freedesktop.login1.policy:23
 msgid "Authentication is required for an application to inhibit system shutdown."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لمنع إيقاف تشغيل النظام."
 
 #: src/login/org.freedesktop.login1.policy:33
 msgid "Allow applications to delay system shutdown"
-msgstr ""
+msgstr "السماح للتطبيقات بتأخير إيقاف تشغيل النظام"
 
 #: src/login/org.freedesktop.login1.policy:34
 msgid "Authentication is required for an application to delay system shutdown."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لتأخير إيقاف تشغيل النظام."
 
 #: src/login/org.freedesktop.login1.policy:44
 msgid "Allow applications to inhibit system sleep"
-msgstr ""
+msgstr "السماح للتطبيقات بتثبيط سكون النظام"
 
 #: src/login/org.freedesktop.login1.policy:45
 msgid "Authentication is required for an application to inhibit system sleep."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لمنع سكون النظام."
 
 #: src/login/org.freedesktop.login1.policy:55
 msgid "Allow applications to delay system sleep"
-msgstr ""
+msgstr "السماح للتطبيقات بتأخير سكون النظام"
 
 #: src/login/org.freedesktop.login1.policy:56
 msgid "Authentication is required for an application to delay system sleep."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لتأخير سكون النظام."
 
 #: src/login/org.freedesktop.login1.policy:65
 msgid "Allow applications to inhibit automatic system suspend"
-msgstr ""
+msgstr "السماح للتطبيقات بمنع التعليق التلقائي للنظام"
 
 #: src/login/org.freedesktop.login1.policy:66
 msgid "Authentication is required for an application to inhibit automatic system suspend."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لمنع التعليق التلقائي للنظام."
 
 #: src/login/org.freedesktop.login1.policy:75
 msgid "Allow applications to inhibit system handling of the power key"
-msgstr ""
+msgstr "السماح للتطبيقات بمنع معالجة النظام لمفتاح التشغيل"
 
 #: src/login/org.freedesktop.login1.policy:76
 msgid "Authentication is required for an application to inhibit system handling of the power key."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لمنع معالجة النظام لمفتاح الطاقة."
 
 #: src/login/org.freedesktop.login1.policy:86
 msgid "Allow applications to inhibit system handling of the suspend key"
-msgstr ""
+msgstr "السماح للتطبيقات بمنع معالجة النظام لمفتاح التعليق"
 
 #: src/login/org.freedesktop.login1.policy:87
 msgid "Authentication is required for an application to inhibit system handling of the suspend key."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لمنع معالجة النظام لمفتاح التعليق."
 
 #: src/login/org.freedesktop.login1.policy:97
 msgid "Allow applications to inhibit system handling of the hibernate key"
-msgstr ""
+msgstr "السماح للتطبيقات بمنع معالجة النظام لمفتاح السبات"
 
 #: src/login/org.freedesktop.login1.policy:98
 msgid "Authentication is required for an application to inhibit system handling of the hibernate key."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لمنع معالجة النظام لمفتاح السبات."
 
 #: src/login/org.freedesktop.login1.policy:107
 msgid "Allow applications to inhibit system handling of the lid switch"
-msgstr ""
+msgstr "السماح للتطبيقات بتثبيط معالجة النظام لمفتاح الغطاء"
 
 #: src/login/org.freedesktop.login1.policy:108
 msgid "Authentication is required for an application to inhibit system handling of the lid switch."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق يمنع معالجة النظام لمفتاح الغطاء."
 
 #: src/login/org.freedesktop.login1.policy:117
 msgid "Allow applications to inhibit system handling of the reboot key"
-msgstr ""
+msgstr "السماح للتطبيقات بمنع معالجة النظام لمفتاح إعادة التشغيل"
 
 #: src/login/org.freedesktop.login1.policy:118
 msgid "Authentication is required for an application to inhibit system handling of the reboot key."
-msgstr ""
+msgstr "المصادقة مطلوبة لتطبيق لمنع معالجة النظام لمفتاح إعادة التشغيل."
 
 #: src/login/org.freedesktop.login1.policy:128
 msgid "Allow non-logged-in user to run programs"
-msgstr ""
+msgstr "السماح للمستخدم غير المسجل بتشغيل البرامج"
 
 #: src/login/org.freedesktop.login1.policy:129
 msgid "Explicit request is required to run programs as a non-logged-in user."
-msgstr ""
+msgstr "مطلوب طلب صريح لتشغيل البرامج كمستخدم غير مسجل الدخول."
 
 #: src/login/org.freedesktop.login1.policy:138
 msgid "Allow non-logged-in users to run programs"
-msgstr ""
+msgstr "السماح للمستخدمين غير المسجلين بتشغيل البرامج"
 
 #: src/login/org.freedesktop.login1.policy:139
 msgid "Authentication is required to run programs as a non-logged-in user."
-msgstr ""
+msgstr "المصادقة مطلوبة لتشغيل البرامج كمستخدم غير مسجل الدخول."
 
 #: src/login/org.freedesktop.login1.policy:148
 msgid "Allow attaching devices to seats"
-msgstr ""
+msgstr "السماح بتوصيل الأجهزة بالمقاعد"
 
 # Pay attention to the concept of "seat".
 #
 # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
 #: src/login/org.freedesktop.login1.policy:149
 msgid "Authentication is required to attach a device to a seat."
-msgstr ""
+msgstr "المصادقة مطلوبة لتوصيل جهاز بمقعد."
 
 #: src/login/org.freedesktop.login1.policy:159
 msgid "Flush device to seat attachments"
-msgstr ""
+msgstr "جهاز المسح إلى ملحقات المقعد"
 
 #: src/login/org.freedesktop.login1.policy:160
 msgid "Authentication is required to reset how devices are attached to seats."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة ضبط كيفية توصيل الأجهزة بالمقاعد."
 
 #: src/login/org.freedesktop.login1.policy:169
 msgid "Power off the system"
-msgstr ""
+msgstr "قم بإيقاف تشغيل النظام"
 
 #: src/login/org.freedesktop.login1.policy:170
 msgid "Authentication is required to power off the system."
-msgstr ""
+msgstr "المصادقة مطلوبة لإيقاف تشغيل النظام."
 
 #: src/login/org.freedesktop.login1.policy:180
 msgid "Power off the system while other users are logged in"
-msgstr ""
+msgstr "قم بإيقاف تشغيل النظام أثناء تسجيل دخول المستخدمين الآخرين"
 
 #: src/login/org.freedesktop.login1.policy:181
 msgid "Authentication is required to power off the system while other users are logged in."
 msgstr ""
+"المصادقة مطلوبة لإيقاف تشغيل النظام أثناء تسجيل دخول المستخدمين الآخرين."
 
 #: src/login/org.freedesktop.login1.policy:191
 msgid "Power off the system while an application is inhibiting this"
-msgstr ""
+msgstr "قم بإيقاف تشغيل النظام أثناء قيام التطبيق بمنع ذلك"
 
 #: src/login/org.freedesktop.login1.policy:192
 msgid "Authentication is required to power off the system while an application is inhibiting this."
-msgstr ""
+msgstr "المصادقة مطلوبة لإيقاف تشغيل النظام أثناء قيام التطبيق بتثبيط ذلك."
 
 #: src/login/org.freedesktop.login1.policy:202
 msgid "Reboot the system"
-msgstr ""
+msgstr "أعد تشغيل النظام"
 
 #: src/login/org.freedesktop.login1.policy:203
 msgid "Authentication is required to reboot the system."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تشغيل النظام."
 
 #: src/login/org.freedesktop.login1.policy:213
 msgid "Reboot the system while other users are logged in"
-msgstr ""
+msgstr "إعادة تشغيل النظام أثناء تسجيل دخول المستخدمين الآخرين"
 
 #: src/login/org.freedesktop.login1.policy:214
 msgid "Authentication is required to reboot the system while other users are logged in."
 msgstr ""
+"المصادقة مطلوبة لإعادة تشغيل النظام أثناء تسجيل دخول المستخدمين الآخرين."
 
 #: src/login/org.freedesktop.login1.policy:224
 msgid "Reboot the system while an application is inhibiting this"
-msgstr ""
+msgstr "أعد تشغيل النظام أثناء قيام أحد التطبيقات بتثبيط ذلك"
 
 #: src/login/org.freedesktop.login1.policy:225
 msgid "Authentication is required to reboot the system while an application is inhibiting this."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تشغيل النظام أثناء قيام التطبيق بتثبيط ذلك."
 
 #: src/login/org.freedesktop.login1.policy:235
 msgid "Halt the system"
-msgstr ""
+msgstr "أوقف النظام"
 
 #: src/login/org.freedesktop.login1.policy:236
 msgid "Authentication is required to halt the system."
-msgstr ""
+msgstr "المصادقة مطلوبة لإيقاف النظام."
 
 #: src/login/org.freedesktop.login1.policy:246
 msgid "Halt the system while other users are logged in"
-msgstr ""
+msgstr "إيقاف النظام أثناء تسجيل دخول المستخدمين الآخرين"
 
 #: src/login/org.freedesktop.login1.policy:247
 msgid "Authentication is required to halt the system while other users are logged in."
-msgstr ""
+msgstr "المصادقة مطلوبة لإيقاف النظام أثناء تسجيل دخول المستخدمين الآخرين."
 
 #: src/login/org.freedesktop.login1.policy:257
 msgid "Halt the system while an application is inhibiting this"
-msgstr ""
+msgstr "إيقاف النظام أثناء قيام التطبيق بتثبيط ذلك"
 
 #: src/login/org.freedesktop.login1.policy:258
 msgid "Authentication is required to halt the system while an application is inhibiting this."
-msgstr ""
+msgstr "المصادقة مطلوبة لإيقاف النظام أثناء قيام التطبيق بتثبيط ذلك."
 
 #: src/login/org.freedesktop.login1.policy:268
 msgid "Suspend the system"
-msgstr ""
+msgstr "تعليق النظام"
 
 #: src/login/org.freedesktop.login1.policy:269
 msgid "Authentication is required to suspend the system."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعليق النظام."
 
 #: src/login/org.freedesktop.login1.policy:278
 msgid "Suspend the system while other users are logged in"
-msgstr ""
+msgstr "تعليق النظام أثناء تسجيل دخول المستخدمين الآخرين"
 
 #: src/login/org.freedesktop.login1.policy:279
 msgid "Authentication is required to suspend the system while other users are logged in."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعليق النظام أثناء تسجيل دخول المستخدمين الآخرين."
 
 #: src/login/org.freedesktop.login1.policy:289
 msgid "Suspend the system while an application is inhibiting this"
-msgstr ""
+msgstr "قم بتعليق النظام أثناء قيام التطبيق بتثبيط ذلك"
 
 #: src/login/org.freedesktop.login1.policy:290
 msgid "Authentication is required to suspend the system while an application is inhibiting this."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعليق النظام أثناء قيام التطبيق بتثبيط ذلك."
 
 #: src/login/org.freedesktop.login1.policy:300
 msgid "Hibernate the system"
-msgstr ""
+msgstr "سبات النظام"
 
 #: src/login/org.freedesktop.login1.policy:301
 msgid "Authentication is required to hibernate the system."
-msgstr ""
+msgstr "المصادقة مطلوبة لوضع السبات في النظام."
 
 #: src/login/org.freedesktop.login1.policy:310
 msgid "Hibernate the system while other users are logged in"
-msgstr ""
+msgstr "قم بإسبات النظام أثناء تسجيل دخول المستخدمين الآخرين"
 
 #: src/login/org.freedesktop.login1.policy:311
 msgid "Authentication is required to hibernate the system while other users are logged in."
 msgstr ""
+"المصادقة مطلوبة لوضع السبات في النظام أثناء تسجيل دخول المستخدمين الآخرين."
 
 #: src/login/org.freedesktop.login1.policy:321
 msgid "Hibernate the system while an application is inhibiting this"
-msgstr ""
+msgstr "قم بإسبات النظام أثناء قيام أحد التطبيقات بتثبيط ذلك"
 
 #: src/login/org.freedesktop.login1.policy:322
 msgid "Authentication is required to hibernate the system while an application is inhibiting this."
 msgstr ""
+"المصادقة مطلوبة لوضع النظام في وضع السبات أثناء قيام أحد التطبيقات بتثبيط "
+"ذلك."
 
 #: src/login/org.freedesktop.login1.policy:332
 msgid "Manage active sessions, users and seats"
-msgstr ""
+msgstr "إدارة الجلسات النشطة والمستخدمين والمقاعد"
 
 #: src/login/org.freedesktop.login1.policy:333
 msgid "Authentication is required to manage active sessions, users and seats."
-msgstr ""
+msgstr "المصادقة مطلوبة لإدارة الجلسات والمستخدمين والمقاعد النشطة."
 
 #: src/login/org.freedesktop.login1.policy:342
 msgid "Lock or unlock active sessions"
-msgstr ""
+msgstr "قفل الجلسات النشطة أو إلغاء قفلها"
 
 #: src/login/org.freedesktop.login1.policy:343
 msgid "Authentication is required to lock or unlock active sessions."
-msgstr ""
+msgstr "المصادقة مطلوبة لقفل الجلسات النشطة أو إلغاء قفلها."
 
 #: src/login/org.freedesktop.login1.policy:352
 msgid "Set the reboot \"reason\" in the kernel"
-msgstr ""
+msgstr "قم بتعيين \"سبب\" إعادة التشغيل في النواة"
 
 #: src/login/org.freedesktop.login1.policy:353
 msgid "Authentication is required to set the reboot \"reason\" in the kernel."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين \"سبب\" إعادة التشغيل في النواة."
 
 #: src/login/org.freedesktop.login1.policy:363
 msgid "Indicate to the firmware to boot to setup interface"
-msgstr ""
+msgstr "أشر إلى البرنامج الثابت للتمهيد إلى واجهة الإعداد"
 
 #: src/login/org.freedesktop.login1.policy:364
 msgid "Authentication is required to indicate to the firmware to boot to setup interface."
-msgstr ""
+msgstr "المصادقة مطلوبة للإشارة إلى البرنامج الثابت للتمهيد إلى واجهة الإعداد."
 
 #: src/login/org.freedesktop.login1.policy:374
 msgid "Indicate to the boot loader to boot to the boot loader menu"
-msgstr ""
+msgstr "أشر إلى محمل التمهيد للتمهيد إلى قائمة محمل التمهيد"
 
 #: src/login/org.freedesktop.login1.policy:375
 msgid "Authentication is required to indicate to the boot loader to boot to the boot loader menu."
 msgstr ""
+"المصادقة مطلوبة للإشارة إلى محمل التمهيد للتمهيد إلى قائمة محمل التمهيد."
 
 #: src/login/org.freedesktop.login1.policy:385
 msgid "Indicate to the boot loader to boot a specific entry"
-msgstr ""
+msgstr "أشر إلى محمل التمهيد لتمهيد إدخال معين"
 
 #: src/login/org.freedesktop.login1.policy:386
 msgid "Authentication is required to indicate to the boot loader to boot into a specific boot loader entry."
 msgstr ""
+"المصادقة مطلوبة للإشارة إلى محمل التمهيد للتمهيد في إدخال محمل تمهيد معين."
 
 #: src/login/org.freedesktop.login1.policy:396
 msgid "Set a wall message"
-msgstr ""
+msgstr "تعيين رسالة حائط"
 
 #: src/login/org.freedesktop.login1.policy:397
 msgid "Authentication is required to set a wall message"
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين رسالة حائط"
 
 #: src/login/org.freedesktop.login1.policy:406
 msgid "Change Session"
-msgstr ""
+msgstr "تغيير الجلسة"
 
 #: src/login/org.freedesktop.login1.policy:407
 msgid "Authentication is required to change the virtual terminal."
-msgstr ""
+msgstr "المصادقة مطلوبة لتغيير المحطة الطرفية الظاهرية."
 
 #: src/machine/org.freedesktop.machine1.policy:22
 msgid "Log into a local container"
-msgstr ""
+msgstr "تسجيل الدخول إلى حاوية محلية"
 
 #: src/machine/org.freedesktop.machine1.policy:23
 msgid "Authentication is required to log into a local container."
-msgstr ""
+msgstr "المصادقة مطلوبة لتسجيل الدخول إلى حاوية محلية."
 
 #: src/machine/org.freedesktop.machine1.policy:32
 msgid "Log into the local host"
-msgstr ""
+msgstr "قم بتسجيل الدخول إلى المضيف المحلي"
 
 #: src/machine/org.freedesktop.machine1.policy:33
 msgid "Authentication is required to log into the local host."
-msgstr ""
+msgstr "المصادقة مطلوبة لتسجيل الدخول إلى المضيف المحلي."
 
 #: src/machine/org.freedesktop.machine1.policy:42
 msgid "Acquire a shell in a local container"
-msgstr ""
+msgstr "الحصول على قذيفة في حاوية محلية"
 
 #: src/machine/org.freedesktop.machine1.policy:43
 msgid "Authentication is required to acquire a shell in a local container."
-msgstr ""
+msgstr "المصادقة مطلوبة للحصول على غلاف في حاوية محلية."
 
 #: src/machine/org.freedesktop.machine1.policy:53
 msgid "Acquire a shell on the local host"
-msgstr ""
+msgstr "احصل على قذيفة على المضيف المحلي"
 
 #: src/machine/org.freedesktop.machine1.policy:54
 msgid "Authentication is required to acquire a shell on the local host."
-msgstr ""
+msgstr "المصادقة مطلوبة للحصول على shell على المضيف المحلي."
 
 #: src/machine/org.freedesktop.machine1.policy:64
 msgid "Acquire a pseudo TTY in a local container"
-msgstr ""
+msgstr "الحصول على TTY زائف في حاوية محلية"
 
 #: src/machine/org.freedesktop.machine1.policy:65
 msgid "Authentication is required to acquire a pseudo TTY in a local container."
-msgstr ""
+msgstr "المصادقة مطلوبة للحصول على TTY زائف في حاوية محلية."
 
 #: src/machine/org.freedesktop.machine1.policy:74
 msgid "Acquire a pseudo TTY on the local host"
-msgstr ""
+msgstr "الحصول على TTY زائف على المضيف المحلي"
 
 #: src/machine/org.freedesktop.machine1.policy:75
 msgid "Authentication is required to acquire a pseudo TTY on the local host."
-msgstr ""
+msgstr "المصادقة مطلوبة للحصول على TTY زائف على المضيف المحلي."
 
 #: src/machine/org.freedesktop.machine1.policy:84
 msgid "Manage local virtual machines and containers"
-msgstr ""
+msgstr "إدارة الأجهزة الظاهرية والحاويات المحلية"
 
 #: src/machine/org.freedesktop.machine1.policy:85
 msgid "Authentication is required to manage local virtual machines and containers."
-msgstr ""
+msgstr "المصادقة مطلوبة لإدارة الأجهزة والحاويات الظاهرية المحلية."
 
 #: src/machine/org.freedesktop.machine1.policy:95
 msgid "Manage local virtual machine and container images"
-msgstr ""
+msgstr "إدارة صور الجهاز الظاهري والحاوية المحلية"
 
 #: src/machine/org.freedesktop.machine1.policy:96
 msgid "Authentication is required to manage local virtual machine and container images."
-msgstr ""
+msgstr "المصادقة مطلوبة لإدارة الجهاز الظاهري المحلي وصور الحاوية."
 
 #: src/network/org.freedesktop.network1.policy:22
 msgid "Set NTP servers"
-msgstr ""
+msgstr "تعيين خوادم NTP"
 
 #: src/network/org.freedesktop.network1.policy:23
 msgid "Authentication is required to set NTP servers."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين خوادم NTP."
 
 #: src/network/org.freedesktop.network1.policy:33
 #: src/resolve/org.freedesktop.resolve1.policy:44
 msgid "Set DNS servers"
-msgstr ""
+msgstr "تعيين خوادم DNS"
 
 #: src/network/org.freedesktop.network1.policy:34
 #: src/resolve/org.freedesktop.resolve1.policy:45
 msgid "Authentication is required to set DNS servers."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين خوادم DNS."
 
 #: src/network/org.freedesktop.network1.policy:44
 #: src/resolve/org.freedesktop.resolve1.policy:55
 msgid "Set domains"
-msgstr ""
+msgstr "تعيين النطاقات"
 
 #: src/network/org.freedesktop.network1.policy:45
 #: src/resolve/org.freedesktop.resolve1.policy:56
 msgid "Authentication is required to set domains."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين المجالات."
 
 #: src/network/org.freedesktop.network1.policy:55
 #: src/resolve/org.freedesktop.resolve1.policy:66
 msgid "Set default route"
-msgstr ""
+msgstr "تعيين المسار الافتراضي"
 
 #: src/network/org.freedesktop.network1.policy:56
 #: src/resolve/org.freedesktop.resolve1.policy:67
 msgid "Authentication is required to set default route."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين المسار الافتراضي."
 
 #: src/network/org.freedesktop.network1.policy:66
 #: src/resolve/org.freedesktop.resolve1.policy:77
 msgid "Enable/disable LLMNR"
-msgstr ""
+msgstr "تمكين / تعطيل LLMNR"
 
 #: src/network/org.freedesktop.network1.policy:67
 #: src/resolve/org.freedesktop.resolve1.policy:78
 msgid "Authentication is required to enable or disable LLMNR."
-msgstr ""
+msgstr "المصادقة مطلوبة لتمكين LLMNR أو تعطيله."
 
 #: src/network/org.freedesktop.network1.policy:77
 #: src/resolve/org.freedesktop.resolve1.policy:88
 msgid "Enable/disable multicast DNS"
-msgstr ""
+msgstr "تمكين/تعطيل DNS للبث المتعدد"
 
 #: src/network/org.freedesktop.network1.policy:78
 #: src/resolve/org.freedesktop.resolve1.policy:89
 msgid "Authentication is required to enable or disable multicast DNS."
-msgstr ""
+msgstr "المصادقة مطلوبة لتمكين DNS للبث المتعدد أو تعطيله."
 
 #: src/network/org.freedesktop.network1.policy:88
 #: src/resolve/org.freedesktop.resolve1.policy:99
 msgid "Enable/disable DNS over TLS"
-msgstr ""
+msgstr "تمكين/تعطيل DNS عبر TLS"
 
 #: src/network/org.freedesktop.network1.policy:89
 #: src/resolve/org.freedesktop.resolve1.policy:100
 msgid "Authentication is required to enable or disable DNS over TLS."
-msgstr ""
+msgstr "المصادقة مطلوبة لتمكين DNS أو تعطيله عبر TLS."
 
 #: src/network/org.freedesktop.network1.policy:99
 #: src/resolve/org.freedesktop.resolve1.policy:110
 msgid "Enable/disable DNSSEC"
-msgstr ""
+msgstr "تمكين/تعطيل DNSSEC"
 
 #: src/network/org.freedesktop.network1.policy:100
 #: src/resolve/org.freedesktop.resolve1.policy:111
 msgid "Authentication is required to enable or disable DNSSEC."
-msgstr ""
+msgstr "المصادقة مطلوبة لتمكين أو تعطيل DNSSEC."
 
 #: src/network/org.freedesktop.network1.policy:110
 #: src/resolve/org.freedesktop.resolve1.policy:121
 msgid "Set DNSSEC Negative Trust Anchors"
-msgstr ""
+msgstr "تعيين مرتكزات الثقة السلبية DNSSEC"
 
 #: src/network/org.freedesktop.network1.policy:111
 #: src/resolve/org.freedesktop.resolve1.policy:122
 msgid "Authentication is required to set DNSSEC Negative Trust Anchors."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين نقاط ارتساء الثقة السلبية DNSSEC."
 
 #: src/network/org.freedesktop.network1.policy:121
 msgid "Revert NTP settings"
-msgstr ""
+msgstr "إرجاع إعدادات NTP"
 
 #: src/network/org.freedesktop.network1.policy:122
 msgid "Authentication is required to reset NTP settings."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تعيين إعدادات NTP."
 
 #: src/network/org.freedesktop.network1.policy:132
 msgid "Revert DNS settings"
-msgstr ""
+msgstr "التراجع عن إعدادات DNS"
 
 #: src/network/org.freedesktop.network1.policy:133
 msgid "Authentication is required to reset DNS settings."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تعيين إعدادات DNS."
 
 #: src/network/org.freedesktop.network1.policy:143
 msgid "DHCP server sends force renew message"
-msgstr ""
+msgstr "خادم DHCP يرسل رسالة تجديد فرض"
 
 #: src/network/org.freedesktop.network1.policy:144
 msgid "Authentication is required to send force renew message."
-msgstr ""
+msgstr "المصادقة مطلوبة لإرسال رسالة فرض التجديد."
 
 #: src/network/org.freedesktop.network1.policy:154
 msgid "Renew dynamic addresses"
-msgstr ""
+msgstr "تجديد العناوين الديناميكية"
 
 #: src/network/org.freedesktop.network1.policy:155
 msgid "Authentication is required to renew dynamic addresses."
-msgstr ""
+msgstr "المصادقة مطلوبة لتجديد العناوين الديناميكية."
 
 #: src/network/org.freedesktop.network1.policy:165
 msgid "Reload network settings"
-msgstr ""
+msgstr "إعادة تحميل إعدادات الشبكة"
 
 #: src/network/org.freedesktop.network1.policy:166
 msgid "Authentication is required to reload network settings."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تحميل إعدادات الشبكة."
 
 #: src/network/org.freedesktop.network1.policy:176
 msgid "Reconfigure network interface"
-msgstr ""
+msgstr "إعادة تكوين واجهة الشبكة"
 
 #: src/network/org.freedesktop.network1.policy:177
 msgid "Authentication is required to reconfigure network interface."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تكوين واجهة الشبكة."
 
 #: src/portable/org.freedesktop.portable1.policy:13
 msgid "Inspect a portable service image"
-msgstr ""
+msgstr "فحص صورة خدمة محمولة"
 
 #: src/portable/org.freedesktop.portable1.policy:14
 msgid "Authentication is required to inspect a portable service image."
-msgstr ""
+msgstr "المصادقة مطلوبة لفحص صورة خدمة محمولة."
 
 #: src/portable/org.freedesktop.portable1.policy:23
 msgid "Attach or detach a portable service image"
-msgstr ""
+msgstr "إرفاق صورة خدمة محمولة أو فصلها"
 
 # Pay attention to the concept of "seat".
 #
 # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
 #: src/portable/org.freedesktop.portable1.policy:24
 msgid "Authentication is required to attach or detach a portable service image."
-msgstr ""
+msgstr "المصادقة مطلوبة لإرفاق صورة خدمة محمولة أو فصلها."
 
 #: src/portable/org.freedesktop.portable1.policy:34
 msgid "Delete or modify portable service image"
-msgstr ""
+msgstr "حذف صورة الخدمة المحمولة أو تعديلها"
 
 #: src/portable/org.freedesktop.portable1.policy:35
 msgid "Authentication is required to delete or modify a portable service image."
-msgstr ""
+msgstr "المصادقة مطلوبة لحذف صورة خدمة محمولة أو تعديلها."
 
 #: src/resolve/org.freedesktop.resolve1.policy:22
 msgid "Register a DNS-SD service"
-msgstr ""
+msgstr "تسجيل خدمة DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:23
 msgid "Authentication is required to register a DNS-SD service"
-msgstr ""
+msgstr "المصادقة مطلوبة لتسجيل خدمة DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:33
 msgid "Unregister a DNS-SD service"
-msgstr ""
+msgstr "إلغاء تسجيل خدمة DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:34
 msgid "Authentication is required to unregister a DNS-SD service"
-msgstr ""
+msgstr "المصادقة مطلوبة لإلغاء تسجيل خدمة DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:132
 msgid "Revert name resolution settings"
-msgstr ""
+msgstr "التراجع عن إعدادات دقة الاسم"
 
 #: src/resolve/org.freedesktop.resolve1.policy:133
 msgid "Authentication is required to reset name resolution settings."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تعيين إعدادات تحليل الاسم."
 
 #: src/timedate/org.freedesktop.timedate1.policy:22
 msgid "Set system time"
-msgstr ""
+msgstr "ضبط وقت النظام"
 
 #: src/timedate/org.freedesktop.timedate1.policy:23
 msgid "Authentication is required to set the system time."
-msgstr ""
+msgstr "المصادقة مطلوبة لضبط وقت النظام."
 
 #: src/timedate/org.freedesktop.timedate1.policy:33
 msgid "Set system timezone"
-msgstr ""
+msgstr "تعيين المنطقة الزمنية للنظام"
 
 #: src/timedate/org.freedesktop.timedate1.policy:34
 msgid "Authentication is required to set the system timezone."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين المنطقة الزمنية للنظام."
 
 #: src/timedate/org.freedesktop.timedate1.policy:43
 msgid "Set RTC to local timezone or UTC"
-msgstr ""
+msgstr "تعيين RTC إلى المنطقة الزمنية المحلية أو UTC"
 
 #: src/timedate/org.freedesktop.timedate1.policy:44
 msgid "Authentication is required to control whether the RTC stores the local or UTC time."
 msgstr ""
+"المصادقة مطلوبة للتحكم في ما إذا كان RTC يخزن الوقت المحلي أو التوقيت "
+"العالمي المنسق."
 
 #: src/timedate/org.freedesktop.timedate1.policy:53
 msgid "Turn network time synchronization on or off"
-msgstr ""
+msgstr "تشغيل مزامنة وقت الشبكة أو إيقاف تشغيلها"
 
 #: src/timedate/org.freedesktop.timedate1.policy:54
 msgid "Authentication is required to control whether network time synchronization shall be enabled."
-msgstr ""
+msgstr "المصادقة مطلوبة للتحكم في ما إذا كان سيتم تمكين مزامنة وقت الشبكة."
 
 #: src/core/dbus-unit.c:352
 msgid "Authentication is required to start '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لبدء \"$(وحدة)\"."
 
 #: src/core/dbus-unit.c:353
 msgid "Authentication is required to stop '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لإيقاف \"$(وحدة)\"."
 
 #: src/core/dbus-unit.c:354
 msgid "Authentication is required to reload '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تحميل \"$(وحدة)\"."
 
 #: src/core/dbus-unit.c:355 src/core/dbus-unit.c:356
 msgid "Authentication is required to restart '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تشغيل \"$(وحدة)\"."
 
 #: src/core/dbus-unit.c:553
 msgid "Authentication is required to send a UNIX signal to the processes of '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لإرسال إشارة UNIX إلى عمليات \"$ (وحدة)\"."
 
 #: src/core/dbus-unit.c:583
 msgid "Authentication is required to reset the \"failed\" state of '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لإعادة تعيين الحالة \"الفاشلة\" ل \"$ (وحدة)\"."
 
 #: src/core/dbus-unit.c:615
 msgid "Authentication is required to set properties on '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لتعيين الخصائص على \"$(وحدة)\"."
 
 #: src/core/dbus-unit.c:716
 msgid "Authentication is required to delete files and directories associated with '$(unit)'."
-msgstr ""
+msgstr "المصادقة مطلوبة لحذف الملفات والدلائل المرتبطة ب \"$ (وحدة)\"."
 
 #: src/core/dbus-unit.c:764
 msgid "Authentication is required to freeze or thaw the processes of '$(unit)' unit."
-msgstr ""
+msgstr "المصادقة مطلوبة لتجميد أو إذابة عمليات وحدة \"$ (وحدة)\"."
