@@ -1,3 +1,9 @@
+systemd (255.2-ok1.10) nile; urgency=medium
+
+  * 新增阿越翻译文件
+
+ -- Kevin Duan <duankaiwen@kylinos.cn>  Thu, 12 Dec 2024 15:15:17 +0800
+
 systemd (255.2-ok1.9) nile; urgency=medium
 
   * modify po/LINGUAS for ug lang
