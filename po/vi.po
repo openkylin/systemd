@@ -10,271 +10,296 @@ msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-11-14 21:25+0000\n"
-"PO-Revision-Date: 2023-11-18 11:17+0000\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2025-02-13 08:12+0000\n"
+"Last-Translator: KevinDuan <duankaiwen@kylinos.cn>\n"
+"Language-Team: Vietnamese <http://weblate.openkylin.top/projects/"
+"openkylin-nile-new/systemd/vi/>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.2\n"
+"X-Generator: Weblate 4.12.1-dev\n"
 
 #: src/core/org.freedesktop.systemd1.policy.in:22
 msgid "Send passphrase back to system"
-msgstr ""
+msgstr "Gửi cụm mật khẩu trở lại hệ thống"
 
 #: src/core/org.freedesktop.systemd1.policy.in:23
 msgid "Authentication is required to send the entered passphrase back to the system."
-msgstr ""
+msgstr "Cần có xác thực để gửi cụm mật khẩu đã nhập trở lại hệ thống."
 
 #: src/core/org.freedesktop.systemd1.policy.in:33
 msgid "Manage system services or other units"
-msgstr ""
+msgstr "Quản lý dịch vụ hệ thống hoặc các đơn vị khác"
 
 #: src/core/org.freedesktop.systemd1.policy.in:34
 msgid "Authentication is required to manage system services or other units."
 msgstr ""
+"Xác thực là bắt buộc để quản lý các dịch vụ hệ thống hoặc các đơn vị khác."
 
 #: src/core/org.freedesktop.systemd1.policy.in:43
 msgid "Manage system service or unit files"
-msgstr ""
+msgstr "Quản lý dịch vụ hệ thống hoặc tệp đơn vị"
 
 #: src/core/org.freedesktop.systemd1.policy.in:44
 msgid "Authentication is required to manage system service or unit files."
-msgstr ""
+msgstr "Xác thực là bắt buộc để quản lý dịch vụ hệ thống hoặc đơn vị files."
 
 #: src/core/org.freedesktop.systemd1.policy.in:54
 msgid "Set or unset system and service manager environment variables"
-msgstr ""
+msgstr "Đặt hoặc hủy đặt các biến môi trường hệ thống và trình quản lý dịch vụ"
 
 #: src/core/org.freedesktop.systemd1.policy.in:55
 msgid "Authentication is required to set or unset system and service manager environment variables."
 msgstr ""
+"Xác thực là bắt buộc để đặt hoặc hủy đặt các biến môi trường hệ thống và "
+"trình quản lý dịch vụ."
 
 #: src/core/org.freedesktop.systemd1.policy.in:64
 msgid "Reload the systemd state"
-msgstr ""
+msgstr "Tải lại trạng thái systemd"
 
 #: src/core/org.freedesktop.systemd1.policy.in:65
 msgid "Authentication is required to reload the systemd state."
-msgstr ""
+msgstr "Xác thực là bắt buộc để tải lại trạng thái systemd."
 
 #: src/core/org.freedesktop.systemd1.policy.in:74
 msgid "Dump the systemd state without rate limits"
-msgstr ""
+msgstr "Dump trạng thái systemd mà không có giới hạn tốc độ"
 
 #: src/core/org.freedesktop.systemd1.policy.in:75
 msgid "Authentication is required to dump the systemd state without rate limits."
 msgstr ""
+"Xác thực là bắt buộc để kết xuất trạng thái systemd mà không có giới hạn tốc "
+"độ."
 
 #: src/home/org.freedesktop.home1.policy:13
 msgid "Create a home area"
-msgstr ""
+msgstr "Tạo khu vực nhà"
 
 #: src/home/org.freedesktop.home1.policy:14
 msgid "Authentication is required to create a user's home area."
-msgstr ""
+msgstr "Xác thực là bắt buộc để tạo khu vực nhà của người dùng."
 
 #: src/home/org.freedesktop.home1.policy:23
 msgid "Remove a home area"
-msgstr ""
+msgstr "Xóa khu vực nhà"
 
 #: src/home/org.freedesktop.home1.policy:24
 msgid "Authentication is required to remove a user's home area."
-msgstr ""
+msgstr "Cần có xác thực để xóa khu vực nhà của người dùng."
 
 #: src/home/org.freedesktop.home1.policy:33
 msgid "Check credentials of a home area"
-msgstr ""
+msgstr "Kiểm tra thông tin đăng nhập của khu vực nhà"
 
 #: src/home/org.freedesktop.home1.policy:34
 msgid "Authentication is required to check credentials against a user's home area."
 msgstr ""
+"Xác thực là bắt buộc để kiểm tra thông tin đăng nhập so với khu vực nhà của "
+"người dùng."
 
 #: src/home/org.freedesktop.home1.policy:43
 msgid "Update a home area"
-msgstr ""
+msgstr "Cập nhật khu vực nhà"
 
 # Pay attention to the concept of "seat".
 #
 # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
 #: src/home/org.freedesktop.home1.policy:44
 msgid "Authentication is required to update a user's home area."
-msgstr ""
+msgstr "Cần có xác thực để cập nhật khu vực nhà của người dùng."
 
 #: src/home/org.freedesktop.home1.policy:53
 msgid "Resize a home area"
-msgstr ""
+msgstr "Thay đổi kích thước khu vực nhà"
 
 #: src/home/org.freedesktop.home1.policy:54
 msgid "Authentication is required to resize a user's home area."
-msgstr ""
+msgstr "Cần có xác thực để thay đổi kích thước khu vực nhà của người dùng."
 
 #: src/home/org.freedesktop.home1.policy:63
 msgid "Change password of a home area"
-msgstr ""
+msgstr "Thay đổi mật khẩu của khu vực nhà"
 
 #: src/home/org.freedesktop.home1.policy:64
 msgid "Authentication is required to change the password of a user's home area."
-msgstr ""
+msgstr "Cần có xác thực để thay đổi mật khẩu của khu vực nhà của người dùng."
 
 #: src/home/pam_systemd_home.c:287
 #, c-format
 msgid "Home of user %s is currently absent, please plug in the necessary storage device or backing file system."
 msgstr ""
+"Trang chủ của người dùng %s hiện vắng mặt, vui lòng cắm thiết bị lưu trữ cần "
+"thiết hoặc hệ thống tệp dự phòng."
 
 #: src/home/pam_systemd_home.c:292
 #, c-format
 msgid "Too frequent login attempts for user %s, try again later."
-msgstr ""
+msgstr "Người dùng %s đăng nhập quá thường xuyên, hãy thử lại sau."
 
 #: src/home/pam_systemd_home.c:304
 msgid "Password: "
-msgstr ""
+msgstr "Mật khẩu: "
 
 #: src/home/pam_systemd_home.c:306
 #, c-format
 msgid "Password incorrect or not sufficient for authentication of user %s."
-msgstr ""
+msgstr "Mật khẩu không chính xác hoặc không đủ để xác thực người dùng %s."
 
 #: src/home/pam_systemd_home.c:307
 msgid "Sorry, try again: "
-msgstr ""
+msgstr "Xin lỗi, hãy thử lại: "
 
 #: src/home/pam_systemd_home.c:329
 msgid "Recovery key: "
-msgstr ""
+msgstr "Phím khôi phục: "
 
 #: src/home/pam_systemd_home.c:331
 #, c-format
 msgid "Password/recovery key incorrect or not sufficient for authentication of user %s."
 msgstr ""
+"Mật khẩu/khóa khôi phục không chính xác hoặc không đủ để xác thực người dùng "
+"%s."
 
 #: src/home/pam_systemd_home.c:332
 msgid "Sorry, reenter recovery key: "
-msgstr ""
+msgstr "Xin lỗi, nhập lại khóa khôi phục: "
 
 #: src/home/pam_systemd_home.c:352
 #, c-format
 msgid "Security token of user %s not inserted."
-msgstr ""
+msgstr "Mã thông báo bảo mật của người dùng %s không được chèn."
 
 #: src/home/pam_systemd_home.c:353 src/home/pam_systemd_home.c:356
 msgid "Try again with password: "
-msgstr ""
+msgstr "Thử lại bằng mật khẩu: "
 
 #: src/home/pam_systemd_home.c:355
 #, c-format
 msgid "Password incorrect or not sufficient, and configured security token of user %s not inserted."
 msgstr ""
+"Mật khẩu không chính xác hoặc không đủ và mã thông báo bảo mật được định cấu "
+"hình của người dùng %s không được chèn."
 
 #: src/home/pam_systemd_home.c:376
 msgid "Security token PIN: "
-msgstr ""
+msgstr "Mã PIN mã thông báo bảo mật: "
 
 #: src/home/pam_systemd_home.c:393
 #, c-format
 msgid "Please authenticate physically on security token of user %s."
-msgstr ""
+msgstr "Vui lòng xác thực vật lý trên mã thông báo bảo mật của người dùng %s."
 
 #: src/home/pam_systemd_home.c:404
 #, c-format
 msgid "Please confirm presence on security token of user %s."
 msgstr ""
+"Vui lòng xác nhận sự hiện diện trên mã thông báo bảo mật của người dùng %s."
 
 #: src/home/pam_systemd_home.c:415
 #, c-format
 msgid "Please verify user on security token of user %s."
 msgstr ""
+"Vui lòng xác minh người dùng trên mã thông báo bảo mật của người dùng %s."
 
 #: src/home/pam_systemd_home.c:424
 msgid "Security token PIN is locked, please unlock it first. (Hint: Removal and re-insertion might suffice.)"
 msgstr ""
+"Mã PIN mã thông báo bảo mật bị khóa, vui lòng mở khóa trước. (Gợi ý: Loại bỏ "
+"và chèn lại có thể là đủ.)"
 
 #: src/home/pam_systemd_home.c:432
 #, c-format
 msgid "Security token PIN incorrect for user %s."
-msgstr ""
+msgstr "Mã PIN mã thông báo bảo mật không chính xác cho người dùng %s."
 
 #: src/home/pam_systemd_home.c:433 src/home/pam_systemd_home.c:452
 #: src/home/pam_systemd_home.c:471
 msgid "Sorry, retry security token PIN: "
-msgstr ""
+msgstr "Xin lỗi, hãy thử lại mã PIN mã bảo mật: "
 
 #: src/home/pam_systemd_home.c:451
 #, c-format
 msgid "Security token PIN of user %s incorrect (only a few tries left!)"
 msgstr ""
+"Mã PIN mã thông báo bảo mật của người dùng %s không chính xác (chỉ còn một "
+"vài lần thử!)"
 
 #: src/home/pam_systemd_home.c:470
 #, c-format
 msgid "Security token PIN of user %s incorrect (only one try left!)"
 msgstr ""
+"Mã thông báo bảo mật mã PIN của người dùng %s không chính xác (chỉ còn một "
+"lần thử!)"
 
 #: src/home/pam_systemd_home.c:616
 #, c-format
 msgid "Home of user %s is currently not active, please log in locally first."
 msgstr ""
+"Trang chủ của người dùng %s hiện không hoạt động, vui lòng đăng nhập cục bộ "
+"trước."
 
 #: src/home/pam_systemd_home.c:618
 #, c-format
 msgid "Home of user %s is currently locked, please unlock locally first."
 msgstr ""
+"Trang chủ của người dùng %s hiện đang bị khóa, vui lòng mở khóa cục bộ trước."
 
 #: src/home/pam_systemd_home.c:645
 #, c-format
 msgid "Too many unsuccessful login attempts for user %s, refusing."
-msgstr ""
+msgstr "Quá nhiều lần đăng nhập không thành công cho người dùng %s, từ chối."
 
 #: src/home/pam_systemd_home.c:868
 msgid "User record is blocked, prohibiting access."
-msgstr ""
+msgstr "Hồ sơ người dùng bị chặn, cấm truy cập."
 
 #: src/home/pam_systemd_home.c:872
 msgid "User record is not valid yet, prohibiting access."
-msgstr ""
+msgstr "Hồ sơ người dùng chưa hợp lệ, cấm truy cập."
 
 #: src/home/pam_systemd_home.c:876
 msgid "User record is not valid anymore, prohibiting access."
-msgstr ""
+msgstr "Hồ sơ người dùng không còn giá trị nữa, cấm truy cập."
 
 #: src/home/pam_systemd_home.c:881 src/home/pam_systemd_home.c:932
 msgid "User record not valid, prohibiting access."
-msgstr ""
+msgstr "Hồ sơ người dùng không hợp lệ, cấm truy cập."
 
 #: src/home/pam_systemd_home.c:893
 #, c-format
 msgid "Too many logins, try again in %s."
-msgstr ""
+msgstr "Quá nhiều lần đăng nhập, hãy thử lại trong %s."
 
 #: src/home/pam_systemd_home.c:904
 msgid "Password change required."
-msgstr ""
+msgstr "Yêu cầu thay đổi mật khẩu."
 
 #: src/home/pam_systemd_home.c:908
 msgid "Password expired, change required."
-msgstr ""
+msgstr "Mật khẩu đã hết hạn, cần thay đổi."
 
 #: src/home/pam_systemd_home.c:914
 msgid "Password is expired, but can't change, refusing login."
-msgstr ""
+msgstr "Mật khẩu đã hết hạn, nhưng không thể thay đổi, từ chối đăng nhập."
 
 #: src/home/pam_systemd_home.c:918
 msgid "Password will expire soon, please change."
-msgstr ""
+msgstr "Mật khẩu sẽ sớm hết hạn, vui lòng thay đổi."
 
 #: src/hostname/org.freedesktop.hostname1.policy:20
 msgid "Set hostname"
-msgstr ""
+msgstr "Đặt tên máy chủ"
 
 #: src/hostname/org.freedesktop.hostname1.policy:21
 msgid "Authentication is required to set the local hostname."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt tên máy chủ cục bộ."
 
 #: src/hostname/org.freedesktop.hostname1.policy:30
 msgid "Set static hostname"
-msgstr ""
+msgstr "Đặt tên máy chủ tĩnh"
 
 # For pretty hostname, the zh_CN/zh_TW translation should be discussed again.
 #
@@ -282,693 +307,747 @@ msgstr ""
 #: src/hostname/org.freedesktop.hostname1.policy:31
 msgid "Authentication is required to set the statically configured local hostname, as well as the pretty hostname."
 msgstr ""
+"Xác thực là bắt buộc để đặt tên máy chủ cục bộ được định cấu hình tĩnh, cũng "
+"như tên máy chủ đẹp."
 
 #: src/hostname/org.freedesktop.hostname1.policy:41
 msgid "Set machine information"
-msgstr ""
+msgstr "Đặt thông tin máy"
 
 #: src/hostname/org.freedesktop.hostname1.policy:42
 msgid "Authentication is required to set local machine information."
-msgstr ""
+msgstr "Cần có xác thực để đặt thông tin máy cục bộ."
 
 #: src/hostname/org.freedesktop.hostname1.policy:51
 msgid "Get product UUID"
-msgstr ""
+msgstr "Nhận UUID sản phẩm"
 
 #: src/hostname/org.freedesktop.hostname1.policy:52
 msgid "Authentication is required to get product UUID."
-msgstr ""
+msgstr "Xác thực là bắt buộc để nhận UUID của sản phẩm."
 
 #: src/hostname/org.freedesktop.hostname1.policy:61
 msgid "Get hardware serial number"
-msgstr ""
+msgstr "Nhận số sê-ri phần cứng"
 
 #: src/hostname/org.freedesktop.hostname1.policy:62
 msgid "Authentication is required to get hardware serial number."
-msgstr ""
+msgstr "Cần có xác thực để lấy số sê-ri phần cứng."
 
 #: src/hostname/org.freedesktop.hostname1.policy:71
 msgid "Get system description"
-msgstr ""
+msgstr "Nhận mô tả hệ thống"
 
 #: src/hostname/org.freedesktop.hostname1.policy:72
 msgid "Authentication is required to get system description."
-msgstr ""
+msgstr "Xác thực là bắt buộc để nhận mô tả hệ thống."
 
 #: src/import/org.freedesktop.import1.policy:22
 msgid "Import a VM or container image"
-msgstr ""
+msgstr "Nhập máy ảo hoặc hình ảnh bộ chứa"
 
 #: src/import/org.freedesktop.import1.policy:23
 msgid "Authentication is required to import a VM or container image"
-msgstr ""
+msgstr "Cần có xác thực để nhập máy ảo hoặc hình ảnh vùng chứa"
 
 #: src/import/org.freedesktop.import1.policy:32
 msgid "Export a VM or container image"
-msgstr ""
+msgstr "Xuất máy ảo hoặc hình ảnh vùng chứa"
 
 #: src/import/org.freedesktop.import1.policy:33
 msgid "Authentication is required to export a VM or container image"
-msgstr ""
+msgstr "Cần xác thực để xuất máy ảo hoặc hình ảnh vùng chứa"
 
 #: src/import/org.freedesktop.import1.policy:42
 msgid "Download a VM or container image"
-msgstr ""
+msgstr "Tải xuống máy ảo hoặc hình ảnh vùng chứa"
 
 #: src/import/org.freedesktop.import1.policy:43
 msgid "Authentication is required to download a VM or container image"
-msgstr ""
+msgstr "Cần xác thực để tải xuống máy ảo hoặc hình ảnh vùng chứa"
 
 #: src/locale/org.freedesktop.locale1.policy:22
 msgid "Set system locale"
-msgstr ""
+msgstr "Đặt ngôn ngữ hệ thống"
 
 #: src/locale/org.freedesktop.locale1.policy:23
 msgid "Authentication is required to set the system locale."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt ngôn ngữ hệ thống."
 
 #: src/locale/org.freedesktop.locale1.policy:33
 msgid "Set system keyboard settings"
-msgstr ""
+msgstr "Đặt cài đặt bàn phím hệ thống"
 
 #: src/locale/org.freedesktop.locale1.policy:34
 msgid "Authentication is required to set the system keyboard settings."
-msgstr ""
+msgstr "Cần có xác thực để đặt cài đặt bàn phím hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:22
 msgid "Allow applications to inhibit system shutdown"
-msgstr ""
+msgstr "Cho phép các ứng dụng ức chế tắt hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:23
 msgid "Authentication is required for an application to inhibit system shutdown."
-msgstr ""
+msgstr "Xác thực là bắt buộc đối với một ứng dụng để ức chế tắt hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:33
 msgid "Allow applications to delay system shutdown"
-msgstr ""
+msgstr "Cho phép các ứng dụng trì hoãn tắt hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:34
 msgid "Authentication is required for an application to delay system shutdown."
-msgstr ""
+msgstr "Cần có xác thực để ứng dụng trì hoãn tắt hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:44
 msgid "Allow applications to inhibit system sleep"
-msgstr ""
+msgstr "Cho phép các ứng dụng ức chế giấc ngủ hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:45
 msgid "Authentication is required for an application to inhibit system sleep."
 msgstr ""
+"Xác thực là bắt buộc đối với một ứng dụng để ức chế chế độ ngủ của hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:55
 msgid "Allow applications to delay system sleep"
-msgstr ""
+msgstr "Cho phép các ứng dụng trì hoãn chế độ ngủ của hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:56
 msgid "Authentication is required for an application to delay system sleep."
 msgstr ""
+"Xác thực là bắt buộc đối với một ứng dụng để trì hoãn chế độ ngủ của hệ "
+"thống."
 
 #: src/login/org.freedesktop.login1.policy:65
 msgid "Allow applications to inhibit automatic system suspend"
-msgstr ""
+msgstr "Cho phép các ứng dụng ngăn chặn hệ thống tự động tạm ngưng"
 
 #: src/login/org.freedesktop.login1.policy:66
 msgid "Authentication is required for an application to inhibit automatic system suspend."
 msgstr ""
+"Xác thực là bắt buộc đối với một ứng dụng để ngăn chặn hệ thống tự động tạm "
+"ngưng."
 
 #: src/login/org.freedesktop.login1.policy:75
 msgid "Allow applications to inhibit system handling of the power key"
-msgstr ""
+msgstr "Cho phép các ứng dụng ức chế hệ thống xử lý phím nguồn"
 
 #: src/login/org.freedesktop.login1.policy:76
 msgid "Authentication is required for an application to inhibit system handling of the power key."
 msgstr ""
+"Xác thực là bắt buộc đối với một ứng dụng để ngăn chặn hệ thống xử lý khóa "
+"nguồn."
 
 #: src/login/org.freedesktop.login1.policy:86
 msgid "Allow applications to inhibit system handling of the suspend key"
-msgstr ""
+msgstr "Cho phép các ứng dụng ngăn chặn hệ thống xử lý khóa tạm ngưng"
 
 #: src/login/org.freedesktop.login1.policy:87
 msgid "Authentication is required for an application to inhibit system handling of the suspend key."
 msgstr ""
+"Xác thực là bắt buộc đối với một ứng dụng để ngăn chặn việc xử lý hệ thống "
+"khóa tạm ngưng."
 
 #: src/login/org.freedesktop.login1.policy:97
 msgid "Allow applications to inhibit system handling of the hibernate key"
-msgstr ""
+msgstr "Cho phép các ứng dụng ức chế hệ thống xử lý khóa ngủ đông"
 
 #: src/login/org.freedesktop.login1.policy:98
 msgid "Authentication is required for an application to inhibit system handling of the hibernate key."
 msgstr ""
+"Xác thực là bắt buộc đối với một ứng dụng để ngăn chặn việc xử lý hệ thống "
+"khóa ngủ đông."
 
 #: src/login/org.freedesktop.login1.policy:107
 msgid "Allow applications to inhibit system handling of the lid switch"
-msgstr ""
+msgstr "Cho phép các ứng dụng ức chế việc xử lý hệ thống của công tắc nắp"
 
 #: src/login/org.freedesktop.login1.policy:108
 msgid "Authentication is required for an application to inhibit system handling of the lid switch."
 msgstr ""
+"Xác thực là bắt buộc đối với một ứng dụng để ngăn chặn việc xử lý hệ thống "
+"của công tắc nắp."
 
 #: src/login/org.freedesktop.login1.policy:117
 msgid "Allow applications to inhibit system handling of the reboot key"
-msgstr ""
+msgstr "Cho phép các ứng dụng ngăn chặn hệ thống xử lý khóa khởi động lại"
 
 #: src/login/org.freedesktop.login1.policy:118
 msgid "Authentication is required for an application to inhibit system handling of the reboot key."
-msgstr ""
+msgstr "Cần có xác thực để ứng dụng ức chế hệ thống xử lý khóa khởi động lại."
 
 #: src/login/org.freedesktop.login1.policy:128
 msgid "Allow non-logged-in user to run programs"
-msgstr ""
+msgstr "Cho phép người dùng không đăng nhập chạy chương trình"
 
 #: src/login/org.freedesktop.login1.policy:129
 msgid "Explicit request is required to run programs as a non-logged-in user."
 msgstr ""
+"Yêu cầu rõ ràng là bắt buộc để chạy chương trình với tư cách là người dùng "
+"không đăng nhập."
 
 #: src/login/org.freedesktop.login1.policy:138
 msgid "Allow non-logged-in users to run programs"
-msgstr ""
+msgstr "Cho phép người dùng không đăng nhập chạy chương trình"
 
 #: src/login/org.freedesktop.login1.policy:139
 msgid "Authentication is required to run programs as a non-logged-in user."
 msgstr ""
+"Cần có xác thực để chạy chương trình với tư cách là người dùng không đăng "
+"nhập."
 
 #: src/login/org.freedesktop.login1.policy:148
 msgid "Allow attaching devices to seats"
-msgstr ""
+msgstr "Cho phép gắn thiết bị vào ghế ngồi"
 
 # Pay attention to the concept of "seat".
 #
 # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
 #: src/login/org.freedesktop.login1.policy:149
 msgid "Authentication is required to attach a device to a seat."
-msgstr ""
+msgstr "Cần có xác thực để gắn thiết bị vào chỗ ngồi."
 
 #: src/login/org.freedesktop.login1.policy:159
 msgid "Flush device to seat attachments"
-msgstr ""
+msgstr "Xả thiết bị vào ghế đính kèm"
 
 #: src/login/org.freedesktop.login1.policy:160
 msgid "Authentication is required to reset how devices are attached to seats."
-msgstr ""
+msgstr "Cần có xác thực để đặt lại cách thiết bị được gắn vào ghế."
 
 #: src/login/org.freedesktop.login1.policy:169
 msgid "Power off the system"
-msgstr ""
+msgstr "Tắt nguồn hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:170
 msgid "Authentication is required to power off the system."
-msgstr ""
+msgstr "Cần có xác thực để tắt nguồn hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:180
 msgid "Power off the system while other users are logged in"
-msgstr ""
+msgstr "Tắt nguồn hệ thống trong khi những người dùng khác đang đăng nhập"
 
 #: src/login/org.freedesktop.login1.policy:181
 msgid "Authentication is required to power off the system while other users are logged in."
 msgstr ""
+"Cần có xác thực để tắt nguồn hệ thống trong khi những người dùng khác đăng "
+"nhập."
 
 #: src/login/org.freedesktop.login1.policy:191
 msgid "Power off the system while an application is inhibiting this"
-msgstr ""
+msgstr "Tắt nguồn hệ thống trong khi một ứng dụng đang ức chế điều này"
 
 #: src/login/org.freedesktop.login1.policy:192
 msgid "Authentication is required to power off the system while an application is inhibiting this."
 msgstr ""
+"Cần có xác thực để tắt nguồn hệ thống trong khi ứng dụng đang ngăn chặn điều "
+"này."
 
 #: src/login/org.freedesktop.login1.policy:202
 msgid "Reboot the system"
-msgstr ""
+msgstr "Khởi động lại hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:203
 msgid "Authentication is required to reboot the system."
-msgstr ""
+msgstr "Cần có xác thực để khởi động lại hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:213
 msgid "Reboot the system while other users are logged in"
-msgstr ""
+msgstr "Khởi động lại hệ thống trong khi những người dùng khác đang đăng nhập"
 
 #: src/login/org.freedesktop.login1.policy:214
 msgid "Authentication is required to reboot the system while other users are logged in."
 msgstr ""
+"Xác thực là bắt buộc để khởi động lại hệ thống trong khi những người dùng "
+"khác đang đăng nhập."
 
 #: src/login/org.freedesktop.login1.policy:224
 msgid "Reboot the system while an application is inhibiting this"
-msgstr ""
+msgstr "Khởi động lại hệ thống trong khi một ứng dụng đang ức chế điều này"
 
 #: src/login/org.freedesktop.login1.policy:225
 msgid "Authentication is required to reboot the system while an application is inhibiting this."
 msgstr ""
+"Xác thực là bắt buộc để khởi động lại hệ thống trong khi một ứng dụng đang "
+"ức chế điều này."
 
 #: src/login/org.freedesktop.login1.policy:235
 msgid "Halt the system"
-msgstr ""
+msgstr "Tạm dừng hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:236
 msgid "Authentication is required to halt the system."
-msgstr ""
+msgstr "Xác thực là bắt buộc để dừng hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:246
 msgid "Halt the system while other users are logged in"
-msgstr ""
+msgstr "Tạm dừng hệ thống trong khi những người dùng khác đang đăng nhập"
 
 #: src/login/org.freedesktop.login1.policy:247
 msgid "Authentication is required to halt the system while other users are logged in."
 msgstr ""
+"Cần có xác thực để dừng hệ thống trong khi những người dùng khác đăng nhập."
 
 #: src/login/org.freedesktop.login1.policy:257
 msgid "Halt the system while an application is inhibiting this"
-msgstr ""
+msgstr "Dừng hệ thống trong khi một ứng dụng đang ức chế điều này"
 
 #: src/login/org.freedesktop.login1.policy:258
 msgid "Authentication is required to halt the system while an application is inhibiting this."
 msgstr ""
+"Xác thực là bắt buộc để dừng hệ thống trong khi một ứng dụng đang ức chế "
+"điều này."
 
 #: src/login/org.freedesktop.login1.policy:268
 msgid "Suspend the system"
-msgstr ""
+msgstr "Tạm ngưng hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:269
 msgid "Authentication is required to suspend the system."
-msgstr ""
+msgstr "Xác thực là bắt buộc để tạm ngưng hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:278
 msgid "Suspend the system while other users are logged in"
-msgstr ""
+msgstr "Tạm ngưng hệ thống trong khi người dùng khác đang đăng nhập"
 
 #: src/login/org.freedesktop.login1.policy:279
 msgid "Authentication is required to suspend the system while other users are logged in."
 msgstr ""
+"Cần có xác thực để tạm ngưng hệ thống trong khi những người dùng khác đăng "
+"nhập."
 
 #: src/login/org.freedesktop.login1.policy:289
 msgid "Suspend the system while an application is inhibiting this"
-msgstr ""
+msgstr "Tạm ngưng hệ thống trong khi một ứng dụng đang ngăn chặn điều này"
 
 #: src/login/org.freedesktop.login1.policy:290
 msgid "Authentication is required to suspend the system while an application is inhibiting this."
 msgstr ""
+"Xác thực là bắt buộc để tạm ngưng hệ thống trong khi ứng dụng đang ngăn chặn "
+"điều này."
 
 #: src/login/org.freedesktop.login1.policy:300
 msgid "Hibernate the system"
-msgstr ""
+msgstr "Ngủ đông hệ thống"
 
 #: src/login/org.freedesktop.login1.policy:301
 msgid "Authentication is required to hibernate the system."
-msgstr ""
+msgstr "Xác thực là bắt buộc để ngủ đông hệ thống."
 
 #: src/login/org.freedesktop.login1.policy:310
 msgid "Hibernate the system while other users are logged in"
-msgstr ""
+msgstr "Ngủ đông hệ thống trong khi người dùng khác đăng nhập"
 
 #: src/login/org.freedesktop.login1.policy:311
 msgid "Authentication is required to hibernate the system while other users are logged in."
 msgstr ""
+"Xác thực là bắt buộc để ngủ đông hệ thống trong khi những người dùng khác "
+"đăng nhập."
 
 #: src/login/org.freedesktop.login1.policy:321
 msgid "Hibernate the system while an application is inhibiting this"
-msgstr ""
+msgstr "Ngủ đông hệ thống trong khi một ứng dụng đang ức chế điều này"
 
 #: src/login/org.freedesktop.login1.policy:322
 msgid "Authentication is required to hibernate the system while an application is inhibiting this."
 msgstr ""
+"Xác thực là bắt buộc để ngủ đông hệ thống trong khi một ứng dụng đang ức chế "
+"điều này."
 
 #: src/login/org.freedesktop.login1.policy:332
 msgid "Manage active sessions, users and seats"
-msgstr ""
+msgstr "Quản lý các phiên, người dùng và chỗ đang hoạt động"
 
 #: src/login/org.freedesktop.login1.policy:333
 msgid "Authentication is required to manage active sessions, users and seats."
 msgstr ""
+"Xác thực là bắt buộc để quản lý các phiên, người dùng và chỗ đang hoạt động."
 
 #: src/login/org.freedesktop.login1.policy:342
 msgid "Lock or unlock active sessions"
-msgstr ""
+msgstr "Khóa hoặc mở khóa các phiên đang hoạt động"
 
 #: src/login/org.freedesktop.login1.policy:343
 msgid "Authentication is required to lock or unlock active sessions."
-msgstr ""
+msgstr "Cần có xác thực để khóa hoặc mở khóa các phiên đang hoạt động."
 
 #: src/login/org.freedesktop.login1.policy:352
 msgid "Set the reboot \"reason\" in the kernel"
-msgstr ""
+msgstr "Đặt \"lý do\" khởi động lại trong hạt nhân"
 
 #: src/login/org.freedesktop.login1.policy:353
 msgid "Authentication is required to set the reboot \"reason\" in the kernel."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt \"lý do\" khởi động lại trong nhân."
 
 #: src/login/org.freedesktop.login1.policy:363
 msgid "Indicate to the firmware to boot to setup interface"
-msgstr ""
+msgstr "Cho biết chương trình cơ sở để khởi động đến giao diện thiết lập"
 
 #: src/login/org.freedesktop.login1.policy:364
 msgid "Authentication is required to indicate to the firmware to boot to setup interface."
 msgstr ""
+"Cần có xác thực để chỉ ra chương trình cơ sở để khởi động đến giao diện "
+"thiết lập."
 
 #: src/login/org.freedesktop.login1.policy:374
 msgid "Indicate to the boot loader to boot to the boot loader menu"
-msgstr ""
+msgstr "Chỉ ra cho bộ nạp khởi động để khởi động đến menu bộ nạp khởi động"
 
 #: src/login/org.freedesktop.login1.policy:375
 msgid "Authentication is required to indicate to the boot loader to boot to the boot loader menu."
 msgstr ""
+"Xác thực là bắt buộc để chỉ ra cho bộ nạp khởi động để khởi động đến menu bộ "
+"nạp khởi động."
 
 #: src/login/org.freedesktop.login1.policy:385
 msgid "Indicate to the boot loader to boot a specific entry"
-msgstr ""
+msgstr "Chỉ ra cho bộ nạp khởi động để khởi động một mục cụ thể"
 
 #: src/login/org.freedesktop.login1.policy:386
 msgid "Authentication is required to indicate to the boot loader to boot into a specific boot loader entry."
 msgstr ""
+"Xác thực là bắt buộc để chỉ ra cho bộ nạp khởi động khởi động vào một mục "
+"nhập bộ nạp khởi động cụ thể."
 
 #: src/login/org.freedesktop.login1.policy:396
 msgid "Set a wall message"
-msgstr ""
+msgstr "Đặt thông báo trên tường"
 
 #: src/login/org.freedesktop.login1.policy:397
 msgid "Authentication is required to set a wall message"
-msgstr ""
+msgstr "Cần có xác thực để đặt thông báo trên tường"
 
 #: src/login/org.freedesktop.login1.policy:406
 msgid "Change Session"
-msgstr ""
+msgstr "Thay đổi phiên"
 
 #: src/login/org.freedesktop.login1.policy:407
 msgid "Authentication is required to change the virtual terminal."
-msgstr ""
+msgstr "Cần có xác thực để thay đổi thiết bị đầu cuối ảo."
 
 #: src/machine/org.freedesktop.machine1.policy:22
 msgid "Log into a local container"
-msgstr ""
+msgstr "Đăng nhập vào vùng chứa cục bộ"
 
 #: src/machine/org.freedesktop.machine1.policy:23
 msgid "Authentication is required to log into a local container."
-msgstr ""
+msgstr "Cần có xác thực để đăng nhập vào vùng chứa cục bộ."
 
 #: src/machine/org.freedesktop.machine1.policy:32
 msgid "Log into the local host"
-msgstr ""
+msgstr "Đăng nhập vào máy chủ cục bộ"
 
 #: src/machine/org.freedesktop.machine1.policy:33
 msgid "Authentication is required to log into the local host."
-msgstr ""
+msgstr "Cần có xác thực để đăng nhập vào máy chủ cục bộ."
 
 #: src/machine/org.freedesktop.machine1.policy:42
 msgid "Acquire a shell in a local container"
-msgstr ""
+msgstr "Mua một vỏ trong một vùng chứa cục bộ"
 
 #: src/machine/org.freedesktop.machine1.policy:43
 msgid "Authentication is required to acquire a shell in a local container."
-msgstr ""
+msgstr "Cần có xác thực để có được một shell trong một vùng chứa cục bộ."
 
 #: src/machine/org.freedesktop.machine1.policy:53
 msgid "Acquire a shell on the local host"
-msgstr ""
+msgstr "Mua một shell trên máy chủ cục bộ"
 
 #: src/machine/org.freedesktop.machine1.policy:54
 msgid "Authentication is required to acquire a shell on the local host."
-msgstr ""
+msgstr "Xác thực là bắt buộc để có được một shell trên máy chủ cục bộ."
 
 #: src/machine/org.freedesktop.machine1.policy:64
 msgid "Acquire a pseudo TTY in a local container"
-msgstr ""
+msgstr "Lấy TTY giả trong vùng chứa cục bộ"
 
 #: src/machine/org.freedesktop.machine1.policy:65
 msgid "Authentication is required to acquire a pseudo TTY in a local container."
-msgstr ""
+msgstr "Cần có xác thực để có được TTY giả trong vùng chứa cục bộ."
 
 #: src/machine/org.freedesktop.machine1.policy:74
 msgid "Acquire a pseudo TTY on the local host"
-msgstr ""
+msgstr "Có được TTY giả trên máy chủ cục bộ"
 
 #: src/machine/org.freedesktop.machine1.policy:75
 msgid "Authentication is required to acquire a pseudo TTY on the local host."
-msgstr ""
+msgstr "Cần có xác thực để có được TTY giả trên máy chủ cục bộ."
 
 #: src/machine/org.freedesktop.machine1.policy:84
 msgid "Manage local virtual machines and containers"
-msgstr ""
+msgstr "Quản lý máy ảo và bộ chứa cục bộ"
 
 #: src/machine/org.freedesktop.machine1.policy:85
 msgid "Authentication is required to manage local virtual machines and containers."
-msgstr ""
+msgstr "Cần có xác thực để quản lý máy ảo và vùng chứa cục bộ."
 
 #: src/machine/org.freedesktop.machine1.policy:95
 msgid "Manage local virtual machine and container images"
-msgstr ""
+msgstr "Quản lý máy ảo cục bộ và hình ảnh bộ chứa"
 
 #: src/machine/org.freedesktop.machine1.policy:96
 msgid "Authentication is required to manage local virtual machine and container images."
-msgstr ""
+msgstr "Cần có xác thực để quản lý máy ảo cục bộ và hình ảnh bộ chứa."
 
 #: src/network/org.freedesktop.network1.policy:22
 msgid "Set NTP servers"
-msgstr ""
+msgstr "Đặt máy chủ NTP"
 
 #: src/network/org.freedesktop.network1.policy:23
 msgid "Authentication is required to set NTP servers."
-msgstr ""
+msgstr "Cần có xác thực để đặt máy chủ NTP."
 
 #: src/network/org.freedesktop.network1.policy:33
 #: src/resolve/org.freedesktop.resolve1.policy:44
 msgid "Set DNS servers"
-msgstr ""
+msgstr "Đặt máy chủ DNS"
 
 #: src/network/org.freedesktop.network1.policy:34
 #: src/resolve/org.freedesktop.resolve1.policy:45
 msgid "Authentication is required to set DNS servers."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt máy chủ DNS."
 
 #: src/network/org.freedesktop.network1.policy:44
 #: src/resolve/org.freedesktop.resolve1.policy:55
 msgid "Set domains"
-msgstr ""
+msgstr "Đặt tên miền"
 
 #: src/network/org.freedesktop.network1.policy:45
 #: src/resolve/org.freedesktop.resolve1.policy:56
 msgid "Authentication is required to set domains."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt miền."
 
 #: src/network/org.freedesktop.network1.policy:55
 #: src/resolve/org.freedesktop.resolve1.policy:66
 msgid "Set default route"
-msgstr ""
+msgstr "Đặt lộ trình mặc định"
 
 #: src/network/org.freedesktop.network1.policy:56
 #: src/resolve/org.freedesktop.resolve1.policy:67
 msgid "Authentication is required to set default route."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt tuyến đường mặc định."
 
 #: src/network/org.freedesktop.network1.policy:66
 #: src/resolve/org.freedesktop.resolve1.policy:77
 msgid "Enable/disable LLMNR"
-msgstr ""
+msgstr "Bật/tắt LLMNR"
 
 #: src/network/org.freedesktop.network1.policy:67
 #: src/resolve/org.freedesktop.resolve1.policy:78
 msgid "Authentication is required to enable or disable LLMNR."
-msgstr ""
+msgstr "Cần có xác thực để bật hoặc tắt LLMNR."
 
 #: src/network/org.freedesktop.network1.policy:77
 #: src/resolve/org.freedesktop.resolve1.policy:88
 msgid "Enable/disable multicast DNS"
-msgstr ""
+msgstr "Bật/tắt DNS đa hướng"
 
 #: src/network/org.freedesktop.network1.policy:78
 #: src/resolve/org.freedesktop.resolve1.policy:89
 msgid "Authentication is required to enable or disable multicast DNS."
-msgstr ""
+msgstr "Cần có xác thực để bật hoặc tắt DNS đa hướng."
 
 #: src/network/org.freedesktop.network1.policy:88
 #: src/resolve/org.freedesktop.resolve1.policy:99
 msgid "Enable/disable DNS over TLS"
-msgstr ""
+msgstr "Bật/tắt DNS qua TLS"
 
 #: src/network/org.freedesktop.network1.policy:89
 #: src/resolve/org.freedesktop.resolve1.policy:100
 msgid "Authentication is required to enable or disable DNS over TLS."
-msgstr ""
+msgstr "Xác thực là bắt buộc để bật hoặc tắt DNS qua TLS."
 
 #: src/network/org.freedesktop.network1.policy:99
 #: src/resolve/org.freedesktop.resolve1.policy:110
 msgid "Enable/disable DNSSEC"
-msgstr ""
+msgstr "Bật/tắt DNSSEC"
 
 #: src/network/org.freedesktop.network1.policy:100
 #: src/resolve/org.freedesktop.resolve1.policy:111
 msgid "Authentication is required to enable or disable DNSSEC."
-msgstr ""
+msgstr "Xác thực là bắt buộc để bật hoặc tắt DNSSEC."
 
 #: src/network/org.freedesktop.network1.policy:110
 #: src/resolve/org.freedesktop.resolve1.policy:121
 msgid "Set DNSSEC Negative Trust Anchors"
-msgstr ""
+msgstr "Đặt neo tin cậy tiêu cực DNSSEC"
 
 #: src/network/org.freedesktop.network1.policy:111
 #: src/resolve/org.freedesktop.resolve1.policy:122
 msgid "Authentication is required to set DNSSEC Negative Trust Anchors."
-msgstr ""
+msgstr "Cần có xác thực để đặt Neo tin cậy tiêu cực DNSSEC."
 
 #: src/network/org.freedesktop.network1.policy:121
 msgid "Revert NTP settings"
-msgstr ""
+msgstr "Hoàn nguyên cài đặt NTP"
 
 #: src/network/org.freedesktop.network1.policy:122
 msgid "Authentication is required to reset NTP settings."
-msgstr ""
+msgstr "Cần xác thực để đặt lại cài đặt NTP."
 
 #: src/network/org.freedesktop.network1.policy:132
 msgid "Revert DNS settings"
-msgstr ""
+msgstr "Hoàn nguyên cài đặt DNS"
 
 #: src/network/org.freedesktop.network1.policy:133
 msgid "Authentication is required to reset DNS settings."
-msgstr ""
+msgstr "Cần xác thực để đặt lại cài đặt DNS."
 
 #: src/network/org.freedesktop.network1.policy:143
 msgid "DHCP server sends force renew message"
-msgstr ""
+msgstr "Máy chủ DHCP gửi thông báo buộc gia hạn"
 
 #: src/network/org.freedesktop.network1.policy:144
 msgid "Authentication is required to send force renew message."
-msgstr ""
+msgstr "Cần có xác thực để gửi tin nhắn buộc gia hạn."
 
 #: src/network/org.freedesktop.network1.policy:154
 msgid "Renew dynamic addresses"
-msgstr ""
+msgstr "Gia hạn địa chỉ động"
 
 #: src/network/org.freedesktop.network1.policy:155
 msgid "Authentication is required to renew dynamic addresses."
-msgstr ""
+msgstr "Xác thực là bắt buộc để gia hạn địa chỉ động."
 
 #: src/network/org.freedesktop.network1.policy:165
 msgid "Reload network settings"
-msgstr ""
+msgstr "Tải lại cài đặt mạng"
 
 #: src/network/org.freedesktop.network1.policy:166
 msgid "Authentication is required to reload network settings."
-msgstr ""
+msgstr "Cần có xác thực để tải lại cài đặt mạng."
 
 #: src/network/org.freedesktop.network1.policy:176
 msgid "Reconfigure network interface"
-msgstr ""
+msgstr "Định cấu hình lại giao diện mạng"
 
 #: src/network/org.freedesktop.network1.policy:177
 msgid "Authentication is required to reconfigure network interface."
-msgstr ""
+msgstr "Cần có xác thực để cấu hình lại giao diện mạng."
 
 #: src/portable/org.freedesktop.portable1.policy:13
 msgid "Inspect a portable service image"
-msgstr ""
+msgstr "Kiểm tra hình ảnh dịch vụ di động"
 
 #: src/portable/org.freedesktop.portable1.policy:14
 msgid "Authentication is required to inspect a portable service image."
-msgstr ""
+msgstr "Cần có xác thực để kiểm tra hình ảnh dịch vụ di động."
 
 #: src/portable/org.freedesktop.portable1.policy:23
 msgid "Attach or detach a portable service image"
-msgstr ""
+msgstr "Đính kèm hoặc tách hình ảnh dịch vụ di động"
 
 # Pay attention to the concept of "seat".
 #
 # To fully understand the meaning, please refer to session management in old ConsoleKit and new systemd-logind.
 #: src/portable/org.freedesktop.portable1.policy:24
 msgid "Authentication is required to attach or detach a portable service image."
-msgstr ""
+msgstr "Cần có xác thực để đính kèm hoặc tách hình ảnh dịch vụ di động."
 
 #: src/portable/org.freedesktop.portable1.policy:34
 msgid "Delete or modify portable service image"
-msgstr ""
+msgstr "Xóa hoặc sửa đổi hình ảnh dịch vụ di động"
 
 #: src/portable/org.freedesktop.portable1.policy:35
 msgid "Authentication is required to delete or modify a portable service image."
-msgstr ""
+msgstr "Cần có xác thực để xóa hoặc sửa đổi hình ảnh dịch vụ di động."
 
 #: src/resolve/org.freedesktop.resolve1.policy:22
 msgid "Register a DNS-SD service"
-msgstr ""
+msgstr "Đăng ký dịch vụ DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:23
 msgid "Authentication is required to register a DNS-SD service"
-msgstr ""
+msgstr "Cần xác thực để đăng ký dịch vụ DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:33
 msgid "Unregister a DNS-SD service"
-msgstr ""
+msgstr "Hủy đăng ký dịch vụ DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:34
 msgid "Authentication is required to unregister a DNS-SD service"
-msgstr ""
+msgstr "Cần xác thực để hủy đăng ký dịch vụ DNS-SD"
 
 #: src/resolve/org.freedesktop.resolve1.policy:132
 msgid "Revert name resolution settings"
-msgstr ""
+msgstr "Hoàn nguyên cài đặt độ phân giải tên"
 
 #: src/resolve/org.freedesktop.resolve1.policy:133
 msgid "Authentication is required to reset name resolution settings."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt lại cài đặt độ phân giải tên."
 
 #: src/timedate/org.freedesktop.timedate1.policy:22
 msgid "Set system time"
-msgstr ""
+msgstr "Đặt thời gian hệ thống"
 
 #: src/timedate/org.freedesktop.timedate1.policy:23
 msgid "Authentication is required to set the system time."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt thời gian hệ thống."
 
 #: src/timedate/org.freedesktop.timedate1.policy:33
 msgid "Set system timezone"
-msgstr ""
+msgstr "Đặt múi giờ hệ thống"
 
 #: src/timedate/org.freedesktop.timedate1.policy:34
 msgid "Authentication is required to set the system timezone."
-msgstr ""
+msgstr "Cần có xác thực để đặt múi giờ hệ thống."
 
 #: src/timedate/org.freedesktop.timedate1.policy:43
 msgid "Set RTC to local timezone or UTC"
-msgstr ""
+msgstr "Đặt RTC thành múi giờ địa phương hoặc UTC"
 
 #: src/timedate/org.freedesktop.timedate1.policy:44
 msgid "Authentication is required to control whether the RTC stores the local or UTC time."
 msgstr ""
+"Xác thực là bắt buộc để kiểm soát xem RTC lưu trữ thời gian địa phương hay "
+"UTC."
 
 #: src/timedate/org.freedesktop.timedate1.policy:53
 msgid "Turn network time synchronization on or off"
-msgstr ""
+msgstr "Bật hoặc tắt đồng bộ hóa thời gian mạng"
 
 #: src/timedate/org.freedesktop.timedate1.policy:54
 msgid "Authentication is required to control whether network time synchronization shall be enabled."
 msgstr ""
+"Xác thực là bắt buộc để kiểm soát xem có bật đồng bộ hóa thời gian mạng hay "
+"không."
 
 #: src/core/dbus-unit.c:352
 msgid "Authentication is required to start '$(unit)'."
-msgstr ""
+msgstr "Xác thực là bắt buộc để bắt đầu '$(đơn vị)'."
 
 #: src/core/dbus-unit.c:353
 msgid "Authentication is required to stop '$(unit)'."
-msgstr ""
+msgstr "Cần có xác thực để dừng '$(unit)'."
 
 #: src/core/dbus-unit.c:354
 msgid "Authentication is required to reload '$(unit)'."
-msgstr ""
+msgstr "Cần có xác thực để tải lại '$(đơn vị)'."
 
 #: src/core/dbus-unit.c:355 src/core/dbus-unit.c:356
 msgid "Authentication is required to restart '$(unit)'."
-msgstr ""
+msgstr "Xác thực là bắt buộc để khởi động lại '$ (đơn vị)'."
 
 #: src/core/dbus-unit.c:553
 msgid "Authentication is required to send a UNIX signal to the processes of '$(unit)'."
 msgstr ""
+"Xác thực là bắt buộc để gửi tín hiệu UNIX đến các quy trình của '$(đơn vị)'."
 
 #: src/core/dbus-unit.c:583
 msgid "Authentication is required to reset the \"failed\" state of '$(unit)'."
 msgstr ""
+"Cần có xác thực để đặt lại trạng thái \"không thành công\" của '$(đơn vị)'."
 
 #: src/core/dbus-unit.c:615
 msgid "Authentication is required to set properties on '$(unit)'."
-msgstr ""
+msgstr "Xác thực là bắt buộc để đặt thuộc tính trên '$(đơn vị)'."
 
 #: src/core/dbus-unit.c:716
 msgid "Authentication is required to delete files and directories associated with '$(unit)'."
 msgstr ""
+"Cần có xác thực để xóa các tệp và thư mục được liên kết với '$(đơn vị)'."
 
 #: src/core/dbus-unit.c:764
 msgid "Authentication is required to freeze or thaw the processes of '$(unit)' unit."
 msgstr ""
+"Cần có xác thực để đóng băng hoặc tan băng các quy trình của đơn vị '$(đơn "
+"vị)'."
