@@ -48,3 +48,4 @@ Translated-using-Weblate-Uyghur-1.patch
 25-modfiy-po-LINGUAS-for-lang.patch
 Added-translation-using-Weblate-Vietnamese.patch
 Translated-using-Weblate-Vietnamese.patch
+26-fix-compile-bug.patch
