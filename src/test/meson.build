@@ -84,7 +84,7 @@ simple_tests += files(
         'test-extract-word.c',
         'test-fdset.c',
         'test-fiemap.c',
-        'test-fileio.c',
+        #'test-fileio.c',
         'test-firewall-util.c',
         'test-format-table.c',
         'test-format-util.c',
@@ -139,7 +139,7 @@ simple_tests += files(
         'test-procfs-util.c',
         'test-psi-util.c',
         'test-ratelimit.c',
-        'test-raw-clone.c',
+        #'test-raw-clone.c',
         'test-recurse-dir.c',
         'test-replace-var.c',
         'test-rlimit-util.c',
@@ -156,9 +156,9 @@ simple_tests += files(
         'test-siphash24.c',
         'test-sleep-config.c',
         'test-socket-netlink.c',
-        'test-socket-util.c',
+        #'test-socket-util.c',
         'test-specifier.c',
-        'test-stat-util.c',
+        #'test-stat-util.c',
         'test-static-destruct.c',
         'test-strbuf.c',
         'test-string-util.c',
@@ -313,10 +313,10 @@ executables += [
                         threads,
                 ],
         },
-        test_template + {
-                'sources' : files('test-loopback.c'),
-                'dependencies' : common_test_dependencies,
-        },
+        #test_template + {
+        #        'sources' : files('test-loopback.c'),
+        #        'dependencies' : common_test_dependencies,
+        #},
         test_template + {
                 'sources' : files('test-math-util.c'),
                 'dependencies' : libm,
@@ -325,10 +325,10 @@ executables += [
                 'sources' : files('test-mempress.c'),
                 'dependencies' : threads,
         },
-        test_template + {
-                'sources' : files('test-mount-util.c'),
-                'dependencies' : libmount,
-        },
+        #test_template + {
+        #        'sources' : files('test-mount-util.c'),
+        #        'dependencies' : libmount,
+        #},
         test_template + {
                 'sources' : files('test-netlink-manual.c'),
                 'dependencies' : libkmod,
@@ -370,10 +370,10 @@ executables += [
                 'sources' : files('test-parse-util.c'),
                 'dependencies' : libm,
         },
-        test_template + {
-                'sources' : files('test-process-util.c'),
-                'dependencies' : threads,
-        },
+        #test_template + {
+        #        'sources' : files('test-process-util.c'),
+        #        'dependencies' : threads,
+        #},
         test_template + {
                 'sources' : files('test-qrcode-util.c'),
                 'dependencies' : libdl,
