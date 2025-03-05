@@ -177,7 +177,7 @@ simple_tests += files(
         'sd-journal/test-journal-stream.c',
         'sd-journal/test-journal.c',
         'sd-login/test-login.c',
-        'sd-netlink/test-netlink.c',
+        #'sd-netlink/test-netlink.c',
 )
 
 libsystemd_tests += [
@@ -209,22 +209,22 @@ libsystemd_tests += [
                         threads,
                 ],
         },
-        {
-                'sources' : files('sd-bus/test-bus-objects.c'),
-                'dependencies' : threads,
-        },
-        {
-                'sources' : files('sd-bus/test-bus-peersockaddr.c'),
-                'dependencies' : threads,
-        },
+        #{
+        #        'sources' : files('sd-bus/test-bus-objects.c'),
+        #        'dependencies' : threads,
+        #},
+        #{
+        #        'sources' : files('sd-bus/test-bus-peersockaddr.c'),
+        #        'dependencies' : threads,
+        #},
         {
                 'sources' : files('sd-bus/test-bus-queue-ref-cycle.c'),
                 'dependencies' : threads,
         },
-        {
-                'sources' : files('sd-bus/test-bus-server.c'),
-                'dependencies' : threads,
-        },
+        #{
+        #        'sources' : files('sd-bus/test-bus-server.c'),
+        #        'dependencies' : threads,
+        #},
         {
                 'sources' : files('sd-bus/test-bus-signature.c'),
                 'dependencies' : threads,

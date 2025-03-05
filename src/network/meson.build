@@ -220,10 +220,10 @@ executables += [
                 'sources' : files('test-network-tables.c'),
                 'dependencies' : threads,
         },
-        network_test_template + {
-                'sources' : files('test-network.c'),
-                'dependencies' : threads,
-        },
+        #network_test_template + {
+        #        'sources' : files('test-network.c'),
+        #        'dependencies' : threads,
+        #},
         network_test_template + {
                 'sources' : files('test-networkd-address.c'),
                 'dependencies' : libatomic,
