@@ -1,3 +1,9 @@
+systemd (255.2-ok1.13) nile; urgency=medium
+
+  * add mn to po/LINGUAS for lang
+
+ -- shilongzhen <shilongzhen@kylinos.cn>  Tue, 11 Mar 2025 09:33:38 +0800
+
 systemd (255.2-ok1.12) nile; urgency=medium
 
   * fix risv build bug
