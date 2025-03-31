@@ -1,3 +1,21 @@
+systemd (255.2-ok1.15) nile; urgency=medium
+
+  * mask parse-hwdb test
+
+ -- shilongzhen <shilongzhen@kylinos.cn>  Tue, 18 Mar 2025 09:26:15 +0800
+
+systemd (255.2-ok1.14) nile; urgency=medium
+
+  * update hwdb for key
+
+ -- shilongzhen <shilongzhen@kylinos.cn>  Thu, 13 Mar 2025 20:21:22 +0800
+
+systemd (255.2-ok1.13) nile; urgency=medium
+
+  * add mn to po/LINGUAS for lang
+
+ -- shilongzhen <shilongzhen@kylinos.cn>  Tue, 11 Mar 2025 09:33:38 +0800
+
 systemd (255.2-ok1.12) nile; urgency=medium
 
   * fix risv build bug

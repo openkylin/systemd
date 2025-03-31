@@ -50,3 +50,4 @@ Added-translation-using-Weblate-Vietnamese.patch
 Translated-using-Weblate-Vietnamese.patch
 26-fix-compile-bug.patch
 27-changelog-255.2-ok1.12.patch
+30-hwdb-mask-parse-hwdb-test.patch
