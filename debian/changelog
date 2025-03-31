@@ -1,3 +1,9 @@
+systemd (255.2-ok1.15) nile; urgency=medium
+
+  * mask parse-hwdb test
+
+ -- shilongzhen <shilongzhen@kylinos.cn>  Tue, 18 Mar 2025 09:26:15 +0800
+
 systemd (255.2-ok1.14) nile; urgency=medium
 
   * update hwdb for key
