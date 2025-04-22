@@ -68,7 +68,7 @@ jobs:
           fetch-depth: 0
 
       - name: Development Freezer
-        uses: redhat-plumbers-in-action/devel-freezer@67aec4a153bd9fca5322e1c4dd4d7c419fb36362
+        uses: redhat-plumbers-in-action/devel-freezer@ad766eafd555b28d2cb8e27937835983f9c3d173
         with:
           pr-number: ${{ env.pr_number }}
           token: ${{ secrets.GITHUB_TOKEN }}
